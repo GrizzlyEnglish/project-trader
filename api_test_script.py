@@ -14,8 +14,10 @@ api_key = ''
 api_secret = ''
 
 trading_client = TradingClient(api_key, api_secret, paper=True)
+broker_client = BrokerClient(api_key, api_secret)
+market_client = StockHistoricalDataClient(api_key, api_secret)
 
 positions = trading_client.get_all_positions()
-positions = [{'symbol': p.symbol, 'qty': p.qty_available} for p in positions]
 
-print(any(p['symbol'] == 'SPY' for p in positions))
+pos = next((x for x in positions if x.symbol == 'FSR'), None)
+print(float(pos.unrealized_pl))

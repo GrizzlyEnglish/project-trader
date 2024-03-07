@@ -1,6 +1,7 @@
 from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
+from alpaca.common.exceptions import APIError
 
 import math
 
@@ -10,9 +11,14 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
 
     buying_power = account.buying_power
 
-    buying_power_per = float(buying_power) / len(stocks_to_buy)
+    amount_to_buy = len(stocks_to_buy)
 
-    print("Current buying power %s and per stock %s" % (buying_power, buying_power_per))
+    if amount_to_buy == 0:
+        return
+
+    buying_power_per = float(buying_power) / amount_to_buy 
+
+    print("Current buying power %s and max per stock %s" % (buying_power, buying_power_per))
 
     # Need to determine how much we can afford
     quote_request = StockLatestQuoteRequest(symbol_or_symbols=stocks_to_buy)
@@ -22,16 +28,22 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
         asset = trading_client.get_asset(stock)
 
         if not asset.tradable:
+            print("%s not marked tradeable exiting" % stock)
             continue
 
-        if latest_quote[stock].ask_price == 0:
+        print("%s ask price %s bid price " % (latest_quote[stock].ask_price, latest_quote[stock].bid_price))
+
+        if latest_quote[stock].bid_price == 0:
             # TODO: Figure out how to handle this case
+            print("%s ask price is 0, not sure how to handle yet" % stock)
             continue
 
-        qty = buying_power_per / latest_quote[stock].ask_price
+        qty = buying_power_per / latest_quote[stock].bid_price
 
         if not asset.fractionable:
-            qty = math.floor(qty)
+            qty = max(math.floor(qty), 1)
+            if (qty * latest_quote[stock].bid_price) > float(buying_power):
+                continue
 
         if qty <= 0:
             continue
@@ -44,9 +56,12 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
                             qty=qty,
                             side=OrderSide.BUY,
                             type=OrderType.MARKET,
-                            time_in_force=TimeInForce.DAY
+                            time_in_force=TimeInForce.DAY,
                             )
 
         #TODO: Figure out how to reset my buying power in order to not run out before buying them all
 
-        market_order = trading_client.submit_order(order_data=market_order_data)
+        try:
+            market_order = trading_client.submit_order(order_data=market_order_data)
+        except APIError as e:
+            print(e)
