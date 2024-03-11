@@ -24,4 +24,4 @@ stocks = ['FSR', 'NKLA', 'BKKT', 'OPK', 'CLOV', 'AGEN', 'GOEV', 'GEVO', 'SENS', 
 while (True):
     penny_stock_strat(stocks, datetime.now() - timedelta(minutes=10), datetime.now(), trading_client, market_client, broker_client)
     print("Sleeping for %s" % str(sleep_time))
-    time.sleep(sleep_time)
+    time.sleep(int(sleep_time))
