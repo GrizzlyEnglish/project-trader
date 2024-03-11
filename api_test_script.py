@@ -8,16 +8,13 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.data.requests import StockLatestQuoteRequest
 
+from nn.generate_model import generate_model
+
 import pandas as pd
 
 api_key = ''
 api_secret = ''
 
-trading_client = TradingClient(api_key, api_secret, paper=True)
-broker_client = BrokerClient(api_key, api_secret)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-positions = trading_client.get_all_positions()
-
-pos = next((x for x in positions if x.symbol == 'FSR'), None)
-print(float(pos.unrealized_pl))
+generate_model('HOOK', market_client)
