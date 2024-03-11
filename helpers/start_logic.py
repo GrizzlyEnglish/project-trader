@@ -1,22 +1,29 @@
-import math
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
-def determine_status(df, column, span, trade_factor):
+def determine_status(df, model):
     status = 'hold'
 
-    df['ewm'] = df[column].ewm(span=span, adjust=False).mean()
+    df['ewm_12'] = df['close'].ewm(span=12, adjust=False).mean()
+    df['ewm_24'] = df['close'].ewm(span=24, adjust=False).mean()
     print(df)
 
-    split = math.floor(span / 2)
+    left_trend = determine_trend(df['ewm_12'].iloc[0], df['ewm_12'].iloc[-1])
 
-    left = df['ewm'][1:split]
-    right = df['ewm'][split:span]
-
-    left_trend = determine_trend(left, trade_factor)
-    right_trend = determine_trend(right, trade_factor)
+    if len(df) > 0:
+        scaler = StandardScaler()
+        split_data = int(len(df)*0.7)
+        scaler.fit_transform(df.iloc[:split_data, :])
+        df_test = scaler.transform(df.iloc[split_data:, :])
+        df_test = np.expand_dims(df_test, 1)
+        predicted = model.predict(df_test)
+        right_trend = determine_trend(df['ewm_12'].iloc[-1], predicted[-1][0])
+    else:
+        right_trend = 'down'
 
     print("     Left trend is %s and right trend is %s" % (left_trend, right_trend))
 
-    if left_trend == 'down' and right_trend == 'up':
+    if right_trend == 'up':
         status = 'buy'
     elif left_trend == 'up' and right_trend == 'down':
         status = 'sell'
@@ -25,17 +32,10 @@ def determine_status(df, column, span, trade_factor):
     return status
 
 
-def determine_trend(df, trade_factor):
-    # Assume down
+def determine_trend(start, end):
     trend = 'empty'
 
-    if df.empty:
-        return trend
-
-    window_factor = df.iloc[0] / df.iloc[-1]
-    window_mean = df.mean()
-
-    if window_factor > trade_factor:
+    if start < end:
         trend = 'up'
     else:
         trend = 'down'

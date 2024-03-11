@@ -1,4 +1,4 @@
-from stocks.strats.penny_stock_strat import penny_stock_strat
+from stocks.penny_stock_strat import penny_stock_strat
 from datetime import datetime, timedelta
 
 import time

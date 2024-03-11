@@ -8,13 +8,15 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.data.requests import StockLatestQuoteRequest
 
-from nn.generate_model import generate_model
+from generate_model import generate_model
 
 import pandas as pd
+import os
 
-api_key = ''
-api_secret = ''
+from dotenv import load_dotenv
 
-market_client = StockHistoricalDataClient(api_key, api_secret)
+load_dotenv()
+
+market_client = StockHistoricalDataClient(os.getenv("API_KEY"), os.getenv("API_SECRET"))
 
 generate_model('HOOK', market_client)

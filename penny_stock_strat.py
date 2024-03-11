@@ -1,20 +1,16 @@
-from alpaca.trading.client import TradingClient
-from alpaca.broker import BrokerClient
-from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data import TimeFrame 
 from alpaca.data.requests import StockBarsRequest
-from datetime import datetime, timedelta
 
+ 
+import sys
+sys.path.append('../helpers')
+ 
 from helpers.buy import buy_stocks
 from helpers.sell import sell_stocks
 from helpers.start_logic import determine_status
+from generate_model import generate_model
 
-def penny_stock_strat(stocks, window_start, window_end, emw_span, api_key, api_secret, paper):
-    # paper=True enables paper trading
-    trading_client = TradingClient(api_key, api_secret, paper=paper)
-    broker_client = BrokerClient(api_key, api_secret)
-    market_client = StockHistoricalDataClient(api_key, api_secret)
-
+def penny_stock_strat(stocks, window_start, window_end, trading_client, market_client, broker_client):
     # Current positions we are able to sell
     positions = trading_client.get_all_positions()
 
@@ -46,20 +42,19 @@ def penny_stock_strat(stocks, window_start, window_end, emw_span, api_key, api_s
             print("No df for %s" % stock)
             continue
 
-        status = determine_status(window_data_df, 'close', emw_span, trade_factor)
+        model = generate_model(stock, market_client)
 
-        '''
-        if large_trend == 'down' and small_trend == 'up':
+        status = determine_status(window_data_df, model)
+
+        if status == 'buy':
             print("Setting % s to buy" % stock)
             buy.append(stock)
-        elif large_trend == 'up' and small_trend == 'down':
+        elif status == 'sell':
             print("Setting % s to sell" % stock)
             sell.append(stock)
         else :
-            print("Hold %s current large trend is %s and small trend is %s" % (stock, large_trend, small_trend))
+            print("Holding %s" % stock)
 
     sell_stocks(sell, positions, trading_client)
 
     buy_stocks(buy, trading_client, market_client)
-
-        '''

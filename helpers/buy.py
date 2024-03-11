@@ -39,16 +39,16 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
 
         print("%s ask price %s bid price " % (latest_quote[stock].ask_price, latest_quote[stock].bid_price))
 
-        if latest_quote[stock].ask_price == 0:
-            # TODO: Figure out how to handle this case
-            print("%s ask price is 0, not sure how to handle yet" % stock)
-            continue
+        price = latest_quote[stock].ask_price
 
-        qty = buying_power_per / latest_quote[stock].ask_price
+        if price == 0:
+            price = latest_quote[stock].bid_price
+
+        qty = buying_power_per / price
 
         if not asset.fractionable:
             qty = max(math.floor(qty), 1)
-            if (qty * latest_quote[stock].ask_price) > float(buying_power):
+            if (qty * price) > float(buying_power):
                 continue
 
         if qty <= 0:
