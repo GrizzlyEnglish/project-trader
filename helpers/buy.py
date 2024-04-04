@@ -1,16 +1,12 @@
-from alpaca.data.requests import StockLatestQuoteRequest
+from alpaca.data.requests import StockLatestQuoteRequest, CryptoLatestQuoteRequest
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 from alpaca.common.exceptions import APIError
+from alpaca.data.historical import StockHistoricalDataClient
 
 import math
 
-def buy_stocks(stocks_to_buy, trading_client, market_client):
-    # after selling get buying power and buy
-    account = trading_client.get_account()
-
-    buying_power = account.buying_power
-
+def buy_stocks(stocks_to_buy, trading_client, market_client, buying_power):
     amount_to_buy = len(stocks_to_buy)
 
     if amount_to_buy == 0:
@@ -18,17 +14,18 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
 
     buying_power_per = 0
 
-    # Only spend a bit if this the only stock to buy
-    if amount_to_buy == 1:
-        buying_power_per = float(buying_power) / 4
-    else:
-        buying_power_per = float(buying_power) / amount_to_buy 
+    buying_power_per = min(buying_power / 4, 20)
 
     print("Current buying power %s and max per stock %s" % (buying_power, buying_power_per))
 
     # Need to determine how much we can afford
-    quote_request = StockLatestQuoteRequest(symbol_or_symbols=stocks_to_buy)
-    latest_quote = market_client.get_stock_latest_quote(quote_request)
+    latest_quote = 0
+    if (type(market_client) == StockHistoricalDataClient):
+        quote_request = StockLatestQuoteRequest(symbol_or_symbols=stocks_to_buy)
+        latest_quote = market_client.get_stock_latest_quote(quote_request)
+    else:
+        quote_request = CryptoLatestQuoteRequest(symbol_or_symbols=stocks_to_buy)
+        latest_quote = market_client.get_crypto_latest_quote(quote_request)
 
     for stock in stocks_to_buy:
         asset = trading_client.get_asset(stock)
@@ -57,13 +54,22 @@ def buy_stocks(stocks_to_buy, trading_client, market_client):
         print("Buying %s of %s" % (qty, stock))
 
         # preparing market order
-        market_order_data = MarketOrderRequest(
-                            symbol=stock,
-                            qty=qty,
-                            side=OrderSide.BUY,
-                            type=OrderType.MARKET,
-                            time_in_force=TimeInForce.DAY,
-                            )
+        if (type(market_client) == StockHistoricalDataClient):
+            market_order_data = MarketOrderRequest(
+                                symbol=stock,
+                                qty=qty,
+                                side=OrderSide.BUY,
+                                type=OrderType.MARKET,
+                                time_in_force=TimeInForce.DAY,
+                                )
+        else:
+            market_order_data = MarketOrderRequest(
+                                symbol=stock,
+                                qty=qty,
+                                side=OrderSide.BUY,
+                                type=OrderType.MARKET,
+                                time_in_force=TimeInForce.GTC,
+                                )
 
         #TODO: Figure out how to reset my buying power in order to not run out before buying them all
 

@@ -2,7 +2,13 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.common.exceptions import APIError
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 
-def sell_stocks(stocks_to_sell, current_positions, trading_client):
+def sell_stocks(stocks_to_sell, trading_client):
+    # Current positions we are able to sell
+    current_positions = trading_client.get_all_positions()
+
+    for p in current_positions:
+        print("Current position on %s %s with a p/l of %s" % (p.symbol, p.qty, p.unrealized_pl))
+
     # Sell first to increase buying power
     for stock in stocks_to_sell:
 

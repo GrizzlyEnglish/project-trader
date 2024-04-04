@@ -2,6 +2,7 @@ from alpaca.data.requests import StockBarsRequest
 from datetime import datetime, timedelta
 from alpaca.data import TimeFrame 
 from sklearn.preprocessing import StandardScaler
+from helpers.features import feature_engineer_df
 
 import pandas as p
 import numpy as np
@@ -9,39 +10,19 @@ import tensorflow as tf
 from tensorflow import keras
 from os.path import exists
 
-def generate_model(stock, market_client):
-    path = "generated/%s.model.keras" % stock
+def generate_model(stock, window_data):
+    stock_path = stock.replace('/', '.')
+    path = "generated/%s.model.keras" % stock_path
 
     if exists(path):
         model = keras.models.load_model(path, compile=True)
     else:
-        window_start = datetime.now() - timedelta(days=30)
-        window_end = datetime.now() 
-
-        window_data = market_client.get_stock_bars(StockBarsRequest(symbol_or_symbols=stock,
-                                start=window_start,
-                                end=window_end,
-                                adjustment='raw',
-                                feed='sip',
-                                timeframe=TimeFrame.Minute))
-        
-        df = window_data.df
+        df = window_data
 
         if df.empty:
             print("No data available for %s" % stock)
 
-        df['ewm_12'] = df['close'].ewm(span=12, adjust=False).mean()
-        df['ewm_24'] = df['close'].ewm(span=24, adjust=False).mean()
-
-        future_ewm = []
-        for i in range(len(df)):
-            start_row = i
-            end_row = min(i + 5, len(df))  
-            subset = df.iloc[start_row:end_row]
-            ewm_12_f = subset['ewm_12'].ewm(span=12, adjust=False).mean()
-            future_ewm.append(ewm_12_f.iloc[-1])
-
-        df.insert(9, 'ewm_12_f_2', future_ewm)
+        df = feature_engineer_df(df)
 
         print(df)
 
@@ -79,7 +60,7 @@ def generate_model(stock, market_client):
         X_test = np.expand_dims(X_test, 1)
         Y_pred = model.predict(X_test)
 
-        model.save(path)
+        #model.save(path)
 
     return model
 '''

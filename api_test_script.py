@@ -8,7 +8,7 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.data.requests import StockLatestQuoteRequest
 
-from generate_model import generate_model
+from helpers.generate_model import generate_model
 
 import pandas as pd
 import os
