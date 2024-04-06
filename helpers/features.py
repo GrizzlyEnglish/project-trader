@@ -20,7 +20,11 @@ def feature_engineer_df(df, addFuture = True):
 
 def get_percentage_diff(previous, current):
     try:
-        percentage = (current - previous) / ((current + previous) / 2) * 100
+        absolute_diff = abs(current - previous)
+        average_value = (current + previous) / 2
+        percentage = (absolute_diff / average_value) * 100.0
+        rounded_percentage = round(percentage)
+        
+        return rounded_percentage
     except ZeroDivisionError:
-        percentage = float('inf')
-    return percentage
+        return float('inf')  # Infinity

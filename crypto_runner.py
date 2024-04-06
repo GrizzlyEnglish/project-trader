@@ -4,7 +4,7 @@ from alpaca.data.historical import CryptoHistoricalDataClient
 from alpaca.trading.requests import GetAssetsRequest
 from alpaca.trading.enums import AssetClass
 from dotenv import load_dotenv
-from crypto_start import crypto_strat
+from strat import crypto_strat
 
 import os
 import time

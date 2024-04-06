@@ -2,7 +2,7 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.common.exceptions import APIError
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 
-def sell_stocks(stocks_to_sell, trading_client):
+def sell_symbol(symbols_to_sell, trading_client):
     # Current positions we are able to sell
     current_positions = trading_client.get_all_positions()
 
@@ -10,13 +10,13 @@ def sell_stocks(stocks_to_sell, trading_client):
         print("Current position on %s %s with a p/l of %s" % (p.symbol, p.qty, p.unrealized_pl))
 
     # Sell first to increase buying power
-    for stock in stocks_to_sell:
+    for symbol in symbols_to_sell:
 
         # make sure we have a poisition
-        pos = next((p for p in current_positions if p.symbol == stock), None)
+        pos = next((p for p in current_positions if p.symbol == symbol), None)
 
         if (pos == None):
-            print("No poistion owned on %s" % stock)
+            print("No poistion owned on %s" % symbol)
             continue
 
         # Check for potential profit/loss and try to max/min them
@@ -24,7 +24,7 @@ def sell_stocks(stocks_to_sell, trading_client):
             print("Holding? Not sure better way to handle for now")
             continue
 
-        print("Selling %s" % stock)
+        print("Selling %s" % symbol)
 
         # preparing market order
         market_order_data = MarketOrderRequest(
