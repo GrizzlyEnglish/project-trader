@@ -9,7 +9,7 @@ def feature_engineer_df(df, addFuture = True):
     df['next_open'] = df['open'].shift(-1)
     df['change'] = df['close'].diff()
 
-    #df = rsi(df)
+    df = rsi(df)
 
     df.fillna(0, inplace=True)
 
@@ -21,7 +21,7 @@ def feature_engineer_df(df, addFuture = True):
             subset = df.iloc[start_row:end_row]
             ewm_12_f = subset['ewm_12'].ewm(span=12, adjust=False).mean()
             future_ewm.append(ewm_12_f.iloc[-1])
-        df.insert(9, 'ewm_12_f_2', future_ewm)
+        df.insert(19, 'ewm_12_f_2', future_ewm)
     return df
 
 def get_percentage_diff(previous, current):

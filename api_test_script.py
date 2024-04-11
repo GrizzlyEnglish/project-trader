@@ -28,4 +28,11 @@ discord_stock = SyncWebhook.from_url(stock_discord_url)
 discord_crypto = SyncWebhook.from_url(crypto_discord_url)
 discord_alpaca = SyncWebhook.from_url(alpaca_discord_url)
 
-info_strat("Stocks", ["RDDT"], stock_market_client, discord_stock, datetime.now() - timedelta(hours=7))
+#stock_info = info_strat("Stock", ["VLO"], stock_market_client, discord_stock, datetime.now() - timedelta(hours=7))
+
+class FakeStock:
+    def __init__(self):
+        self.symbol = "SHIB/USD"
+        self.trend = 42
+
+sell_strat('Crypto', [FakeStock()], trading_client, discord_alpaca)

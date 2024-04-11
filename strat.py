@@ -3,9 +3,12 @@ from helpers.sell import sell_symbol
 from helpers.trend_logic import predict_ewm_12
 from helpers.get_data import get_bars
 from helpers.features import rsi
-from datetime import timedelta
+from datetime import timedelta, datetime
+from alpaca.trading.requests import GetOrdersRequest
 
-def sell_strat(symbols, trading_client, discord):
+import os
+
+def sell_strat(type, symbols, trading_client, discord):
     current_positions = trading_client.get_all_positions()
 
     for p in current_positions:
@@ -13,13 +16,24 @@ def sell_strat(symbols, trading_client, discord):
 
         pl = float(p.unrealized_pl)
 
-        s = next((s for s in symbols if s.symbol == p.symbol), None)
+        s = next((s for s in symbols if s.symbol.replace("/", "") == p.symbol), None)
 
-        if (pl > 0 and s != None):
-            discord.send("[%s] Selling %s it has a current P/L of %s and is expected to see a %s%% decrese in ewm" % (type, p.symbol, pl, s.trend))
-            sell_symbol(p.symbol, trading_client)
-        else:
-            discord.send("[%s] %s has a current P/L of %s and is expected to see a %s%% decrese in ewm, check if it is worth selling at a loss or holding" % (type, p.symbol, pl, s.trend))
+        if s != None:
+            if (pl > 0):
+                sold = False
+                if type == 'Crypto':
+                    sold = True
+                    sell_symbol(p, type, trading_client)
+                else:
+                    orders = trading_client.get_orders(GetOrdersRequest(after=datetime.now().replace(hour=9, minute=0, second=0, microsecond=0), symbols=p.symbol)) 
+                    if len(orders) == 0:
+                        sold = True
+                        sell_symbol(p, type, trading_client)
+
+                if sold:
+                    discord.send("Selling %s it has a current P/L of %s and is expected to see a %s%% decrese in ewm" % (p.symbol, pl, s.trend))
+            else:
+                discord.send("%s has a current P/L of %s and is expected to see a %s%% decrese in ewm, check if it is worth selling at a loss or holding" % (p.symbol, pl, s.trend))
 
 def buy_strat(symbols, trading_client, market_client, discord):
     account = trading_client.get_account()
@@ -37,11 +51,12 @@ def buy_strat(symbols, trading_client, market_client, discord):
 def info_strat(type, symbols, market_client, discord, start):
     buy = []
     sell = []
-    days = 60
-    mins = 5
 
-    percentage_threshold = 10
-    volume_threshold = 1000000
+    days = float(os.getenv('FULL_DAY_COUNT'))
+    mins = float(os.getenv('CURRENT_MIN_COUNT'))
+
+    percentage_threshold = float(os.getenv('PREDICTED_THRESHOLD'))
+    volume_threshold = float(os.getenv('VOLUME_THRESHOLD'))
 
     for s in symbols:
         full_bars = get_bars(s, start - timedelta(days=days), start - timedelta(minutes=mins), market_client)
@@ -71,6 +86,6 @@ def info_strat(type, symbols, market_client, discord, start):
                 over_threshold = True
 
             if over_threshold:
-                discord.send("%s \n   EMW Prediction: %s%% \n   Closing: $%s \n   RSI: %s \n   Volume 7/d: %s" % (s, trend['difference'], trend['close'], trend['rsi'], "{:,}".format(volume)))
+                discord.send("%s \n   EMW Prediction: %s%% at %s \n   Closing: $%s \n   RSI: %s \n   Volume 7/d: %s" % (s, trend['difference'], "${:,.2f}".format(trend['price']), trend['close'], trend['rsi'], "{:,}".format(volume)))
 
     return { 'buy': buy, 'sell': sell }
