@@ -1,22 +1,31 @@
 from alpaca.trading.client import TradingClient
-from alpaca.broker import BrokerClient
-from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.data import TimeFrame 
-from alpaca.data.requests import StockBarsRequest
-from datetime import datetime, timedelta
-from alpaca.trading.requests import MarketOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
-from alpaca.data.requests import StockLatestQuoteRequest
-
-from helpers.generate_model import generate_model
-
-import pandas as pd
-import os
-
+from alpaca.data.historical import CryptoHistoricalDataClient, StockHistoricalDataClient
+from alpaca.trading.requests import GetAssetsRequest
+from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
 from dotenv import load_dotenv
+from strat import buy_strat, sell_strat, info_strat
+from discord import SyncWebhook
+from datetime import datetime,timedelta
+
+import os
+import time
 
 load_dotenv()
 
-market_client = StockHistoricalDataClient(os.getenv("API_KEY"), os.getenv("API_SECRET"))
+api_key = os.getenv("API_KEY")
+api_secret = os.getenv("API_SECRET")
+paper = os.getenv("IS_PAPER")
+sleep_time = os.getenv("SLEEP_TIME")
+stock_discord_url = os.getenv('TEST_DISCORD_URL')
+crypto_discord_url = os.getenv('TEST_DISCORD_URL')
+alpaca_discord_url = os.getenv('TEST_DISCORD_URL')
 
-generate_model('HOOK', market_client)
+trading_client = TradingClient(api_key, api_secret, paper=paper)
+crypto_market_client = CryptoHistoricalDataClient(api_key, api_secret)
+stock_market_client = StockHistoricalDataClient(api_key, api_secret)
+
+discord_stock = SyncWebhook.from_url(stock_discord_url)
+discord_crypto = SyncWebhook.from_url(crypto_discord_url)
+discord_alpaca = SyncWebhook.from_url(alpaca_discord_url)
+
+info_strat("Stocks", ["RDDT"], stock_market_client, discord_stock, datetime.now() - timedelta(hours=7))

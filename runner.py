@@ -5,6 +5,7 @@ from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
 from dotenv import load_dotenv
 from strat import buy_strat, sell_strat, info_strat
 from discord import SyncWebhook
+from datetime import datetime
 
 import os
 import time
@@ -37,25 +38,25 @@ while (True):
         request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
         response = trading_client.get_all_assets(request)
         stocks = [s.symbol for s in response]
-        stock_info = info_strat("Stocks", stocks, stock_market_client, discord_stock)
+        stock_info = info_strat("Stocks", stocks, stock_market_client, discord_stock, datetime.now())
 
     # Crypto always open
     request = GetAssetsRequest(asset_class=AssetClass.CRYPTO)
     response = trading_client.get_all_assets(request)
-    coins = [c.symbol for c in response if '/' in c.symbol]
-    coin_info = info_strat("Crypto", coins, crypto_market_client, discord_crypto)
+    coins = [c.symbol for c in response if '/USD' in c.symbol]
+    coin_info = info_strat("Crypto", coins, crypto_market_client, discord_crypto, datetime.now())
 
     if len(stock_info['sell']) > 0:
-        sell_strat(stock_info.sell, trading_client, discord_alpaca)
+        sell_strat(stock_info['sell'], trading_client, discord_alpaca)
 
     if len(coin_info['sell']) > 0:
-        sell_strat(coin_info.sell, trading_client, discord_alpaca)
+        sell_strat(coin_info['sell'], trading_client, discord_alpaca)
 
     if len(stock_info['buy']) > 0:
-        buy_strat(coin_info.buy, trading_client, crypto_market_client, discord_crypto)
+        buy_strat(coin_info['buy'], trading_client, crypto_market_client, discord_crypto)
 
     if len(coin_info['buy']) > 0:
-        buy_strat(stock_info.buy, trading_client, stock_market_client, discord_stock)
+        buy_strat(stock_info['buy'], trading_client, stock_market_client, discord_stock)
 
     print("Sleeping for %s" % str(sleep_time))
     time.sleep(int(sleep_time))

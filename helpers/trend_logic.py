@@ -35,5 +35,7 @@ def predict_ewm_12(symbol, full_bars, current_bars):
     return { 
         'price': predicted_price, 
         'current': df['ewm_12'].iloc[0],  
-        'difference': percent_difference ,
+        'difference': percent_difference,
+        'close': df.iloc[-1]['close'],
+        #'rsi': df.iloc[-1]['rsi'] 
     }
