@@ -47,7 +47,7 @@ def stock_runner():
 def crypto_runner():
     request = GetAssetsRequest(asset_class=AssetClass.CRYPTO)
     response = trading_client.get_all_assets(request)
-    coins = [c.symbol for c in response if '/USD' in c.symbol if filter_strat(s.symbol, stock_market_client, datetime.now())]
+    coins = [c.symbol for c in response if '/USD' in c.symbol if filter_strat(c.symbol, stock_market_client, datetime.now())]
     coin_info = info_strat(coins, crypto_market_client, discord_crypto, datetime.now())
 
     if len(coin_info['sell']) > 0:
