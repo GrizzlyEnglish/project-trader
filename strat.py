@@ -48,35 +48,30 @@ def buy_strat(symbols, trading_client, market_client, discord):
 
             buying_power = float(account.buying_power)
 
-def info_strat(type, symbols, market_client, discord, start):
+def filter_strat(symbol, market_client, start):
+    volume_threshold = float(os.getenv('VOLUME_THRESHOLD'))
+
+    week_bars = get_bars(symbol, start - timedelta(days=7), start, market_client)
+
+    if week_bars.empty:
+        return False
+
+    volume = week_bars['volume'].sum()
+    return volume > volume_threshold
+
+def info_strat(symbols, market_client, discord, start):
     buy = []
     sell = []
 
-    days = float(os.getenv('FULL_DAY_COUNT'))
-    mins = float(os.getenv('CURRENT_MIN_COUNT'))
-
     percentage_threshold = float(os.getenv('PREDICTED_THRESHOLD'))
-    volume_threshold = float(os.getenv('VOLUME_THRESHOLD'))
 
     for s in symbols:
-        full_bars = get_bars(s, start - timedelta(days=days), start - timedelta(minutes=mins), market_client)
-        current_bars = get_bars(s, start - timedelta(minutes=mins), start, market_client)
+        try:
+            trend = predict_ewm_12(s, start, market_client)
 
-        if current_bars.empty or full_bars.empty:
-            continue
+            if trend == None:
+                continue
 
-        if current_bars.iloc[-1]['close'] < full_bars['close'].min():
-            discord.send("%s just closed at its lowest in %s days at %s" % (type, s, days, current_bars.iloc[-1]['close']))
-
-        trend = predict_ewm_12(s, full_bars, current_bars)
-
-        if trend == None:
-            continue
-
-        week_bars = get_bars(s, start - timedelta(days=7), start, market_client)
-        volume = week_bars['volume'].sum()
-
-        if volume > volume_threshold:
             over_threshold = False
             if trend['difference'] > percentage_threshold:
                 buy.append(s)
@@ -86,6 +81,12 @@ def info_strat(type, symbols, market_client, discord, start):
                 over_threshold = True
 
             if over_threshold:
-                discord.send("%s \n   EMW Prediction: %s%% at %s \n   Closing: $%s \n   RSI: %s \n   Volume 7/d: %s" % (s, trend['difference'], "${:,.2f}".format(trend['price']), trend['close'], trend['rsi'], "{:,}".format(volume)))
+                prediction_message = "EMW prediction: %s%% at %s" % (trend['difference'], "${:,.2f}".format(trend['price']))
+                closing_message = "Bar closing: $%s" % trend['current_close']
+                rsi_message = "RSI: %s" % trend['rsi']
+                volume_message = "Bar trade count: %s" % "{:,}".format(trend['trade_count'])
+                discord.send("%s\n    %s\n    %s\n    %s\n    %s" % (s, prediction_message, closing_message, rsi_message, volume_message))
+        except Exception as e:
+            print(e)
 
     return { 'buy': buy, 'sell': sell }

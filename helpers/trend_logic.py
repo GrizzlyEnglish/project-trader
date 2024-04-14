@@ -1,18 +1,29 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from alpaca.data.requests import  CryptoBarsRequest, StockBarsRequest
-from alpaca.data import TimeFrame 
 from datetime import datetime, timedelta
-from alpaca.data.historical import CryptoHistoricalDataClient
-from alpaca.common.exceptions import APIError
+from helpers.get_data import get_bars
 
-from helpers.generate_model import generate_model
+from helpers.generate_model import get_model, generate_model
 from helpers.features import feature_engineer_df, get_percentage_diff
 
+import os
 import math
 
-def predict_ewm_12(symbol, full_bars, current_bars):
-    model = generate_model(symbol, full_bars)
+def predict_ewm_12(symbol, start, market_client):
+    model = get_model(symbol)
+
+    if model == None:
+        days = float(os.getenv('FULL_DAY_COUNT'))
+        full_bars = get_bars(symbol, start - timedelta(days=days), start, market_client)
+        if full_bars.empty:
+            return
+        model = generate_model(symbol, full_bars)
+
+    current_bars = get_bars(symbol, start - timedelta(days=1), start, market_client)
+    current_bars = current_bars.tail(20)
+
+    if current_bars.empty:
+        return
 
     df = feature_engineer_df(current_bars, False)
 
@@ -37,5 +48,7 @@ def predict_ewm_12(symbol, full_bars, current_bars):
         'current': df['ewm_12'].iloc[0],  
         'difference': percent_difference,
         'close': df.iloc[-1]['close'],
-        'rsi': df.iloc[-1]['rsi'] 
+        'rsi': df.iloc[-1]['rsi'],
+        'current_close': current_bars.iloc[-1]['close'],
+        'trade_count': current_bars.iloc[-1]['trade_count']
     }
