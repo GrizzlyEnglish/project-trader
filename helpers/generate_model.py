@@ -65,16 +65,16 @@ def create_model(stock, path, window_data):
     model = tf.keras.Sequential([
         keras.layers.LSTM(60, return_sequences=True),
         keras.layers.Dropout(0.3),
-        keras.layers.LSTM(120, return_sequences=False),
+        keras.layers.LSTM(60, return_sequences=False),
         keras.layers.Dropout(0.3),
-        keras.layers.Dense(20),
+        keras.layers.Dense(1),
         keras.layers.Dense(1),
     ])
 
     model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
 
     X_train = np.expand_dims(X_train, 1)
-    model.fit(X_train, Y_train, batch_size = 750, epochs = 100)
+    model.fit(X_train, Y_train, batch_size = 250, epochs = 100)
 
     model.save(path)
 

@@ -21,7 +21,7 @@ def feature_engineer_df(df, addFuture = True):
             subset = df.iloc[start_row:end_row]
             ewm_12_f = subset['ewm_12'].ewm(span=12, adjust=False).mean()
             future_ewm.append(ewm_12_f.iloc[-1])
-        df.insert(19, 'ewm_12_f_2', future_ewm)
+        df.insert(14, 'ewm_12_f_2', future_ewm)
     return df
 
 def get_percentage_diff(previous, current):
@@ -42,6 +42,13 @@ def rsi(df):
     df['avg_loss'] = rma(df.loss.to_numpy(), 14)
     df['rs'] = df.avg_gain / df.avg_loss
     df['rsi'] = 100 - (100 / (1 + df.rs))
+
+    df.pop('gain')
+    df.pop('loss',)
+    df.pop('avg_gain')
+    df.pop('avg_loss')
+    df.pop('rs')
+    
     return df
 
 #@numba.jit

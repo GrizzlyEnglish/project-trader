@@ -33,25 +33,29 @@ def stock_runner():
     clock = trading_client.get_clock()
 
     if clock.is_open:
-        request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
-        response = trading_client.get_all_assets(request)
-        stocks = [s.symbol for s in response if filter_strat(s.symbol, stock_market_client, datetime.now())]
+        #request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
+        #response = trading_client.get_all_assets(request)
+        #stocks = [s.symbol for s in response if filter_strat(s.symbol, stock_market_client, datetime.now())]
+        stocks = []
+        with open('stocks.txt') as file:
+            for line in file:
+                stocks.append(line.strip())  
         stock_info = info_strat(stocks, stock_market_client, discord_stock, datetime.now())
 
-    if len(stock_info['sell']) > 0:
-        sell_strat(stock_info['sell'], trading_client, discord_alpaca)
+        if len(stock_info['sell']) > 0:
+            sell_strat('Stock', stock_info['sell'], trading_client, discord_alpaca)
 
-    if len(stock_info['buy']) > 0:
-        buy_strat(stock_info['buy'], trading_client, stock_market_client, discord_stock)
+        if len(stock_info['buy']) > 0:
+            buy_strat(stock_info['buy'], trading_client, stock_market_client, discord_stock)
 
 def crypto_runner():
     request = GetAssetsRequest(asset_class=AssetClass.CRYPTO)
     response = trading_client.get_all_assets(request)
-    coins = [c.symbol for c in response if '/USD' in c.symbol if filter_strat(c.symbol, stock_market_client, datetime.now())]
+    coins = [c.symbol for c in response if '/USD' in c.symbol if filter_strat(c.symbol, crypto_market_client, datetime.now())]
     coin_info = info_strat(coins, crypto_market_client, discord_crypto, datetime.now())
 
     if len(coin_info['sell']) > 0:
-        sell_strat(coin_info['sell'], trading_client, discord_alpaca)
+        sell_strat('Crypto', coin_info['sell'], trading_client, discord_alpaca)
 
     if len(coin_info['buy']) > 0:
         buy_strat(coin_info['buy'], trading_client, crypto_market_client, discord_crypto)

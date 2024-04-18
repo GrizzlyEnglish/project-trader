@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from helpers.get_data import get_bars
 from datetime import timedelta, datetime
 from helpers.generate_model import generate_model
-from strat import filter_strat, yahoo_fin_top
+from strat import filter_strat
 
 import os
 
@@ -31,6 +31,10 @@ stock_market_client = StockHistoricalDataClient(api_key, api_secret)
 request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
 response = trading_client.get_all_assets(request)
 stocks = [s.symbol for s in response if filter_strat(s.symbol, stock_market_client, start)]
+
+with open('stocks.txt', 'w') as file:
+    for s in stocks:
+        file.write(s + '\n')
 
 print(len(stocks))
 

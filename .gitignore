@@ -8,3 +8,4 @@ virtualenv/
 .idea/
 .pycproject
 .pydevproject
+*.txt

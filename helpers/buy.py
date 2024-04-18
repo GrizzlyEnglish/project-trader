@@ -7,7 +7,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 import math
 
 def buy_symbol(stock, trading_client, market_client, buying_power, discord):
-    buying_power_per = min(buying_power / 4, 20)
+    buying_power_per = min(buying_power / 4, 50)
 
     print("Current buying power %s and max per stock %s" % (buying_power, buying_power_per))
 
@@ -28,7 +28,7 @@ def buy_symbol(stock, trading_client, market_client, buying_power, discord):
 
     print("%s ask price %s bid price " % (latest_quote[stock].ask_price, latest_quote[stock].bid_price))
 
-    price = latest_quote[stock].ask_price
+    price = latest_quote[stock].bid_price
 
     if price == 0:
         price = latest_quote[stock].bid_price
@@ -66,6 +66,12 @@ def buy_symbol(stock, trading_client, market_client, buying_power, discord):
     try:
         market_order = trading_client.submit_order(order_data=market_order_data)
 
-        discord.send("Bought %s of %s at " % (market_order.filled_qty, stock, market_order.limit_price))
+        price = market_order.limit_price
+
+        if price == None:
+            price = "unknown"
+
+        if float(market_order.filled_qty) > 0:
+            discord.send("Bought %s of %s at %s" % (market_order.filled_qty, stock, price))
     except APIError as e:
         print(e)

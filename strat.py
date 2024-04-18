@@ -16,7 +16,7 @@ def sell_strat(type, symbols, trading_client, discord):
 
         pl = float(p.unrealized_pl)
 
-        s = next((s for s in symbols if s.symbol.replace("/", "") == p.symbol), None)
+        s = next((s for s in symbols if s['symbol'].replace("/", "") == p.symbol), None)
 
         if s != None:
             if (pl > 0):

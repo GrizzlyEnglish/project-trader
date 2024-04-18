@@ -19,13 +19,15 @@ def predict_ewm_12(symbol, start, market_client):
             return
         model = generate_model(symbol, full_bars)
 
-    current_bars = get_bars(symbol, start - timedelta(days=1), start, market_client)
+    current_bars = get_bars(symbol, start - timedelta(days=4), start, market_client)
     current_bars = current_bars.tail(20)
 
     if current_bars.empty:
         return
-
+    
     df = feature_engineer_df(current_bars, False)
+
+    df = df.tail(1)
 
     predicted_price = 0
 
