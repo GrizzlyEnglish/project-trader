@@ -71,7 +71,7 @@ def buy_symbol(stock, trading_client, market_client, buying_power, discord):
         if price == None:
             price = "unknown"
 
-        if float(market_order.filled_qty) > 0:
-            discord.send("Bought %s of %s at %s" % (market_order.filled_qty, stock, price))
+        return True
     except APIError as e:
         print(e)
+        return False

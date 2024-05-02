@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from strat import buy_strat, sell_strat, info_strat
 from discord import SyncWebhook
 from datetime import datetime,timedelta
+from alpaca.trading.requests import GetOrdersRequest
 
 import os
 import time
@@ -28,4 +29,5 @@ discord_stock = SyncWebhook.from_url(stock_discord_url)
 discord_crypto = SyncWebhook.from_url(crypto_discord_url)
 discord_alpaca = SyncWebhook.from_url(alpaca_discord_url)
 
-stock_info = info_strat(["VLO"], stock_market_client, discord_stock, datetime.now() - timedelta(days=1, hours=7))
+#orders = trading_client.get_orders(GetOrdersRequest(after=datetime.now().replace(hour=9, minute=0, second=0, microsecond=0), symbols=['AMWL'])) 
+sell_strat('STOCK', [], trading_client, discord_alpaca)

@@ -1,12 +1,9 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import CryptoHistoricalDataClient, StockHistoricalDataClient
-from alpaca.trading.requests import GetAssetsRequest
-from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
 from dotenv import load_dotenv
 from helpers.get_data import get_bars
 from datetime import timedelta, datetime
-from helpers.generate_model import generate_model
-from strat import filter_strat
+from strat import fully_generate_all_stocks
 
 import os
 
@@ -28,19 +25,6 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 crypto_market_client = CryptoHistoricalDataClient(api_key, api_secret)
 stock_market_client = StockHistoricalDataClient(api_key, api_secret)
 
-request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
-response = trading_client.get_all_assets(request)
-stocks = [s.symbol for s in response if filter_strat(s.symbol, stock_market_client, start)]
+stocks =[]
 
-with open('stocks.txt', 'w') as file:
-    for s in stocks:
-        file.write(s + '\n')
-
-print(len(stocks))
-
-for s in stocks:
-    try:
-        full_bars = get_bars(s, start - timedelta(days=days), start, stock_market_client)
-        generate_model(s, full_bars)
-    except Exception as e:
-        print(e)
+fully_generate_all_stocks(trading_client, stock_market_client, datetime.now())
