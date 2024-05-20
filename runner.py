@@ -39,11 +39,9 @@ def stock_runner(notify):
                 stocks.append(line.strip())  
         stock_info = info_strat(stocks, stock_market_client, discord_stock, datetime.now(), notify)
 
-        if len(stock_info['sell']) > 0:
-            sell_strat('Stock', stock_info['sell'], trading_client, discord_alpaca)
+        sell_strat('Stock', stock_info['sell'], stock_info['buy'], trading_client, discord_alpaca)
 
-        if len(stock_info['buy']) > 0:
-            buy_strat(stock_info['buy'], trading_client, stock_market_client, discord_alpaca)
+        buy_strat(stock_info['buy'], trading_client, stock_market_client, discord_alpaca)
 
 def crypto_runner(notify):
     request = GetAssetsRequest(asset_class=AssetClass.CRYPTO)
@@ -51,11 +49,9 @@ def crypto_runner(notify):
     coins = [c.symbol for c in response if '/USD' in c.symbol if filter_strat(c.symbol, crypto_market_client, datetime.now())]
     coin_info = info_strat(coins, crypto_market_client, discord_crypto, datetime.now(), notify)
 
-    if len(coin_info['sell']) > 0:
-        sell_strat('Crypto', coin_info['sell'], trading_client, discord_alpaca)
+    sell_strat('Crypto', coin_info['sell'], coin_info['buy'], trading_client, discord_alpaca)
 
-    if len(coin_info['buy']) > 0:
-        buy_strat(coin_info['buy'], trading_client, crypto_market_client, discord_crypto)
+    buy_strat(coin_info['buy'], trading_client, crypto_market_client, discord_crypto)
 
 last_notify = None
 

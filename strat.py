@@ -26,7 +26,7 @@ def fully_generate_all_stocks(trading_client, stock_market_client, start):
         except Exception as e:
             print(e)
 
-def sell_strat(type, symbols, trading_client, discord):
+def sell_strat(type, loss_symbols, gain_symbols, trading_client, discord):
     current_positions = trading_client.get_all_positions()
 
     stop_loss = float(os.getenv('STOP_LOSS'))
@@ -34,9 +34,23 @@ def sell_strat(type, symbols, trading_client, discord):
     for p in current_positions:
         pl = float(p.unrealized_plpc)
 
-        s = next((s for s in symbols if s['symbol'].replace("/", "") == p.symbol), None)
+        loss_p = next((s for s in loss_symbols if s['symbol'].replace("/", "") == p.symbol), None)
+        gain_p = next((s for s in gain_symbols if s['symbol'].replace("/", "") == p.symbol), None)
 
-        if s != None or pl < -stop_loss:
+        sell = False
+
+        if pl > 0:
+            # Profit, check if predicted to drop
+            sell = loss_p != None
+        else:
+            # Loss, check if below limit and not predicted to gain
+            sell = pl < -stop_loss and gain_p == None
+
+        # Two reasons to sell
+        # 1 Profit + Predicted to drop
+        # 2 Loss greater than limit and not predicted to gain
+
+        if sell:
             sold = False
             if type == 'Crypto':
                 sold = True
