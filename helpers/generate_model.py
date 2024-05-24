@@ -45,10 +45,11 @@ def create_model(stock, path, window_data):
 
     print(df)
 
-    X = df.iloc[:, 0:-1]
-    Y = df.iloc[:, -1]
+    X = df.iloc[:, 0:-2]
+    Y = df.iloc[:, -2:]
 
     print(X)
+    print(Y)
 
     split_data = int(len(df)*0.7)
 
@@ -63,18 +64,16 @@ def create_model(stock, path, window_data):
     X_test = scaler.transform(X_test)
 
     model = tf.keras.Sequential([
-        keras.layers.LSTM(60, return_sequences=True),
-        keras.layers.Dropout(0.3),
-        keras.layers.LSTM(60, return_sequences=False),
-        keras.layers.Dropout(0.3),
-        keras.layers.Dense(1),
-        keras.layers.Dense(1),
+        keras.layers.LSTM(30, return_sequences=True),
+        keras.layers.Dropout(0.37),
+        keras.layers.LSTM(23, return_sequences=False),
+        keras.layers.Dense(2),
     ])
 
     model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
 
     X_train = np.expand_dims(X_train, 1)
-    model.fit(X_train, Y_train, batch_size = 250, epochs = 100)
+    model.fit(X_train, Y_train, batch_size = 120, epochs = 100)
 
     model.save(path)
 

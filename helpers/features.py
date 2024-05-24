@@ -1,9 +1,17 @@
 #import numba
 import numpy as np
+import yfinance as yf
 
-def feature_engineer_df(df, addFuture = True):
-    df['ewm_12'] = df['close'].ewm(span=12, adjust=False).mean()
-    df['ewm_24'] = df['close'].ewm(span=24, adjust=False).mean()
+def feature_engineer_df(current, addFuture = True):
+    small_window = 50
+    large_window = 200
+
+    df = current.copy()
+
+    #df['ewm_short'] = df['close'].ewm(span=50).mean()
+    #df['ewm_long'] = df['close'].ewm(span=200).mean()
+    df['ewm_short'] = df['close'].rolling(window=small_window).mean()
+    df['ewm_long'] = df['close'].rolling(window=large_window).mean()
     df['close_var'] = get_percentage_diff(df['open'], df['close'])
     df['gap'] = df['close'] - df['open']
     df['next_open'] = df['open'].shift(-1)
@@ -11,17 +19,28 @@ def feature_engineer_df(df, addFuture = True):
 
     df = rsi(df)
 
-    df.fillna(0, inplace=True)
+    #df.fillna(0, inplace=True)
 
     if addFuture:
-        future_ewm = []
+        df['ewm_short_f_2'] = df['ewm_short'].shift(-small_window)
+        df['ewm_long_f_2'] = df['ewm_long'].shift(-large_window)
+        '''
+        future_10_ewm = []
+        future_50_ewm = []
         for i in range(len(df)):
             start_row = i
-            end_row = min(i + 5, len(df))  
+            end_row = min(i + 50, len(df))  
             subset = df.iloc[start_row:end_row]
-            ewm_12_f = subset['ewm_12'].ewm(span=12, adjust=False).mean()
-            future_ewm.append(ewm_12_f.iloc[-1])
-        df.insert(14, 'ewm_12_f_2', future_ewm)
+            #ewm_short_f = subset['close'].ewm(span=50).mean()
+            #ewm_long_f = subset['close'].ewm(span=200).mean()
+            ewm_short_f = subset['close'].rolling(window=50).mean()
+            ewm_long_f = subset['close'].rolling(window=200).mean()
+            future_10_ewm.append(ewm_short_f.iloc[-1])
+            future_50_ewm.append(ewm_long_f.iloc[-1])
+        df.insert(14, 'ewm_short_f_2', future_10_ewm)
+        df.insert(15, 'ewm_long_f_2', future_50_ewm)
+        '''
+    df = df.dropna()
     return df
 
 def get_percentage_diff(previous, current):

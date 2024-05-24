@@ -1,4 +1,4 @@
-from alpaca.data.requests import StockLatestQuoteRequest, CryptoLatestQuoteRequest
+from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 from alpaca.common.exceptions import APIError
@@ -13,12 +13,8 @@ def buy_symbol(stock, trading_client, market_client, buying_power, discord):
 
     # Need to determine how much we can afford
     latest_quote = 0
-    if (type(market_client) == StockHistoricalDataClient):
-        quote_request = StockLatestQuoteRequest(symbol_or_symbols=stock)
-        latest_quote = market_client.get_stock_latest_quote(quote_request)
-    else:
-        quote_request = CryptoLatestQuoteRequest(symbol_or_symbols=stock)
-        latest_quote = market_client.get_crypto_latest_quote(quote_request)
+    quote_request = StockLatestQuoteRequest(symbol_or_symbols=stock)
+    latest_quote = market_client.get_stock_latest_quote(quote_request)
 
     asset = trading_client.get_asset(stock)
 

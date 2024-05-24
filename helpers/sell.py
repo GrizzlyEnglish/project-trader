@@ -2,11 +2,8 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.common.exceptions import APIError
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 
-def sell_symbol(position, type, trading_client):
+def sell_symbol(position, trading_client):
     time_in_force = TimeInForce.DAY
-
-    if type == "Crypto":
-        time_in_force = TimeInForce.GTC
 
     # preparing market order
     market_order_data = MarketOrderRequest(

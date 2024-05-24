@@ -1,6 +1,6 @@
 from helpers.buy import buy_symbol
 from helpers.sell import sell_symbol
-from helpers.trend_logic import predict_ewm_12
+from helpers.trend_logic import predict_ewm
 from helpers.get_data import get_bars
 from helpers.generate_model import generate_model
 from datetime import timedelta, datetime
@@ -26,7 +26,7 @@ def fully_generate_all_stocks(trading_client, stock_market_client, start):
         except Exception as e:
             print(e)
 
-def sell_strat(type, loss_symbols, gain_symbols, trading_client, discord):
+def sell_strat(loss_symbols, gain_symbols, trading_client, discord):
     current_positions = trading_client.get_all_positions()
 
     stop_loss = float(os.getenv('STOP_LOSS'))
@@ -44,7 +44,7 @@ def sell_strat(type, loss_symbols, gain_symbols, trading_client, discord):
             sell = loss_p != None
         else:
             # Loss, check if below limit and not predicted to gain
-            sell = pl < -stop_loss and gain_p == None
+            sell = pl < -stop_loss or (pl < 0 and gain_p == None)
 
         # Two reasons to sell
         # 1 Profit + Predicted to drop
@@ -52,18 +52,14 @@ def sell_strat(type, loss_symbols, gain_symbols, trading_client, discord):
 
         if sell:
             sold = False
-            if type == 'Crypto':
-                sold = True
-                sell_symbol(p, type, trading_client)
-            else:
-                try:
-                    orders = trading_client.get_orders(GetOrdersRequest(after=datetime.now().replace(day=1, hour=1, minute=0, second=0, microsecond=0), symbols=[p.symbol])) 
-                    if len(orders) == 0:
-                        sell_symbol(p, type, trading_client)
-                        sold = True
-                except Exception as e:
-                    print(e)
-                    discord.send("[Sell] Failed to sell %s 'cause %s" % (p.symbol, e))
+            try:
+                orders = trading_client.get_orders(GetOrdersRequest(after=datetime.now().replace(day=1, hour=1, minute=0, second=0, microsecond=0), symbols=[p.symbol])) 
+                if len(orders) == 0:
+                    sell_symbol(p, type, trading_client)
+                    sold = True
+            except Exception as e:
+                print(e)
+                discord.send("[Sell] Failed to sell %s 'cause %s" % (p.symbol, e))
 
             if sold:
                 discord.send("[Sell] %s" % p.symbol)
@@ -99,34 +95,30 @@ def info_strat(symbols, market_client, discord, start, notify):
     buy = []
     sell = []
 
-    percentage_threshold = float(os.getenv('PREDICTED_THRESHOLD'))
-
     for s in symbols:
         try:
-            trend = predict_ewm_12(s, start, market_client)
+            trend = predict_ewm(s, start, market_client)
 
             if trend == None:
                 continue
 
-            over_threshold = False
-            if trend['difference'] > 0:
-                buy.append({ 'symbol': s, 'trend': trend['difference'] })
-                over_threshold = trend['difference'] > percentage_threshold
-            elif trend['difference'] < 0:
-                sell.append({ 'symbol': s, 'trend': trend['difference'] })
-                over_threshold = trend['difference'] < -percentage_threshold
+            if trend['status'] == 'buy':
+                buy.append({ 'symbol': s, 'trend': trend['trend'] })
+            elif trend['status'] == 'sell':
+                sell.append({ 'symbol': s, 'trend': trend['trend'] })
 
-            if over_threshold and notify:
-                prediction_message = "EMW prediction: %s%% at %s" % (trend['difference'], "${:,.2f}".format(trend['price']))
+            if notify and trend['status'] != 'hold':
+                current_ewm = "C Short: %s Long: %s" % (round(trend['current 10'], 2), round(trend['current 50'], 2))
+                predicted_ewm = "P Short: %s Long: %s" % (round(trend['predicted 10'], 2), round(trend['predicted 50'], 2))
                 closing_message = "Bar closing: $%s" % trend['current_close']
-                rsi_message = "RSI: %s" % trend['rsi']
+                rsi_message = "RSI: %s" % round(trend['rsi'], 2)
                 volume_message = "Bar trade count: %s" % "{:,}".format(trend['trade_count'])
-                discord.send("%s\n    %s\n    %s\n    %s\n    %s" % (s, prediction_message, closing_message, rsi_message, volume_message))
+                discord.send("%s\n    %s\n    %s\n    %s\n    %s\n    %s\n    %s" % (s, current_ewm, predicted_ewm, closing_message, rsi_message, volume_message, trend['status']))
         except Exception as e:
             print(e)
 
     def trendSort(k):
-        return k['trend'] * -1
+        return k['trend']
 
     buy.sort(key=trendSort)
     sell.sort(key=trendSort)
