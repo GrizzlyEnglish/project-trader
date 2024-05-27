@@ -1,12 +1,14 @@
 from helpers.buy import buy_symbol
 from helpers.sell import sell_symbol
-from helpers.trend_logic import predict_ewm
+from helpers.trend_logic import predict_status, current_status
 from helpers.get_data import get_bars
-from helpers.generate_model import generate_model
+from helpers.generate_model import get_model
+from helpers.features import feature_engineer_df
 from datetime import timedelta, datetime
 from alpaca.trading.requests import GetOrdersRequest
 from alpaca.trading.requests import GetAssetsRequest
 from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
+from discord_webhook import DiscordEmbed
 
 import os
 
@@ -22,7 +24,7 @@ def fully_generate_all_stocks(trading_client, stock_market_client, start):
     for s in stocks:
         try:
             full_bars = get_bars(s, start - timedelta(days=days), start, stock_market_client)
-            generate_model(s, full_bars)
+            get_model(s, full_bars, True)
         except Exception as e:
             print(e)
 
@@ -91,36 +93,78 @@ def filter_strat(symbol, market_client, start):
     volume = week_bars['volume'].sum()
     return volume > volume_threshold
 
-def info_strat(symbols, market_client, discord, start, notify):
+def trend_strat(symbols, market_client, discord, start, notify, forceModel=False, debugInfo=False):
     buy = []
     sell = []
 
     for s in symbols:
         try:
-            trend = predict_ewm(s, start, market_client)
+            days = float(os.getenv('FULL_DAY_COUNT'))
+            full_bars = get_bars(s, start - timedelta(days=days), start, market_client)
 
-            if trend == None:
+            if full_bars.empty:
                 continue
 
-            if trend['status'] == 'buy':
-                buy.append({ 'symbol': s, 'trend': trend['trend'] })
-            elif trend['status'] == 'sell':
-                sell.append({ 'symbol': s, 'trend': trend['trend'] })
+            full_bars = feature_engineer_df(full_bars)
 
-            if notify and trend['status'] != 'hold':
-                current_ewm = "C Short: %s Long: %s" % (round(trend['current 10'], 2), round(trend['current 50'], 2))
-                predicted_ewm = "P Short: %s Long: %s" % (round(trend['predicted 10'], 2), round(trend['predicted 50'], 2))
-                closing_message = "Bar closing: $%s" % trend['current_close']
-                rsi_message = "RSI: %s" % round(trend['rsi'], 2)
-                volume_message = "Bar trade count: %s" % "{:,}".format(trend['trade_count'])
-                discord.send("%s\n    %s\n    %s\n    %s\n    %s\n    %s\n    %s" % (s, current_ewm, predicted_ewm, closing_message, rsi_message, volume_message, trend['status']))
+            current_stats = current_status(full_bars, debugInfo)
+            current_trend = current_stats['cross']
+
+            predicted_stats = predict_status(s, full_bars, forceModel, debugInfo)
+            predicted_trend = predicted_stats['status']
+
+            # Weigh based on predicted and current, give current a bit more so it buys sooner
+            status = ''
+            if current_trend == 'buy':
+                status = 'buy'
+                buy.append({ 'symbol': s, 'weight': 2 })
+            elif current_trend == 'sell':
+                status = 'sell'
+                sell.append({ 'symbol': s, 'weight': 2 })
+            elif predicted_trend == 'buy':
+                status = 'buy'
+                buy.append({ 'symbol': s, 'weight': 1 })
+            elif predicted_trend == 'sell':
+                status = 'sell'
+                sell.append({ 'symbol': s, 'weight': 1 })
+
+            if notify: #and current_trend != 'hold' or predicted_trend != 'hold':
+                #TODO: Update to make this show what trend is being marked as buy/sell
+                body = createMessageBody(current_stats, predicted_stats, full_bars)
+                sendMessage(s, status, body, discord)
         except Exception as e:
             print(e)
 
     def trendSort(k):
-        return k['trend']
+        return k['weight']
 
     buy.sort(key=trendSort)
     sell.sort(key=trendSort)
 
     return { 'buy': buy, 'sell': sell }
+
+def createMessageBody(current_stats, predicted_stats, full_bars):
+    crossover = "MA cross: %s" % current_stats['cross'].upper()
+    predicted = "Predicted MA cross: %s" % predicted_stats['status'].upper()
+    rsi = "RSI: %s" % current_stats['rsi'].upper()
+    macd = "MACD: %s" % current_stats['macd'].upper()
+    obv = "OBV: %s" % current_stats['obv'].upper()
+
+    closing_message = "Bar: %s sold at $%s closed %s" % (full_bars.iloc[-1]['close'], "{:,}".format(full_bars.iloc[-1]['trade_count']), full_bars.iloc[-1].name[1].strftime("%X"))
+    rsi_message = "RSI: %s" % round(full_bars.iloc[-1]['rsi'], 2)
+
+    long_message = "MA Long Current: %s Predicted: %s" % (round(predicted_stats['predicted_long'],2), round(predicted_stats['predicted_short'],2))
+    short_message = "MA Short Current: %s Predicted: %s" % (round(predicted_stats['predicted_short'],2), round(predicted_stats['predicted_long'],2))
+
+    return "%s\n\n%s\n%s\n%s\n\n%s\n%s\n%s\n\n%s\n%s" % (closing_message, rsi_message, short_message, long_message, rsi, macd, obv, crossover, predicted)
+
+def sendMessage(symbol, status, body, discord):
+    if status == 'buy':
+        color = '087e20'
+    elif status == 'sell':
+        color = '7e2508'
+    else:
+        color = '41087e'
+    embed = DiscordEmbed(title="%s" % symbol, description=body, color=color)
+    discord.add_embed(embed)
+    discord.execute()

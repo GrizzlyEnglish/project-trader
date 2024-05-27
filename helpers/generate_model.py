@@ -1,5 +1,4 @@
 from sklearn.preprocessing import StandardScaler
-from helpers.features import feature_engineer_df
 from os.path import exists
 from tensorflow import keras
 
@@ -16,32 +15,28 @@ def is_file_older_than_x_days(filepath, days=7):
 
     return age_in_days > days
 
-def get_model(stock):
-    stock_path = stock.replace('/', '.')
-    path = "generated/%s.model.keras" % stock_path
+def get_path(symbol):
+    stock_path = symbol.replace('/', '.')
+    return "generated/%s.model.keras" % stock_path
+
+def get_model(symbol, window_data, force=False):
+    path = get_path(symbol)
     file_exists = exists(path)
     file_to_old = False
 
     if file_exists:
         file_to_old = is_file_older_than_x_days(path)
 
-    if file_exists and not file_to_old :
+    if not force and file_exists and not file_to_old :
         return keras.models.load_model(path, compile=True)
     
-    return None
+    return create_model(symbol, path, window_data)
 
-def generate_model(stock, window_data):
-    stock_path = stock.replace('/', '.')
-    path = "generated/%s.model.keras" % stock_path
-    return create_model(stock, path, window_data)
-
-def create_model(stock, path, window_data):
+def create_model(symbol, path, window_data):
     df = window_data
 
     if df.empty:
-        print("No data available for %s" % stock)
-
-    df = feature_engineer_df(df)
+        print("No data available for %s" % symbol)
 
     print(df)
 
@@ -64,9 +59,9 @@ def create_model(stock, path, window_data):
     X_test = scaler.transform(X_test)
 
     model = tf.keras.Sequential([
-        keras.layers.LSTM(30, return_sequences=True),
+        keras.layers.LSTM(130, return_sequences=True),
         keras.layers.Dropout(0.37),
-        keras.layers.LSTM(23, return_sequences=False),
+        keras.layers.LSTM(65, return_sequences=False),
         keras.layers.Dense(2),
     ])
 

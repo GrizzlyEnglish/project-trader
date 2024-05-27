@@ -2,10 +2,10 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from discord import SyncWebhook
+from discord_webhook import DiscordWebhook, DiscordEmbed
 from datetime import timedelta, datetime
 
-from helpers.trend_logic import predict_ewm
-from strat import info_strat, sell_strat
+from strat import trend_strat
 
 import os
 
@@ -22,10 +22,8 @@ alpaca_discord_url = os.getenv('TEST_DISCORD_URL')
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 stock_market_client = StockHistoricalDataClient(api_key, api_secret)
 
-discord_stock = SyncWebhook.from_url(stock_discord_url)
-discord_crypto = SyncWebhook.from_url(crypto_discord_url)
-discord_alpaca = SyncWebhook.from_url(alpaca_discord_url)
+discord_stock = DiscordWebhook(stock_discord_url)
+discord_crypto = DiscordWebhook(crypto_discord_url)
+discord_alpaca = DiscordWebhook(alpaca_discord_url)
 
-predict_ewm('EQH', datetime.now(), stock_market_client, True)
-#info_strat(['AAPL'], stock_market_client, discord_stock, datetime.now(), True)
-#sell_strat('Stock', [{'symbol': 'DXYZ'}], [], trading_client, discord_alpaca)
+trend_strat(['AAPL'], stock_market_client, discord_stock, datetime(2024, 5, 25, 11), True, False, False)

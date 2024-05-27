@@ -1,35 +1,128 @@
 import numpy as np
 import shapely.geometry as sg
-import os
-import math
 import plotext as plt
 
 from sklearn.preprocessing import StandardScaler
-from datetime import datetime, timedelta
-from helpers.get_data import get_bars
+from helpers.generate_model import get_model
+from helpers.features import obv, rsi
 
-from helpers.generate_model import get_model, generate_model
-from helpers.features import feature_engineer_df, get_percentage_diff
+def cross_line(pA, pB, name, graph):
+    aPoints = [(index, value) for index, value in enumerate(pA)] 
+    bPoints = [(index, value) for index, value in enumerate(pB)] 
 
-def predict_ewm(symbol, start, market_client, force=False, graph=False):
-    if force:
-        model = None
-    else:
-        model = get_model(symbol)
+    aline = sg.LineString(aPoints)
+    bline = sg.LineString(bPoints)
 
-    days = float(os.getenv('FULL_DAY_COUNT'))
-    full_bars = get_bars(symbol, start - timedelta(days=days), start, market_client)
+    aEnd = aPoints[-1][1]
+    bEnd = bPoints[-1][1]
 
-    if full_bars.empty:
-        return
+    if graph:
+        sp = [item[1] for item in aPoints]
+        lp = [item[1] for item in bPoints]
 
-    if model == None or force:
-        model = generate_model(symbol, full_bars)
+        plt.plot(sp, label = "short")
+        plt.plot(lp, label = "long")
 
-    clipped = 10
+        plt.title(name)
+        plt.show()
 
-    df = feature_engineer_df(full_bars, False)
-    df = df.tail(clipped)
+        plt.clear_data()
+
+    if bline.intersects(aline):
+        if bEnd > aEnd:
+            return 'b'
+        else:
+            return 'a'
+
+    return None
+
+def crossover_trend(short, long, graph):
+    crossed = cross_line(short, long, 'CROSSOVER', graph)
+
+    if crossed == 'a':
+        return 'buy'
+    elif crossed == 'b':
+        return 'sell'
+
+    return 'hold'
+
+def macd_trend(macd, signal, graph):
+    crossed = cross_line(macd, signal, 'MACD', graph)
+    if crossed == 'a':
+        return 'buy'
+    elif crossed == 'b':
+        return 'sell'
+    
+    return 'hold'
+
+def obv_trend(df):
+    obv_df = obv(df)
+    obv_df = obv_df['obv']
+    trend = obv_df.pct_change()
+
+    trend_up = trend[trend > 0.01].shape[0]
+    trend_down = trend[trend < -0.01].shape[0]
+    trend_stale = trend.count() - (trend_up + trend_down)
+
+    if trend_up > (trend_down + trend_stale):
+        return 'buy'
+    elif trend_stale > (trend_up + trend_down) or trend_down > trend_up:
+        return 'sell'
+
+    return 'hold'
+
+def rsi_trend(df):
+    rsi_df = rsi(df)
+    rsi_df = rsi_df['rsi']
+
+    # find spot where it was below 50, check if it moves back above 50
+    def get_count_from_mark(mark):
+        below_idx = rsi_df.lt(mark).idxmax()
+        above_idx = rsi_df[below_idx:].gt(mark).idxmax()
+        return rsi_df[above_idx:].count()
+
+    # buy strat
+    sublet = rsi_df.count() * .2
+
+    if get_count_from_mark(50) <= sublet:
+        return 'buy'
+    elif get_count_from_mark(30) <= sublet:
+        return 'sell'
+
+    return 'hold'
+
+def current_status(full_bars, graph):
+    df = full_bars.copy().tail(20)
+
+    # Look for current ma crossover, macd, rsi, and obv
+    crossover_status = crossover_trend(df['ma_short'], df['ma_long'], graph)
+    print("  Crossover Short: %s Long: %s    Status: %s" % (df['ma_short'].iloc[-1], df['ma_long'].iloc[-1], crossover_status))
+
+    macd_status = macd_trend(df['macd'], df['signal'], graph)
+    print("  MACD macd: %s signal: %s    Status: %s" % (df['macd'].iloc[-1], df['signal'].iloc[-1], macd_status))
+
+    obv_status = obv_trend(df)
+    print("  OBV Status: %s" % obv_status)
+
+    rsi_status = rsi_trend(df)
+    print("  RSI Status: %s" % rsi_status)
+
+    return {
+        'rsi': rsi_status,
+        'macd': macd_status,
+        'obv': obv_status,
+        'cross': crossover_status
+    }
+
+def predict_status(symbol, full_bars, forceModel, graph=False):
+    model = get_model(symbol, full_bars, forceModel)
+
+    clipped = 20
+
+    df = full_bars.tail(clipped).copy()
+
+    df.drop('ma_short_f_2', axis=1, inplace=True)
+    df.drop('ma_long_f_2', axis=1, inplace=True)
 
     scaler = StandardScaler()
     scaler.fit_transform(df)
@@ -37,53 +130,23 @@ def predict_ewm(symbol, start, market_client, force=False, graph=False):
     df_test = np.expand_dims(df_test, 1)
     predicted = model.predict(df_test)
 
-    current_10_ewm = df['ewm_short']
-    current_50_ewm = df['ewm_long']
+    shortPoints = [value[1][0] for value in enumerate(predicted)] 
+    longPoints = [value[1][1] for value in enumerate(predicted)] 
 
     predicted_status = 'hold'
+    crossed = cross_line(shortPoints, longPoints, 'PREDICTED MA', graph)
 
-    shortLinePointsC = [(index, value) for index, value in enumerate(current_10_ewm)] 
-    longLinePointsC = [(index, value) for index, value in enumerate(current_50_ewm)] 
+    if crossed == 'a':
+        predicted_status = 'buy'
+    elif crossed == 'b':
+        predicted_status = 'sell'
 
-    shortLinePointsP = [(index + clipped, value[0]) for index, value in enumerate(predicted)] 
-    longLinePointsP = [(index + clipped, value[1]) for index, value in enumerate(predicted)] 
-
-    sp = [item[1] for sublist in (shortLinePointsC, shortLinePointsP) for item in sublist]
-    lp = [item[1] for sublist in (longLinePointsC, longLinePointsP) for item in sublist]
-
-    shortEnd = sp[-1]
-    longEnd = lp[-1]
-
-    if graph:
-        plt.plot(sp, label = "short")
-        plt.plot(lp, label = "long")
-
-        plt.title("%s" % symbol)
-        plt.show()
-
-    shortPoints = [item for sublist in (shortLinePointsC, shortLinePointsP) for item in sublist] 
-    shortline = sg.LineString(shortPoints)
-
-    longPoints = [item for sublist in (longLinePointsC, longLinePointsP) for item in sublist] 
-    longline = sg.LineString(longPoints)
-
-    if shortline.intersects(longline):
-        if shortEnd > longEnd:
-            predicted_status = 'buy'
-        else:
-            predicted_status = 'sell'
-
-    print("  C Short: %s Long: %s  P Short: %s Long: %s    Status: %s" % (current_10_ewm.iloc[-1], current_50_ewm.iloc[-1], shortEnd, longEnd, predicted_status))
+    print("  Predicted Short: %s Long: %s    Status: %s" % (shortPoints[-1], longPoints[-1], predicted_status))
 
     return { 
         'status': predicted_status,
-        'current 10': df['ewm_short'].iloc[0],  
-        'current 50': df['ewm_long'].iloc[0],  
-        'predicted 10': shortEnd,  
-        'predicted 50': longEnd,  
-        'trend': longEnd - df['ewm_long'].iloc[0],
-        'close': df.iloc[-1]['close'],
-        'rsi': df.iloc[-1]['rsi'],
-        'current_close': full_bars.iloc[-1]['close'],
-        'trade_count': full_bars.iloc[-1]['trade_count']
+        'current_short': df['ma_short'].iloc[0],  
+        'current_long': df['ma_long'].iloc[0],  
+        'predicted_short': shortPoints[-1],  
+        'predicted_long': longPoints[-1],  
     }

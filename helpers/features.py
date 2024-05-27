@@ -1,46 +1,40 @@
 #import numba
 import numpy as np
-import yfinance as yf
 
-def feature_engineer_df(current, addFuture = True):
+def feature_engineer_df(df):
     small_window = 50
     large_window = 200
 
-    df = current.copy()
+    df.loc[:, 'ma_short'] = df['close'].rolling(window=small_window).mean()
+    df.loc[:, 'ma_long'] = df['close'].rolling(window=large_window).mean()
+    df.loc[:, 'close_var'] = get_percentage_diff(df['open'], df['close'])
+    df.loc[:, 'gap'] = df['close'] - df['open']
+    df.loc[:, 'next_open'] = df['open'].shift(-1)
+    df.loc[:, 'change'] = df['close'].diff()
 
-    #df['ewm_short'] = df['close'].ewm(span=50).mean()
-    #df['ewm_long'] = df['close'].ewm(span=200).mean()
-    df['ewm_short'] = df['close'].rolling(window=small_window).mean()
-    df['ewm_long'] = df['close'].rolling(window=large_window).mean()
-    df['close_var'] = get_percentage_diff(df['open'], df['close'])
-    df['gap'] = df['close'] - df['open']
-    df['next_open'] = df['open'].shift(-1)
-    df['change'] = df['close'].diff()
+    df.loc[:, 'ema_short'] = df['close'].ewm(span=12).mean()
+    df.loc[:, 'ema_long'] = df['close'].ewm(span=26).mean()
+
+    df.loc[:, 'macd'] = df['ema_short'] - df['ema_long']
+    df.loc[:, 'signal'] = df['macd'].ewm(span=9).mean()
+
+    df = obv(df)
 
     df = rsi(df)
 
-    #df.fillna(0, inplace=True)
+    df.loc[:, 'ma_short_f_2'] = df['ma_short'].shift(-small_window)
+    df.loc[:, 'ma_long_f_2'] = df['ma_long'].shift(-large_window)
 
-    if addFuture:
-        df['ewm_short_f_2'] = df['ewm_short'].shift(-small_window)
-        df['ewm_long_f_2'] = df['ewm_long'].shift(-large_window)
-        '''
-        future_10_ewm = []
-        future_50_ewm = []
-        for i in range(len(df)):
-            start_row = i
-            end_row = min(i + 50, len(df))  
-            subset = df.iloc[start_row:end_row]
-            #ewm_short_f = subset['close'].ewm(span=50).mean()
-            #ewm_long_f = subset['close'].ewm(span=200).mean()
-            ewm_short_f = subset['close'].rolling(window=50).mean()
-            ewm_long_f = subset['close'].rolling(window=200).mean()
-            future_10_ewm.append(ewm_short_f.iloc[-1])
-            future_50_ewm.append(ewm_long_f.iloc[-1])
-        df.insert(14, 'ewm_short_f_2', future_10_ewm)
-        df.insert(15, 'ewm_long_f_2', future_50_ewm)
-        '''
+    # Drop stuff to not overfit
+    df.drop('ema_short', axis=1, inplace=True)
+    df.drop('ema_long', axis=1, inplace=True)
+
     df = df.dropna()
+
+    return df
+
+def obv(df):
+    df.loc[:, 'obv'] = (np.sign(df['close'].diff()) * df['volume']).fillna(0).cumsum()
     return df
 
 def get_percentage_diff(previous, current):
@@ -55,12 +49,12 @@ def get_percentage_diff(previous, current):
         return float('inf')  # Infinity
     
 def rsi(df):
-    df['gain'] = df.change.mask(df.change < 0, 0.0)
-    df['loss'] = -df.change.mask(df.change > 0, -0.0)
-    df['avg_gain'] = rma(df.gain.to_numpy(), 14)
-    df['avg_loss'] = rma(df.loss.to_numpy(), 14)
-    df['rs'] = df.avg_gain / df.avg_loss
-    df['rsi'] = 100 - (100 / (1 + df.rs))
+    df.loc[:, 'gain'] = df.change.mask(df.change < 0, 0.0)
+    df.loc[:, 'loss'] = -df.change.mask(df.change > 0, -0.0)
+    df.loc[:, 'avg_gain'] = rma(df.gain.to_numpy(), 14)
+    df.loc[:, 'avg_loss'] = rma(df.loss.to_numpy(), 14)
+    df.loc[:, 'rs'] = df.avg_gain / df.avg_loss
+    df.loc[:, 'rsi'] = 100 - (100 / (1 + df.rs))
 
     df.pop('gain')
     df.pop('loss',)

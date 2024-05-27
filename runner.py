@@ -1,10 +1,8 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.trading.requests import GetAssetsRequest
-from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
 from dotenv import load_dotenv
 from strat import buy_strat, sell_strat, info_strat, filter_strat
-from discord import SyncWebhook
+from discord_webhook import DiscordWebhook
 from datetime import datetime, timedelta
 
 import os
@@ -22,8 +20,8 @@ alpaca_discord_url = os.getenv('ALPACA_DISCORD_URL')
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 stock_market_client = StockHistoricalDataClient(api_key, api_secret)
 
-discord_stock = SyncWebhook.from_url(stock_discord_url)
-discord_alpaca = SyncWebhook.from_url(alpaca_discord_url)
+discord_stock = DiscordWebhook(stock_discord_url)
+discord_alpaca = DiscordWebhook(alpaca_discord_url)
 
 
 def stock_runner(notify):
