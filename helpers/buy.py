@@ -6,7 +6,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 
 import math
 
-def buy_symbol(stock, trading_client, market_client, buying_power, discord):
+def buy_symbol(stock, trading_client, market_client, buying_power):
     buying_power_per = min(buying_power / 4, 50)
 
     print("Current buying power %s and max per stock %s" % (buying_power, buying_power_per))
@@ -16,7 +16,11 @@ def buy_symbol(stock, trading_client, market_client, buying_power, discord):
     quote_request = StockLatestQuoteRequest(symbol_or_symbols=stock)
     latest_quote = market_client.get_stock_latest_quote(quote_request)
 
-    asset = trading_client.get_asset(stock)
+    try:
+        asset = trading_client.get_asset(stock)
+    except APIError as e:
+        print(e)
+        return
 
     if not asset.tradable:
         print("%s not marked tradeable exiting" % stock)

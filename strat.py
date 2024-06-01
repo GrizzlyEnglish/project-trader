@@ -7,8 +7,8 @@ from helpers.features import feature_engineer_df
 from datetime import timedelta, datetime
 from alpaca.trading.requests import GetOrdersRequest
 from alpaca.trading.requests import GetAssetsRequest
-from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange
-from discord_webhook import DiscordEmbed
+from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange, OrderSide
+from discord_webhook import DiscordEmbed, DiscordWebhook
 
 import os
 
@@ -28,7 +28,7 @@ def fully_generate_all_stocks(trading_client, stock_market_client, start):
         except Exception as e:
             print(e)
 
-def sell_strat(loss_symbols, gain_symbols, trading_client, discord):
+def sell_strat(loss_symbols, gain_symbols, trading_client):
     current_positions = trading_client.get_all_positions()
 
     stop_loss = float(os.getenv('STOP_LOSS'))
@@ -43,40 +43,41 @@ def sell_strat(loss_symbols, gain_symbols, trading_client, discord):
 
         if pl > 0:
             # Profit, check if predicted to drop
-            sell = loss_p != None
+            sell = loss_p != None or gain_p == None
         else:
             # Loss, check if below limit and not predicted to gain
-            sell = pl < -stop_loss or (pl < 0 and gain_p == None)
+            sell = pl < -stop_loss or (pl < 0 and gain_p == None) or loss_p != None
 
         # Two reasons to sell
         # 1 Profit + Predicted to drop
         # 2 Loss greater than limit and not predicted to gain
 
         if sell:
-            sold = False
             try:
-                orders = trading_client.get_orders(GetOrdersRequest(after=datetime.now().replace(day=1, hour=1, minute=0, second=0, microsecond=0), symbols=[p.symbol])) 
+                previous_date = datetime.now() - timedelta(hours=12)
+                orders = trading_client.get_orders(GetOrdersRequest(status='closed', after=previous_date, side=OrderSide.BUY, symbols=[p.symbol])) 
                 if len(orders) == 0:
-                    sell_symbol(p, type, trading_client)
-                    sold = True
+                    sell_symbol(p, trading_client)
+                    sendAlpacaMessage("[Sell] Sold %s" % p.symbol)
+                else:
+                    sendAlpacaMessage("[Sell] Did not sell %s had a buy within 24 hours" % p.symbol)
             except Exception as e:
                 print(e)
-                discord.send("[Sell] Failed to sell %s 'cause %s" % (p.symbol, e))
+                sendAlpacaMessage("[Sell] Failed to sell %s 'cause %s" % (p.symbol, e))
+        else:
+            sendAlpacaMessage("[Sell] Did not sell %s with p/l of %s (gain: %s loss: %s)" % (p.symbol, pl, loss_p != None, gain_p != None))
 
-            if sold:
-                discord.send("[Sell] %s" % p.symbol)
-
-def buy_strat(symbols, trading_client, market_client, discord):
+def buy_strat(symbols, trading_client, market_client,):
     account = trading_client.get_account()
 
     buying_power = float(account.buying_power)
 
     if buying_power > 0:
         for s in symbols:
-            bought = buy_symbol(s['symbol'], trading_client, market_client, buying_power, discord)
+            bought = buy_symbol(s['symbol'], trading_client, market_client, buying_power)
 
             if bought:
-                discord.send("[Buy] %s with %s trending at %s" % (s['symbol'], buying_power, s['trend']))
+                sendAlpacaMessage("[Buy] %s with %s" % (s['symbol'], buying_power))
 
             account = trading_client.get_account()
 
@@ -93,7 +94,7 @@ def filter_strat(symbol, market_client, start):
     volume = week_bars['volume'].sum()
     return volume > volume_threshold
 
-def trend_strat(symbols, market_client, discord, start, notify, forceModel=False, debugInfo=False):
+def trend_strat(symbols, market_client, start, notify, forceModel=False, debugInfo=False):
     buy = []
     sell = []
 
@@ -131,7 +132,7 @@ def trend_strat(symbols, market_client, discord, start, notify, forceModel=False
             if notify: #and current_trend != 'hold' or predicted_trend != 'hold':
                 #TODO: Update to make this show what trend is being marked as buy/sell
                 body = createMessageBody(current_stats, predicted_stats, full_bars)
-                sendMessage(s, status, body, discord)
+                sendMessage(s, status, body)
         except Exception as e:
             print(e)
 
@@ -158,13 +159,20 @@ def createMessageBody(current_stats, predicted_stats, full_bars):
 
     return "%s\n\n%s\n%s\n%s\n\n%s\n%s\n%s\n\n%s\n%s" % (closing_message, rsi_message, short_message, long_message, rsi, macd, obv, crossover, predicted)
 
-def sendMessage(symbol, status, body, discord):
+def sendMessage(symbol, status, body):
     if status == 'buy':
         color = '087e20'
     elif status == 'sell':
         color = '7e2508'
     else:
         color = '41087e'
+    stock_discord_url = os.getenv('STOCK_DISCORD_URL')
+    discord = DiscordWebhook(stock_discord_url)
     embed = DiscordEmbed(title="%s" % symbol, description=body, color=color)
     discord.add_embed(embed)
+    discord.execute()
+
+def sendAlpacaMessage(message):
+    alpaca_discord_url = os.getenv('ALPACA_DISCORD_URL')
+    discord = DiscordWebhook(alpaca_discord_url, content=message)
     discord.execute()
