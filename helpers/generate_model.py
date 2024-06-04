@@ -33,15 +33,15 @@ def get_model(symbol, window_data, force=False):
     return create_model(symbol, path, window_data)
 
 def create_model(symbol, path, window_data):
-    df = window_data
+    df = window_data.copy().dropna()
 
     if df.empty:
         print("No data available for %s" % symbol)
 
     print(df)
 
-    X = df.iloc[:, 0:-2]
-    Y = df.iloc[:, -2:]
+    X = df.iloc[:, 0:-3]
+    Y = df.iloc[:, -3:]
 
     print(X)
     print(Y)
@@ -60,9 +60,10 @@ def create_model(symbol, path, window_data):
 
     model = tf.keras.Sequential([
         keras.layers.LSTM(130, return_sequences=True),
-        keras.layers.Dropout(0.37),
+        keras.layers.Dropout(0.27),
         keras.layers.LSTM(65, return_sequences=False),
-        keras.layers.Dense(2),
+        keras.layers.Dropout(0.14),
+        keras.layers.Dense(3),
     ])
 
     model.compile(optimizer = 'adam', loss = 'mean_squared_error', metrics = ['accuracy'])
@@ -77,9 +78,9 @@ def create_model(symbol, path, window_data):
     Y_pred = model.predict(X_test)
 
     for i in range(len(Y_test)):
-        predicted = Y_pred[i][0]
-        test = Y_test.iloc[i]
-        print("%s   %s", (test, predicted))
+        print("MA Short: T %s   P %s" % (Y_test.iloc[i,0], Y_pred[i][0]))
+        print("MA Long: T %s   P %s" % (Y_test.iloc[i,1], Y_pred[i][1]))
+        print("Close: T %s   P %s" % (Y_test.iloc[i,2], Y_pred[i][2]))
     '''
 
     return model

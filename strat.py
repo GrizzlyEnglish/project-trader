@@ -10,7 +10,10 @@ from alpaca.trading.requests import GetAssetsRequest
 from alpaca.trading.enums import AssetClass, AssetStatus, AssetExchange, OrderSide
 from discord_webhook import DiscordEmbed, DiscordWebhook
 
+import numpy as np
 import os
+
+MAX_WEIGHT = 20
 
 def fully_generate_all_stocks(trading_client, stock_market_client, start):
     request = GetAssetsRequest(asset_class=AssetClass.US_EQUITY, status=AssetStatus.ACTIVE, exchange=AssetExchange.NYSE)
@@ -28,7 +31,7 @@ def fully_generate_all_stocks(trading_client, stock_market_client, start):
         except Exception as e:
             print(e)
 
-def sell_strat(loss_symbols, gain_symbols, trading_client):
+def sell_strat(symbol_trends, trading_client):
     current_positions = trading_client.get_all_positions()
 
     stop_loss = float(os.getenv('STOP_LOSS'))
@@ -36,21 +39,24 @@ def sell_strat(loss_symbols, gain_symbols, trading_client):
     for p in current_positions:
         pl = float(p.unrealized_plpc)
 
-        loss_p = next((s for s in loss_symbols if s['symbol'].replace("/", "") == p.symbol), None)
-        gain_p = next((s for s in gain_symbols if s['symbol'].replace("/", "") == p.symbol), None)
+        trend = next((s for s in symbol_trends if s['symbol'].replace("/", "") == p.symbol), None)
 
         sell = False
 
-        if pl > 0:
-            # Profit, check if predicted to drop
-            sell = loss_p != None or gain_p == None
-        else:
-            # Loss, check if below limit and not predicted to gain
-            sell = pl < -stop_loss or (pl < 0 and gain_p == None) or loss_p != None
+        weight = 0
 
-        # Two reasons to sell
-        # 1 Profit + Predicted to drop
-        # 2 Loss greater than limit and not predicted to gain
+        if trend != None:
+            weight = trend['weight']
+
+        if pl > 0:
+            # Profit if we have any chance of loss sell, if low chance of gain sell
+            sell = weight < 4
+        elif pl < -stop_loss:
+            # Very low, unless high chance of gain sell it
+            sell = weight > 6
+        else:
+            # We are loosing if there is huge chance of gain we can
+            sell = weight < 2
 
         if sell:
             try:
@@ -58,14 +64,12 @@ def sell_strat(loss_symbols, gain_symbols, trading_client):
                 orders = trading_client.get_orders(GetOrdersRequest(status='closed', after=previous_date, side=OrderSide.BUY, symbols=[p.symbol])) 
                 if len(orders) == 0:
                     sell_symbol(p, trading_client)
-                    sendAlpacaMessage("[Sell] Sold %s" % p.symbol)
-                else:
-                    sendAlpacaMessage("[Sell] Did not sell %s had a buy within 24 hours" % p.symbol)
+                    sendAlpacaMessage("[Sell] Sold %s with p/l of %s and a weight of %s" % (p.symbol, pl, weight))
             except Exception as e:
                 print(e)
                 sendAlpacaMessage("[Sell] Failed to sell %s 'cause %s" % (p.symbol, e))
         else:
-            sendAlpacaMessage("[Sell] Did not sell %s with p/l of %s (gain: %s loss: %s)" % (p.symbol, pl, loss_p != None, gain_p != None))
+            sendAlpacaMessage("[Sell] Did not sell %s with p/l of %s and a weight of %s" % (p.symbol, pl, weight))
 
 def buy_strat(symbols, trading_client, market_client,):
     account = trading_client.get_account()
@@ -95,8 +99,7 @@ def filter_strat(symbol, market_client, start):
     return volume > volume_threshold
 
 def trend_strat(symbols, market_client, start, notify, forceModel=False, debugInfo=False):
-    buy = []
-    sell = []
+    trends = []
 
     for s in symbols:
         try:
@@ -109,60 +112,85 @@ def trend_strat(symbols, market_client, start, notify, forceModel=False, debugIn
             full_bars = feature_engineer_df(full_bars)
 
             current_stats = current_status(full_bars, debugInfo)
-            current_trend = current_stats['cross']
 
             predicted_stats = predict_status(s, full_bars, forceModel, debugInfo)
-            predicted_trend = predicted_stats['status']
 
-            # Weigh based on predicted and current, give current a bit more so it buys sooner
-            status = ''
-            if current_trend == 'buy':
-                status = 'buy'
-                buy.append({ 'symbol': s, 'weight': 2 })
-            elif current_trend == 'sell':
-                status = 'sell'
-                sell.append({ 'symbol': s, 'weight': 2 })
-            elif predicted_trend == 'buy':
-                status = 'buy'
-                buy.append({ 'symbol': s, 'weight': 1 })
-            elif predicted_trend == 'sell':
-                status = 'sell'
-                sell.append({ 'symbol': s, 'weight': 1 })
+            weight = get_weight(current_stats, predicted_stats)
+
+            trends.append({ 'symbol': s, 'weight': weight })
 
             if notify: #and current_trend != 'hold' or predicted_trend != 'hold':
                 #TODO: Update to make this show what trend is being marked as buy/sell
-                body = createMessageBody(current_stats, predicted_stats, full_bars)
-                sendMessage(s, status, body)
+                body = createMessageBody(current_stats, predicted_stats, full_bars, weight)
+                sendMessage(s, weight, body)
         except Exception as e:
             print(e)
 
     def trendSort(k):
         return k['weight']
 
-    buy.sort(key=trendSort)
-    sell.sort(key=trendSort)
+    trends.sort(key=trendSort)
 
-    return { 'buy': buy, 'sell': sell }
+    return trends
 
-def createMessageBody(current_stats, predicted_stats, full_bars):
-    crossover = "MA cross: %s" % current_stats['cross'].upper()
-    predicted = "Predicted MA cross: %s" % predicted_stats['status'].upper()
-    rsi = "RSI: %s" % current_stats['rsi'].upper()
+# MAX = 20
+# MIN = -20
+def get_buy_sell_weight(status, scale):
+    if status == "buy":
+        return scale
+    elif status == "sell":
+        return scale * -1
+    return 0
+
+def get_weight(current_stats, predicted_stats):
+    # Weigh the buy/sell in order to make better purchases
+    weight = 0
+    # Current trends weigh higher and RSI>MACD>OBV
+    weight += get_buy_sell_weight(current_stats['rsi'], 6)
+    weight += get_buy_sell_weight(current_stats['macd'], 5)
+    weight += get_buy_sell_weight(current_stats['obv'], 4)
+
+    # Predicted weighs less and CROSS>PRICE
+    weight += get_buy_sell_weight(predicted_stats['predicted_cross'], 3)
+    weight += get_buy_sell_weight(predicted_stats['predicted_price'], 2)
+
+    return weight
+
+def createMessageBody(current_stats, predicted_stats, full_bars, weight):
+    up_arrow = "\u2191"
+    down_arrow = "\u2193"
+    side_bar = "\u2015"
+
+    # Bar info
+    trade_count = "{:,}".format(full_bars.iloc[-1]['trade_count'])
+    last_close = full_bars.iloc[-1]['close']
+    last_close_time = full_bars.iloc[-1].name[1].strftime("%X")
+    closing_message = "%s sold at $%s closed %s" % (trade_count, last_close, last_close_time)
+
+    avg_future = predicted_stats['future_close']
+    future_arrow = side_bar
+    if avg_future < last_close:
+        future_arrow = down_arrow
+    elif avg_future > last_close:
+        future_arrow = up_arrow
+    predicted_closing_message = "%s Predicted: $%s closing in +24hr" % (future_arrow, avg_future)
+
+    #MA Info
+    current_crossover = "Current: %s" % current_stats['cross'].upper()
+    predicted_crossover = "Predicted: %s" % predicted_stats['predicted_cross'].upper()
+
+    #Trend Info
+    rsi_message = "RSI: %s | %s" % (round(full_bars.iloc[-1]['rsi'], 2), current_stats['rsi'].upper())
     macd = "MACD: %s" % current_stats['macd'].upper()
     obv = "OBV: %s" % current_stats['obv'].upper()
+    weight_message = "WEIGHT: %s" % weight
 
-    closing_message = "Bar: %s sold at $%s closed %s" % (full_bars.iloc[-1]['close'], "{:,}".format(full_bars.iloc[-1]['trade_count']), full_bars.iloc[-1].name[1].strftime("%X"))
-    rsi_message = "RSI: %s" % round(full_bars.iloc[-1]['rsi'], 2)
+    return "Bar\n%s\n%s\n\nMA\n%s\n%s\n\nTrend\n%s\n%s\n%s\n\nBot Info\n%s" % (closing_message, predicted_closing_message, current_crossover, predicted_crossover, rsi_message, macd, obv, weight_message)
 
-    long_message = "MA Long Current: %s Predicted: %s" % (round(predicted_stats['predicted_long'],2), round(predicted_stats['predicted_short'],2))
-    short_message = "MA Short Current: %s Predicted: %s" % (round(predicted_stats['predicted_short'],2), round(predicted_stats['predicted_long'],2))
-
-    return "%s\n\n%s\n%s\n%s\n\n%s\n%s\n%s\n\n%s\n%s" % (closing_message, rsi_message, short_message, long_message, rsi, macd, obv, crossover, predicted)
-
-def sendMessage(symbol, status, body):
-    if status == 'buy':
+def sendMessage(symbol, weight, body):
+    if weight > 0:
         color = '087e20'
-    elif status == 'sell':
+    elif weight < 0:
         color = '7e2508'
     else:
         color = '41087e'
@@ -174,5 +202,5 @@ def sendMessage(symbol, status, body):
 
 def sendAlpacaMessage(message):
     alpaca_discord_url = os.getenv('ALPACA_DISCORD_URL')
-    discord = DiscordWebhook(alpaca_discord_url, content=message)
+    discord = DiscordWebhook(alpaca_discord_url, content=message, rate_limit_retry=True)
     discord.execute()

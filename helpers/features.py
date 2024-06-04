@@ -25,11 +25,7 @@ def feature_engineer_df(df):
     df.loc[:, 'ma_short_f_2'] = df['ma_short'].shift(-small_window)
     df.loc[:, 'ma_long_f_2'] = df['ma_long'].shift(-large_window)
 
-    # Drop stuff to not overfit
-    df.drop('ema_short', axis=1, inplace=True)
-    df.drop('ema_long', axis=1, inplace=True)
-
-    df = df.dropna()
+    df.loc[:, 'future_close'] = df['close'].shift(-60*24)
 
     return df
 

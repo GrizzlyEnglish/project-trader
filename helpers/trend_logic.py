@@ -4,7 +4,7 @@ import plotext as plt
 
 from sklearn.preprocessing import StandardScaler
 from helpers.generate_model import get_model
-from helpers.features import obv, rsi
+from helpers.features import obv, rsi, feature_engineer_df
 
 def cross_line(pA, pB, name, graph):
     aPoints = [(index, value) for index, value in enumerate(pA)] 
@@ -36,28 +36,33 @@ def cross_line(pA, pB, name, graph):
 
     return None
 
-def crossover_trend(short, long, graph):
-    crossed = cross_line(short, long, 'CROSSOVER', graph)
-
+def cross_line_status(crossed):
     if crossed == 'a':
         return 'buy'
     elif crossed == 'b':
         return 'sell'
 
     return 'hold'
+
+def price_based_status(current, predicted):
+    if predicted > current:
+        return 'buy'
+    elif predicted < current:
+        return 'sell'
+
+    return 'hold'
+
+def crossover_trend(short, long, graph):
+    crossed = cross_line(short, long, 'CROSSOVER', graph)
+    return cross_line_status(crossed)
 
 def macd_trend(macd, signal, graph):
     crossed = cross_line(macd, signal, 'MACD', graph)
-    if crossed == 'a':
-        return 'buy'
-    elif crossed == 'b':
-        return 'sell'
-    
-    return 'hold'
+    return cross_line_status(crossed)
 
 def obv_trend(df):
-    obv_df = obv(df)
-    obv_df = obv_df['obv']
+    #obv_df = obv(df)
+    obv_df = df['obv']
     trend = obv_df.pct_change()
 
     trend_up = trend[trend > 0.01].shape[0]
@@ -72,31 +77,23 @@ def obv_trend(df):
     return 'hold'
 
 def rsi_trend(df):
-    rsi_df = rsi(df)
-    rsi_df = rsi_df['rsi']
+    bullish = len(df[df['rsi'] < 30]) > 0 and len(df[df['rsi'] > 30]) > 0
+    bearish = len(df[df['rsi'] > 70]) > 0 and len(df[df['rsi'] > 70]) > 0
 
-    # find spot where it was below 50, check if it moves back above 50
-    def get_count_from_mark(mark):
-        below_idx = rsi_df.lt(mark).idxmax()
-        above_idx = rsi_df[below_idx:].gt(mark).idxmax()
-        return rsi_df[above_idx:].count()
-
-    # buy strat
-    sublet = rsi_df.count() * .2
-
-    if get_count_from_mark(50) <= sublet:
+    if bullish:
         return 'buy'
-    elif get_count_from_mark(30) <= sublet:
+    elif bearish:
         return 'sell'
 
     return 'hold'
 
 def current_status(full_bars, graph):
-    df = full_bars.copy().tail(20)
+    df = full_bars.copy().tail(40)
 
-    # Look for current ma crossover, macd, rsi, and obv
-    crossover_status = crossover_trend(df['ma_short'], df['ma_long'], graph)
+    crossover_status = crossover_trend(df['ma_short'].tail(15), df['ma_long'].tail(15), graph)
     print("  Crossover Short: %s Long: %s    Status: %s" % (df['ma_short'].iloc[-1], df['ma_long'].iloc[-1], crossover_status))
+
+    df = feature_engineer_df(df)
 
     macd_status = macd_trend(df['macd'], df['signal'], graph)
     print("  MACD macd: %s signal: %s    Status: %s" % (df['macd'].iloc[-1], df['signal'].iloc[-1], macd_status))
@@ -119,10 +116,12 @@ def predict_status(symbol, full_bars, forceModel, graph=False):
 
     clipped = 20
 
-    df = full_bars.tail(clipped).copy()
+    df = full_bars.copy().dropna().tail(clipped)
 
+    # Values to predict
     df.drop('ma_short_f_2', axis=1, inplace=True)
     df.drop('ma_long_f_2', axis=1, inplace=True)
+    df.drop('future_close', axis=1, inplace=True)
 
     scaler = StandardScaler()
     scaler.fit_transform(df)
@@ -132,21 +131,24 @@ def predict_status(symbol, full_bars, forceModel, graph=False):
 
     shortPoints = [value[1][0] for value in enumerate(predicted)] 
     longPoints = [value[1][1] for value in enumerate(predicted)] 
+    future_close = [value[1][2] for value in enumerate(predicted)] 
 
-    predicted_status = 'hold'
     crossed = cross_line(shortPoints, longPoints, 'PREDICTED MA', graph)
+    predicted_cross_status = cross_line_status(crossed)
 
-    if crossed == 'a':
-        predicted_status = 'buy'
-    elif crossed == 'b':
-        predicted_status = 'sell'
+    avg_future = round(np.average(np.array(future_close)),2) 
+    current_close = df.iloc[-1]['close']
+    predicted_price_status = price_based_status(current_close, avg_future)
 
-    print("  Predicted Short: %s Long: %s    Status: %s" % (shortPoints[-1], longPoints[-1], predicted_status))
+    print("  Predicted Short: %s Long: %s    Status: %s" % (shortPoints[-1], longPoints[-1], predicted_cross_status))
+    print("  Predicted Price: %s Current Price: %s    Status: %s" % (current_close, avg_future, predicted_price_status))
 
     return { 
-        'status': predicted_status,
+        'predicted_cross': predicted_cross_status,
         'current_short': df['ma_short'].iloc[0],  
         'current_long': df['ma_long'].iloc[0],  
         'predicted_short': shortPoints[-1],  
-        'predicted_long': longPoints[-1],  
+        'predicted_long': longPoints[-1],
+        'future_close': avg_future,
+        'predicted_price': predicted_price_status
     }
