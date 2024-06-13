@@ -2,14 +2,12 @@ from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 from alpaca.common.exceptions import APIError
-from alpaca.data.historical import StockHistoricalDataClient
+from messaging.discord import send_alpaca_message
 
 import math
 
 def buy_symbol(stock, trading_client, market_client, buying_power):
-    buying_power_per = min(buying_power / 4, 50)
-
-    print("Current buying power %s and max per stock %s" % (buying_power, buying_power_per))
+    print("Current buying power %s and max per stock %s" % (buying_power, buying_power))
 
     # Need to determine how much we can afford
     latest_quote = 0
@@ -33,45 +31,40 @@ def buy_symbol(stock, trading_client, market_client, buying_power):
     if price == 0:
         price = latest_quote[stock].bid_price
 
-    qty = buying_power_per / price
+    qty = buying_power / price
 
     if not asset.fractionable:
         qty = max(math.floor(qty), 1)
         if (qty * price) > float(buying_power):
-            return
+            return buying_power
 
-    if qty <= 0:
-        return
+    if qty < 1:
+        return buying_power
 
-    # preparing market order
-    if (type(market_client) == StockHistoricalDataClient):
-        market_order_data = MarketOrderRequest(
-                            symbol=stock,
-                            qty=qty,
-                            side=OrderSide.BUY,
-                            type=OrderType.MARKET,
-                            time_in_force=TimeInForce.DAY,
-                            )
-    else:
-        market_order_data = MarketOrderRequest(
-                            symbol=stock,
-                            qty=qty,
-                            side=OrderSide.BUY,
-                            type=OrderType.MARKET,
-                            time_in_force=TimeInForce.GTC,
-                            )
+    return submit_order(stock, qty, trading_client)
 
-    #TODO: Figure out how to reset my buying power in order to not run out before buying them all
+def submit_order(stock, qty, trading_client):
+    market_order_data = MarketOrderRequest(
+                        symbol=stock,
+                        qty=qty,
+                        side=OrderSide.BUY,
+                        type=OrderType.MARKET,
+                        time_in_force=TimeInForce.DAY,
+                        )
 
     try:
         market_order = trading_client.submit_order(order_data=market_order_data)
 
-        price = market_order.limit_price
+        price = market_order.filled_avg_price
 
         if price == None:
             price = "unknown"
 
+        #TODO: Store in database?
+        send_alpaca_message("[ENTER] Bought: %s of %s at %s" % (qty, stock, price))
+
         return True
     except APIError as e:
         print(e)
+        send_alpaca_message("[ENTER] Failed to enter %s due to %s" % (stock, e))
         return False

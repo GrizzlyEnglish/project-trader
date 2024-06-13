@@ -37,6 +37,7 @@ def create_model(symbol, path, window_data):
 
     if df.empty:
         print("No data available for %s" % symbol)
+        return None
 
     print(df)
 

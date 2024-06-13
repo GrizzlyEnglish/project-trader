@@ -1,10 +1,15 @@
 #import numba
 import numpy as np
 
-def feature_engineer_df(df):
-    small_window = 50
-    large_window = 200
+small_window = 50
+large_window = 200
 
+def fully_feature_engineer(df):
+    feature_engineer_df(df)
+    feature_engineer_future_df(df)
+    return df
+
+def feature_engineer_df(df):
     df.loc[:, 'ma_short'] = df['close'].rolling(window=small_window).mean()
     df.loc[:, 'ma_long'] = df['close'].rolling(window=large_window).mean()
     df.loc[:, 'close_var'] = get_percentage_diff(df['open'], df['close'])
@@ -22,9 +27,13 @@ def feature_engineer_df(df):
 
     df = rsi(df)
 
+    return df
+
+def feature_engineer_future_df(df):
     df.loc[:, 'ma_short_f_2'] = df['ma_short'].shift(-small_window)
     df.loc[:, 'ma_long_f_2'] = df['ma_long'].shift(-large_window)
 
+    # TODO: Make this be the end of the market day for the next day?
     df.loc[:, 'future_close'] = df['close'].shift(-60*24)
 
     return df

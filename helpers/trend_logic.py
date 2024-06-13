@@ -2,9 +2,14 @@ import numpy as np
 import shapely.geometry as sg
 import plotext as plt
 
-from sklearn.preprocessing import StandardScaler
 from helpers.generate_model import get_model
-from helpers.features import obv, rsi, feature_engineer_df
+from helpers.get_data import get_bars
+from helpers.get_data import get_bars
+from helpers.features import feature_engineer_df, fully_feature_engineer 
+from datetime import timedelta, datetime
+from sklearn.preprocessing import StandardScaler
+
+import os
 
 def cross_line(pA, pB, name, graph):
     aPoints = [(index, value) for index, value in enumerate(pA)] 
@@ -87,22 +92,30 @@ def rsi_trend(df):
 
     return 'hold'
 
-def current_status(full_bars, graph):
+def current_status(s, full_bars):
+    graph = (os.getenv('GRAPH_CROSSOVERS', 'False') == 'True')
+
     df = full_bars.copy().tail(40)
 
     crossover_status = crossover_trend(df['ma_short'].tail(15), df['ma_long'].tail(15), graph)
-    print("  Crossover Short: %s Long: %s    Status: %s" % (df['ma_short'].iloc[-1], df['ma_long'].iloc[-1], crossover_status))
-
-    df = feature_engineer_df(df)
 
     macd_status = macd_trend(df['macd'], df['signal'], graph)
-    print("  MACD macd: %s signal: %s    Status: %s" % (df['macd'].iloc[-1], df['signal'].iloc[-1], macd_status))
-
     obv_status = obv_trend(df)
-    print("  OBV Status: %s" % obv_status)
-
     rsi_status = rsi_trend(df)
-    print("  RSI Status: %s" % rsi_status)
+
+    print("[%s] MA %s S: %s L: %s | MACD %s M: %s S: %s | RSI %s %s | OBV %s %s" % (
+        s,
+        crossover_status,
+        round(df['ma_short'].iloc[-1], 2),
+        round(df['ma_long'].iloc[-1], 2),
+        macd_status,
+        round(df['macd'].iloc[-1], 2),
+        round(df['signal'].iloc[-1], 2),
+        rsi_status,
+        round(df['rsi'].iloc[-1], 2),
+        obv_status,
+        round(df['obv'].iloc[-1], 2),
+    ))
 
     return {
         'rsi': rsi_status,
@@ -111,8 +124,59 @@ def current_status(full_bars, graph):
         'cross': crossover_status
     }
 
-def predict_status(symbol, full_bars, forceModel, graph=False):
-    model = get_model(symbol, full_bars, forceModel)
+def weight_symbol_current_status(symbols, market_client, start):
+    marked_symbols = []
+    days = float(os.getenv('CURRENT_DAY_COUNT'))
+    until = start - timedelta(days=days)
+    for s in symbols:
+        try:
+            full_bars = get_bars(s, until, start, market_client)
+
+            if full_bars.empty:
+                continue
+
+            full_bars = feature_engineer_df(full_bars)
+
+            current_stats = current_status(s, full_bars)
+
+            weight = 0
+            weight += get_buy_sell_weight(current_stats['cross'], 7)
+            weight += get_buy_sell_weight(current_stats['rsi'], 4)
+            weight += get_buy_sell_weight(current_stats['macd'], 3)
+            weight += get_buy_sell_weight(current_stats['obv'], 2)
+
+            marked_symbols.append({ 
+                'symbol': s, 
+                'weight': weight,
+                'abs_weight': abs(weight),
+                'last_close': full_bars['close'].iloc[-1],
+                'volume': full_bars['volume'].sum()
+            })
+        except Exception as e:
+            print(e)
+
+    return marked_symbols
+
+def get_predicted_price(symbol, market_client):
+    prediction = predict_status(symbol, market_client)
+    if prediction == None:
+        return None
+    return prediction['future_close']
+
+def predict_status(symbol, market_client):
+    graph = os.getenv('GRAPH_CROSSOVERS') == 'True'
+    force_model = os.getenv('FORCE_MODEL_GEN') == 'True'
+    days = float(os.getenv('PREDICT_DAY_COUNT'))
+    start = datetime.now() - timedelta(days=days)
+
+    full_bars = get_bars(symbol, start, datetime.now(), market_client)
+
+    full_bars = fully_feature_engineer(full_bars)
+
+    model = get_model(symbol, full_bars, force_model)
+
+    if model == None:
+        return None
 
     clipped = 20
 
@@ -141,7 +205,7 @@ def predict_status(symbol, full_bars, forceModel, graph=False):
     predicted_price_status = price_based_status(current_close, avg_future)
 
     print("  Predicted Short: %s Long: %s    Status: %s" % (shortPoints[-1], longPoints[-1], predicted_cross_status))
-    print("  Predicted Price: %s Current Price: %s    Status: %s" % (current_close, avg_future, predicted_price_status))
+    print("  Predicted Price: %s Current Price: %s    Status: %s" % (avg_future, current_close, predicted_price_status))
 
     return { 
         'predicted_cross': predicted_cross_status,
@@ -152,3 +216,10 @@ def predict_status(symbol, full_bars, forceModel, graph=False):
         'future_close': avg_future,
         'predicted_price': predicted_price_status
     }
+
+def get_buy_sell_weight(status, scale):
+    if status == "buy":
+        return scale
+    elif status == "sell":
+        return scale * -1
+    return 0

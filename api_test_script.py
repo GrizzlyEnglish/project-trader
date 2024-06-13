@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 from discord import SyncWebhook
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from datetime import timedelta, datetime
-
-from strat import trend_strat
+from helpers.options import get_option_call, get_option_put
 
 import os
 
@@ -21,5 +20,5 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 stock_market_client = StockHistoricalDataClient(api_key, api_secret)
 
-trend = trend_strat(['VLD'], stock_market_client, datetime(2024, 6, 4, 1), True, False, False)
-print(trend)
+options = get_option_put('AAPL', 210, 190, trading_client)
+print(options)
