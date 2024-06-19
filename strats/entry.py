@@ -6,9 +6,16 @@ from messaging.discord import send_alpaca_message
 
 import math
 
-def get_entry_symbols(weighted_symbols):
-    entries = [w for w in weighted_symbols if w['weight'] > 0]
+def get_stock_entry(weighted_symbols, weight=0):
+    entries = [w for w in weighted_symbols if w['weight'] > weight]
     entries = sorted(entries, key=lambda x: x['weight'], reverse=True) 
+
+    return entries
+
+def get_option_entry(weighted_symbols):
+    option_weight = 8
+    entries = [w for w in weighted_symbols if w['abs_weight'] > option_weight]
+    entries = sorted(entries, key=lambda x: x['abs_weight'], reverse=False) 
 
     return entries
 
@@ -29,7 +36,8 @@ def enter(entries, trading_client, market_client):
 
 def enter_stock(buying_power, entries, trading_client, market_client):
     if buying_power > 0:
-        for s in entries:
+        symbols = get_stock_entry(entries, 7)
+        for s in symbols:
             buying_power_per = min(buying_power / 4, 50)
 
             if buying_power <= 1:
@@ -41,8 +49,7 @@ def enter_stock(buying_power, entries, trading_client, market_client):
                 buying_power = buying_power - buying_power_per
 
 def enter_option(buying_power, entries, trading_client, market_client, send_trade):
-    symbols = [e for e in entries if e['abs_weight'] >= 8]
-    symbols = sorted(symbols, key=lambda x: x['abs_weight'], reverse=False)
+    symbols = get_option_entry(entries)
 
     for e in symbols:
         options = None

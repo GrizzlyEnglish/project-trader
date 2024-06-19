@@ -2,7 +2,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
-from strats.entry import enter, get_entry_symbols
+from strats.entry import enter, get_stock_entry 
 from strats.exit import get_exit_symbols, exit
 from datetime import datetime, timedelta
 from messaging.discord import send_stock_info_messages
@@ -20,12 +20,13 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
+last_notify = None
+
 # 1. Get symbols
 assets = load_symbols()
 
 while (True):
     start = datetime.now()
-    last_notify = None
 
     # get the weight of the assets
     weighted_assets = weight_symbol_current_status(assets, market_client, start)
@@ -33,7 +34,7 @@ while (True):
     if last_notify == None or (datetime.now() - last_notify) >= timedelta(hours=1):
         # notify top 10 enter/exits
         last_notify = datetime.now()
-        enter_assets = get_entry_symbols(weighted_assets)
+        enter_assets = get_stock_entry(weighted_assets)
         exit_assets = get_exit_symbols(weighted_assets) 
         send_stock_info_messages(enter_assets, exit_assets)
 
