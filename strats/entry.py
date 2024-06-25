@@ -3,8 +3,10 @@ from helpers.buy import buy_symbol, submit_order
 from helpers.options import has_open_options, get_option_call, get_option_put
 from helpers.trend_logic import get_predicted_price
 from messaging.discord import send_alpaca_message
+from helpers.get_data import check_enter_pdt_gaurd
 
 import math
+import os
 
 def get_stock_entry(weighted_symbols, weight=0):
     entries = [w for w in weighted_symbols if w['weight'] > weight]
@@ -22,14 +24,18 @@ def get_option_entry(weighted_symbols):
 def enter(entries, trading_client, market_client):
     buying_power = get_buying_power(trading_client)
 
-    has_options = has_open_options(trading_client)
+    # Remove pdt stuff
+    entries = [e for e in entries if not check_enter_pdt_gaurd(e['symbol'], trading_client)]
 
-    option_power = 100
-    stock_power = buying_power - option_power
-
-    # We only want one open at a time, and enough funds for an option
-    if not has_options:
+    # If we have the configured amount buy an option
+    option_power = float(os.getenv('OPTION_POWER'))
+    if buying_power > option_power:
         enter_option(option_power, entries, trading_client, market_client, True)
+
+    # Use every last bit
+    stock_power = buying_power - option_power
+    if stock_power > 0:
+        stock_power = buying_power
 
     if stock_power > 0:
         enter_stock(stock_power, entries, trading_client, market_client)
@@ -50,6 +56,9 @@ def enter_stock(buying_power, entries, trading_client, market_client):
 
 def enter_option(buying_power, entries, trading_client, market_client, send_trade):
     symbols = get_option_entry(entries)
+    half_power = buying_power/2
+
+    options = []
 
     for e in symbols:
         options = None
@@ -75,6 +84,7 @@ def enter_option(buying_power, entries, trading_client, market_client, send_trad
             continue
 
         for o in options.option_contracts:
+            o_buying_power = min(buying_power, half_power)
             if o.close_price != None and o.size != None and o.open_interest != None:
                 size = float(o.size)
                 close_price = float(o.close_price)
@@ -87,15 +97,16 @@ def enter_option(buying_power, entries, trading_client, market_client, send_trad
                 else:
                     breakeven_price = close_price + strike_price
                     is_within_bounds = breakeven_price >= shield
-                qty = math.floor(buying_power / option_price)
+                qty = math.floor(o_buying_power / option_price)
                 send_alpaca_message("[ENTER] Option %s closed at %s with strike of %s and break even of %s" % (o.symbol, close_price, strike_price, breakeven_price))
                 if qty > 0 and is_within_bounds:
                     if send_trade:
                         submit_order(o.symbol, qty, trading_client)
-                    return {
+                    buying_power = buying_power - (option_price * qty)
+                    options.append({
                         'option': o.symbol,
                         'symbol': e['symbol'],
                         'qty': qty
-                    }
+                    })
 
-    return None
+    return options

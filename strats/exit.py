@@ -1,5 +1,4 @@
-from helpers.get_data import position_sellable
-from helpers.sell import sell_symbol
+from helpers.get_data import check_exit_pdt_gaurd
 from messaging.discord import send_alpaca_message
 from helpers.trend_logic import predict_status
 
@@ -52,6 +51,7 @@ def exit(entries, trading_client, market_client):
     for position in current_positions:
         pl = float(position.unrealized_plpc)
         symbol = position.symbol
+        sell_symbol = symbol
 
         if position.asset_class == AssetClass.US_OPTION:
             contract = trading_client.get_option_contract(symbol)
@@ -59,8 +59,9 @@ def exit(entries, trading_client, market_client):
 
         current_trend = next((s for s in entries if s['symbol'].replace("/", "") == symbol), None)
         
-        if current_trend == None or not position_sellable(symbol, trading_client):
+        if current_trend == None or check_exit_pdt_gaurd(symbol, trading_client):
             # If no trend somehow, or we bought it today just return
+            print("Can't sell %s bought within 12 hours or there is no trend" % symbol)
             continue
         
         status = determine_if_exiting(symbol, current_trend, pl, stop_loss, market_client)
@@ -68,8 +69,9 @@ def exit(entries, trading_client, market_client):
         if status['sell']:
             message = status['message']
             try:
-                sell_symbol(position.symbol, trading_client)
+                trading_client.close_position(sell_symbol)
             except Exception as e:
-                message = e
+                print(e)
+                message = "Error occurred trying to exit"
 
         send_alpaca_message(message)

@@ -2,11 +2,6 @@ from alpaca.trading.enums import AssetClass, AssetStatus, ExerciseStyle
 from alpaca.trading.requests import GetOptionContractsRequest
 from datetime import datetime, timedelta
 
-def has_open_options(trading_client):
-    positions = trading_client.get_all_positions()
-    option = next((s for s in positions if s.asset_class == AssetClass.US_OPTION), None)
-    return option != None
-
 def get_option_call(symbol, current_price, predicted_price, trading_client):
     return get_option(symbol, 'call', current_price, predicted_price, trading_client)
 

@@ -35,7 +35,7 @@ def get_model(symbol, window_data, force=False):
 def create_model(symbol, path, window_data):
     df = window_data.copy().dropna()
 
-    if df.empty:
+    if df.empty or df.shape[0] < 100:
         print("No data available for %s" % symbol)
         return None
 
