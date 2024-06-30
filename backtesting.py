@@ -63,9 +63,9 @@ while (start.year == 2022):
                         for k in keys:
                             # We do pretend we exited and get some data
                             data[k]['exit_price'] = bars.iloc[0]['close']
-                            data[k]['predicted_next_close'] = status['future_close']
+                            data[k]['predicted_next_close'] = status['predicted_close']
                             data[k]['actual_next_close'] = bars.iloc[-1]['close'] 
-                            data[k]['prediction_var'] = get_percentage_diff(bars.iloc[-1]['close'], status['future_close'])
+                            data[k]['prediction_var'] = get_percentage_diff(bars.iloc[-1]['close'], status['predicted_close'])
                             pl = data[k]['enter_price'] - data[k]['exit_price']
                             data[k]['p/l'] = pl
                             if pl > 0:

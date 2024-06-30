@@ -2,12 +2,12 @@ import numpy as np
 import shapely.geometry as sg
 import plotext as plt
 
-from helpers.generate_model import get_model
+from helpers.rnn_model import get_prediction
 from helpers.get_data import get_bars
 from helpers.get_data import get_bars
 from helpers.features import feature_engineer_df, fully_feature_engineer 
 from datetime import timedelta, datetime
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler 
 
 import os
 
@@ -157,63 +157,52 @@ def weight_symbol_current_status(symbols, market_client, start):
 
     return marked_symbols
 
-def get_predicted_price(symbol, market_client):
-    prediction = predict_status(symbol, market_client)
+def get_predicted_price(symbol, market_client, end=None):
+    prediction = predict_status(symbol, market_client, end)
     if prediction == None:
         return None
-    return prediction['future_close']
+    return prediction['predicted_close']
 
-def predict_status(symbol, market_client):
+def predict_status(symbol, market_client, end=None):
     graph = os.getenv('GRAPH_CROSSOVERS') == 'True'
     force_model = os.getenv('FORCE_MODEL_GEN') == 'True'
     days = float(os.getenv('PREDICT_DAY_COUNT'))
-    start = datetime.now() - timedelta(days=days)
 
-    full_bars = get_bars(symbol, start, datetime.now(), market_client)
+    if end == None:
+        end = datetime.now()
+
+    start = end - timedelta(days=days)
+
+    full_bars = get_bars(symbol, start, end, market_client)
 
     full_bars = fully_feature_engineer(full_bars)
 
-    model = get_model(symbol, full_bars, force_model)
+    current_close = full_bars.iloc[-1]['close']
+    current_short = full_bars['ma_short'].iloc[0]
+    current_long = full_bars['ma_short'].iloc[0]
 
-    if model == None:
+    short_points, long_points, future_close = get_prediction(symbol, full_bars, force_model)
+
+    if short_points == None or long_points == None or future_close == None:
         return None
 
-    clipped = 20
-
-    df = full_bars.copy().dropna().tail(clipped)
-
-    # Values to predict
-    df.drop('ma_short_f_2', axis=1, inplace=True)
-    df.drop('ma_long_f_2', axis=1, inplace=True)
-    df.drop('future_close', axis=1, inplace=True)
-
-    scaler = StandardScaler()
-    scaler.fit_transform(df)
-    df_test = scaler.transform(df)
-    df_test = np.expand_dims(df_test, 1)
-    predicted = model.predict(df_test)
-
-    shortPoints = [value[1][0] for value in enumerate(predicted)] 
-    longPoints = [value[1][1] for value in enumerate(predicted)] 
-    future_close = [value[1][2] for value in enumerate(predicted)] 
-
-    crossed = cross_line(shortPoints, longPoints, 'PREDICTED MA', graph)
+    crossed = cross_line(short_points, long_points, 'PREDICTED MA', graph)
     predicted_cross_status = cross_line_status(crossed)
 
     avg_future = round(np.average(np.array(future_close)),2) 
-    current_close = df.iloc[-1]['close']
     predicted_price_status = price_based_status(current_close, avg_future)
 
-    print("  Predicted Short: %s Long: %s    Status: %s" % (shortPoints[-1], longPoints[-1], predicted_cross_status))
+    print("  Predicted Short: %s Long: %s    Status: %s" % (short_points[-1], long_points[-1], predicted_cross_status))
     print("  Predicted Price: %s Current Price: %s    Status: %s" % (avg_future, current_close, predicted_price_status))
 
     return { 
         'predicted_cross': predicted_cross_status,
-        'current_short': df['ma_short'].iloc[0],  
-        'current_long': df['ma_long'].iloc[0],  
-        'predicted_short': shortPoints[-1],  
-        'predicted_long': longPoints[-1],
-        'future_close': avg_future,
+        'current_short': current_short,  
+        'current_long': current_long,  
+        'current_close': current_close,
+        'predicted_short': short_points[-1],  
+        'predicted_long': long_points[-1],
+        'predicted_close': avg_future,
         'predicted_price': predicted_price_status
     }
 
