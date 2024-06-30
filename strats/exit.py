@@ -40,7 +40,7 @@ def determine_if_exiting(symbol, current_trend, pl, stop_loss, market_client):
     return {
         'sell': sell,
         'message': message,
-        'future_close': future_close
+        'predicted_close': future_close
     }
 
 def exit(entries, trading_client, market_client):

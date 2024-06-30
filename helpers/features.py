@@ -1,5 +1,7 @@
-#import numba
+from sklearn.cluster import KMeans
+
 import numpy as np
+import os
 
 small_window = 50
 large_window = 200
@@ -26,6 +28,8 @@ def feature_engineer_df(df):
     df = obv(df)
 
     df = rsi(df)
+
+    df = support_resistance(df)
 
     return df
 
@@ -77,3 +81,34 @@ def rma(x, n):
     for i in range(n+1, len(x)):
         a[i] = (a[i-1] * (n - 1) + x[i]) / n
     return a
+
+def support_resistance(df):
+    cluster_count = int(os.getenv('RS_CLUSTER_COUNT'))
+    close = np.array(df['close']).reshape(-1, 1)
+    kmeans = KMeans(n_clusters=cluster_count).fit(close)
+    clusters = kmeans.predict(close)
+    min_max_values = []
+
+    for i in range(cluster_count):
+        min_max_values.append([np.inf, -np.inf])
+
+    for i in range(len(close)):
+        cluster = clusters[i]
+        i_close = close[i][0]
+        if i_close < min_max_values[cluster][0]:
+            min_max_values[cluster][0] = i_close
+        if i_close > min_max_values[cluster][1]:
+            min_max_values[cluster][1] = i_close
+
+    resistance = []
+    support = []
+    for i in range(len(close)):
+        cluster = clusters[i]
+        pair = min_max_values[cluster]
+        resistance.append(pair[0])
+        support.append(pair[1])
+
+    df['resistance'] = resistance
+    df['support'] = support
+
+    return df

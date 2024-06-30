@@ -100,9 +100,6 @@ def create_model(symbol, model_path, scaler_path, window_data):
     y_scaler = RobustScaler()
     Y = y_scaler.fit_transform(Y)
 
-    print(X)
-    print(Y)
-
     split_data = int(len(df)*0.7)
 
     #X_train, X_test, Y_train, Y_test = X.iloc[:split_data, :], X.iloc[split_data:, :], Y.iloc[:split_data], Y.iloc[split_data:]

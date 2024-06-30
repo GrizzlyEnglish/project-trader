@@ -24,7 +24,7 @@ data = []
 holding = {}
 
 assets = [
-    'CHWY'
+    'QQQ'
 ]
 
 year = 2024

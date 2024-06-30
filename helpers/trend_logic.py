@@ -92,6 +92,24 @@ def rsi_trend(df):
 
     return 'hold'
 
+def support_trend(df, weight):
+    s1 = df.iloc[-1]['support']
+    s2 = df.iloc[-2]['support']
+
+    if s1 < s2:
+        return weight
+    
+    return 0
+
+def resistance_trend(df, weight):
+    r1 = df.iloc[-1]['resistance']
+    r2 = df.iloc[-2]['resistance']
+
+    if r1 > r2:
+        return weight
+    
+    return 0
+
 def current_status(s, full_bars):
     graph = (os.getenv('GRAPH_CROSSOVERS', 'False') == 'True')
 
@@ -142,8 +160,11 @@ def weight_symbol_current_status(symbols, market_client, start):
             weight = 0
             weight += get_buy_sell_weight(current_stats['cross'], 7)
             weight += get_buy_sell_weight(current_stats['rsi'], 4)
-            weight += get_buy_sell_weight(current_stats['macd'], 3)
-            weight += get_buy_sell_weight(current_stats['obv'], 2)
+            weight += get_buy_sell_weight(current_stats['macd'], 2)
+            weight += get_buy_sell_weight(current_stats['obv'], 1)
+
+            weight += support_trend(full_bars, -2)
+            weight += resistance_trend(full_bars, 2)
 
             marked_symbols.append({ 
                 'symbol': s, 
@@ -157,16 +178,19 @@ def weight_symbol_current_status(symbols, market_client, start):
 
     return marked_symbols
 
-def get_predicted_price(symbol, market_client, end=None):
+def get_predicted_price(symbol, market_client, end=None, force_model=False):
     prediction = predict_status(symbol, market_client, end)
     if prediction == None:
         return None
     return prediction['predicted_close']
 
-def predict_status(symbol, market_client, end=None):
+def predict_status(symbol, market_client, end=None, force_model=False):
     graph = os.getenv('GRAPH_CROSSOVERS') == 'True'
-    force_model = os.getenv('FORCE_MODEL_GEN') == 'True'
     days = float(os.getenv('PREDICT_DAY_COUNT'))
+
+    if not force_model:
+        # check env for forcing
+        force_model = os.getenv('FORCE_MODEL_GEN') == 'True'
 
     if end == None:
         end = datetime.now()
