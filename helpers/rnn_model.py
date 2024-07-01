@@ -47,7 +47,7 @@ def get_prediction(symbol, bars, force_model):
     return shortPoints, longPoints, future_close
 
 
-def is_file_older_than_x_days(filepath, days=7):
+def is_file_older_than_x_days(filepath, days=30):
     file_mtime = os.path.getmtime(filepath)
     current_time = time.time()
     age_in_seconds = current_time - file_mtime
