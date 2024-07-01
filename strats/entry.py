@@ -1,7 +1,6 @@
 from helpers.get_data import get_buying_power
 from helpers.buy import buy_symbol, submit_order
 from helpers.options import get_option_call, get_option_put
-from helpers.trend_logic import get_predicted_price
 from helpers.get_data import check_enter_pdt_gaurd, check_option_gaurd
 from helpers.features import get_percentage_diff
 from datetime import datetime
@@ -31,7 +30,7 @@ def enter(entries, trading_client, market_client):
     # If we have the configured amount buy an option
     option_power = float(os.getenv('OPTION_POWER'))
     if (buying_power > option_power) and not check_option_gaurd(trading_client):
-        enter_option(option_power, entries, trading_client, market_client, True)
+        enter_option(option_power, entries, trading_client, True)
 
     # Use every last bit
     stock_power = buying_power - option_power
@@ -55,7 +54,7 @@ def enter_stock(buying_power, entries, trading_client, market_client):
             if bought:
                 buying_power = buying_power - buying_power_per
 
-def enter_option(buying_power, entries, trading_client, market_client, send_trade):
+def enter_option(buying_power, entries, trading_client, send_trade):
     symbols = get_option_entry(entries)
     half_power = buying_power/2
 
@@ -66,7 +65,7 @@ def enter_option(buying_power, entries, trading_client, market_client, send_trad
 
         s = e['symbol']
         cp = e['last_close']
-        future_close = get_predicted_price(s, market_client)
+        future_close = e['predicted_close'] 
 
         print("Looking for options for %s between %s and %s" % (s, cp, future_close))
 

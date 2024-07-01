@@ -1,7 +1,7 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from helpers.trend_logic import get_predicted_price
+from helpers.trend_logic import weight_symbol_current_status
 from helpers.get_data import get_bars
 from datetime import datetime, timedelta
 
@@ -23,44 +23,64 @@ data = []
 
 holding = {}
 
-assets = [
-    'QQQ'
+symbols = [
+    'QQQ', 'HIMS', 'CHWY'
 ]
 
 year = 2024
 
-for asset in assets:
-    start = datetime(year, 1, 1, 12, 30)
+start = datetime(year, 1, 1, 12, 30)
 
-    data = []
+data = []
 
-    while (start.year == 2024):
-        weekday = start.weekday()
-        if weekday <= 5:
-            print(start)
+force_counter = -1
 
-            predicted = get_predicted_price(asset, market_client, start)
+while (start.year == 2024):
+    weekday = start.weekday()
+    if weekday <= 5:
+        print(start)
 
-            if predicted != None:
-                diff = 1
+        force_model = False
 
-                if weekday == 4:
-                    diff = 3
+        if force_counter > 30 or force_counter == -1:
+            force_model = True
+            force_counter = 0
 
-                actual = get_bars(asset, start, start + timedelta(days=1), market_client)
+        weights = weight_symbol_current_status(symbols, market_client, start, force_model)
 
-                if not actual.empty:
-                    actual = actual.iloc[-1]['close']
-                    data.append({
-                        'date': start,
-                        'predicted': predicted,
-                        'actual': actual
-                    })
+        for w in weights:
+            symbol = w['symbol']
+            predicted = w['predicted_price']
+            diff = 1
 
-        start = start + timedelta(days=1)
+            if weekday == 4:
+                diff = 3
 
-        if start.date() == datetime.now().date():
-            break
+            actual_df = get_bars(symbol, start, start + timedelta(days=1), market_client)
 
-    df = pd.DataFrame(data)
-    df.to_csv('backtest.csv', index=True)
+            if not actual_df.empty:
+                actual = actual_df.iloc[-1]['close']
+                current = actual_df.iloc[0]['close']
+                data.append({
+                    'symbol': symbol,
+                    'date': start,
+                    'current_price': current,
+                    'predicted_price': predicted,
+                    'actual_price': actual,
+                    'weight': w['weight'],
+                    'cross': w['cross'],
+                    'predicted_cross': w['predicted_cross'],
+                    'rsi': w['rsi'],
+                    'macd': w['macd'],
+                    'obv': w['obv'],
+                    'res_sup': w['res_sup']
+                })
+
+    start = start + timedelta(days=1)
+    force_counter = force_counter + 1
+
+    if start.date() == datetime.now().date():
+        break
+
+df = pd.DataFrame(data)
+df.to_csv('backtest.csv', index=True)

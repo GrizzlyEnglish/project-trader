@@ -53,7 +53,7 @@ while (start.year == 2022):
 
             # Marked as an exit see if we actually want to
             if current_trend != None:
-                status = determine_if_exiting(s, current_trend, 0, 0, market_client)
+                status = determine_if_exiting(s, current_trend, 0, 0)
                 if status['sell']:
                     days_diff = 1
                     if start.weekday() == 5:

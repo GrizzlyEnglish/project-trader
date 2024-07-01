@@ -92,23 +92,19 @@ def rsi_trend(df):
 
     return 'hold'
 
-def support_trend(df, weight):
+def support_resistance_trend(df):
     s1 = df.iloc[-1]['support']
     s2 = df.iloc[-2]['support']
 
-    if s1 < s2:
-        return weight
-    
-    return 0
-
-def resistance_trend(df, weight):
     r1 = df.iloc[-1]['resistance']
     r2 = df.iloc[-2]['resistance']
 
-    if r1 > r2:
-        return weight
+    if s1 < s2:
+        return "sell"
+    elif r1 > r2:
+        return "buy"
     
-    return 0
+    return "hold"
 
 def current_status(s, full_bars):
     graph = (os.getenv('GRAPH_CROSSOVERS', 'False') == 'True')
@@ -120,6 +116,7 @@ def current_status(s, full_bars):
     macd_status = macd_trend(df['macd'], df['signal'], graph)
     obv_status = obv_trend(df)
     rsi_status = rsi_trend(df)
+    res_sup_status = support_resistance_trend(df)
 
     print("[%s] MA %s S: %s L: %s | MACD %s M: %s S: %s | RSI %s %s | OBV %s %s" % (
         s,
@@ -139,12 +136,20 @@ def current_status(s, full_bars):
         'rsi': rsi_status,
         'macd': macd_status,
         'obv': obv_status,
-        'cross': crossover_status
+        'cross': crossover_status,
+        'res_sup': res_sup_status
     }
 
-def weight_symbol_current_status(symbols, market_client, start):
+def weight_symbol_current_status(symbols, market_client, start, force_model=False):
     marked_symbols = []
     days = float(os.getenv('CURRENT_DAY_COUNT'))
+    cross_weight = float(os.getenv('CROSS_WEIGHT'))
+    rsi_weight = float(os.getenv('RSI_WEIGHT'))
+    macd_weight = float(os.getenv('MACD_WEIGHT'))
+    obv_weight = float(os.getenv('OBV_WEIGHT'))
+    supres_weight = float(os.getenv('SUPRES_WEIGHT'))
+    prediction_weight = float(os.getenv('PREDICTION_WEIGHT'))
+    prediction_cross_weight = float(os.getenv('PREDICTION_CROSS_WEIGHT'))
     until = start - timedelta(days=days)
     for s in symbols:
         try:
@@ -158,20 +163,30 @@ def weight_symbol_current_status(symbols, market_client, start):
             current_stats = current_status(s, full_bars)
 
             weight = 0
-            weight += get_buy_sell_weight(current_stats['cross'], 7)
-            weight += get_buy_sell_weight(current_stats['rsi'], 4)
-            weight += get_buy_sell_weight(current_stats['macd'], 2)
-            weight += get_buy_sell_weight(current_stats['obv'], 1)
+            weight += get_buy_sell_weight(current_stats['cross'], cross_weight)
+            weight += get_buy_sell_weight(current_stats['rsi'], rsi_weight)
+            weight += get_buy_sell_weight(current_stats['macd'], macd_weight)
+            weight += get_buy_sell_weight(current_stats['obv'], obv_weight)
+            weight += get_buy_sell_weight(current_stats['res_sup'], supres_weight)
 
-            weight += support_trend(full_bars, -2)
-            weight += resistance_trend(full_bars, 2)
+            prediction = predict_status(s, market_client, start, force_model)
+            weight += get_buy_sell_weight(prediction['predicted_status'], prediction_weight)
+            weight += get_buy_sell_weight(prediction['predicted_cross'], prediction_cross_weight)
 
             marked_symbols.append({ 
                 'symbol': s, 
                 'weight': weight,
                 'abs_weight': abs(weight),
                 'last_close': full_bars['close'].iloc[-1],
-                'volume': full_bars['volume'].sum()
+                'volume': full_bars['volume'].sum(),
+                'predicted_price': prediction['predicted_close'],
+                'predicted_cross': prediction['predicted_cross'],
+                'predicted_status': prediction['predicted_status'],
+                'cross': current_stats['cross'],
+                'rsi': current_stats['rsi'],
+                'macd': current_stats['macd'],
+                'obv': current_stats['obv'],
+                'res_sup': current_stats['res_sup']
             })
         except Exception as e:
             print(e)
@@ -227,7 +242,7 @@ def predict_status(symbol, market_client, end=None, force_model=False):
         'predicted_short': short_points[-1],  
         'predicted_long': long_points[-1],
         'predicted_close': avg_future,
-        'predicted_price': predicted_price_status
+        'predicted_status': predicted_price_status
     }
 
 def get_buy_sell_weight(status, scale):

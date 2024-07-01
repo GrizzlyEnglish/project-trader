@@ -12,26 +12,25 @@ def get_exit_symbols(weighted_symbols):
 
     return entries
 
-def determine_if_exiting(symbol, current_trend, pl, stop_loss, market_client):
+def determine_if_exiting(symbol, current_trend, pl, stop_loss):
     current_weight = current_trend['weight']
+    future_close = current_trend['predicted_price']
+    predicted_cross = current_trend['predicted_cross']
+    predicted_status = current_trend['predicted_status']
 
     sell = False
     message = ""
-    future_close = 0
 
     if current_weight < -10 and pl > 0:
         # Very good chance this is the best time to exit
         message = "[EXIT] Exiting %s with a weight of %s" % (symbol, current_weight)
         sell = True
     elif current_weight <= 0:
-        # Not sure, let us predict the price and see if we should
-        prediction = predict_status(symbol, market_client)
-        if prediction != None:
-            future_close = prediction['predicted_close']
-            if prediction != None and (prediction['predicted_cross'] == "sell" or prediction['predicted_price'] == "sell"):
-                # The model is predicting a cross and a dip in price let us just sell it
-                message = "[EXIT] Exiting %s with a weight of %s, close of %s, and a predicted future price of %s" % (symbol, current_weight, current_trend['last_close'], future_close)
-                sell = True
+        # Not sure, let us check the predict price and see if we should
+        if predicted_cross == "sell" or predicted_status == "sell":
+            # The model is predicting a cross and a dip in price let us just sell it
+            message = "[EXIT] Exiting %s with a weight of %s, close of %s, and a predicted future price of %s" % (symbol, current_weight, current_trend['last_close'], future_close)
+            sell = True
     
     if not sell and pl < stop_loss:
         sell = True
@@ -43,7 +42,7 @@ def determine_if_exiting(symbol, current_trend, pl, stop_loss, market_client):
         'predicted_close': future_close
     }
 
-def exit(entries, trading_client, market_client):
+def exit(entries, trading_client):
     current_positions = trading_client.get_all_positions()
 
     stop_loss = float(os.getenv('STOP_LOSS'))
@@ -64,7 +63,7 @@ def exit(entries, trading_client, market_client):
             print("Can't sell %s bought within 12 hours or there is no trend" % symbol)
             continue
         
-        status = determine_if_exiting(symbol, current_trend, pl, stop_loss, market_client)
+        status = determine_if_exiting(symbol, current_trend, pl, stop_loss)
 
         if status['sell']:
             message = status['message']

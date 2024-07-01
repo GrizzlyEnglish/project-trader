@@ -39,7 +39,7 @@ while (True):
         send_stock_info_messages(enter_assets, exit_assets)
 
     # 2. Exit any open positions we need to
-    exit(weighted_assets, trading_client, market_client)
+    exit(weighted_assets, trading_client)
 
     # 3. Enter with any buying power we have
     enter(weighted_assets, trading_client, market_client)
