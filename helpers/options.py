@@ -2,11 +2,11 @@ from alpaca.trading.enums import AssetClass, AssetStatus, ExerciseStyle
 from alpaca.trading.requests import GetOptionContractsRequest
 from datetime import datetime, timedelta
 
-def get_option_call(symbol, current_price, predicted_price, trading_client):
-    return get_option(symbol, 'call', current_price, predicted_price, trading_client)
+def get_option_call(symbol, predicted_price, trading_client):
+    return get_option(symbol, 'call', 0, predicted_price, trading_client)
 
-def get_option_put(symbol, current_price, predicted_price, trading_client):
-    return get_option(symbol, 'put', predicted_price, current_price, trading_client)
+def get_option_put(symbol, predicted_price, trading_client):
+    return get_option(symbol, 'put', 0, predicted_price, trading_client)
 
 def get_option(symbol, type, current_price, predicted_price, trading_client):
     # Failed to predict just send empty array

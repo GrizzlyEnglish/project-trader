@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
 from helpers.get_data import get_bars
 from datetime import datetime, timedelta
+from helpers.load_stocks import load_symbols
 
 import os
 import pandas as pd
@@ -23,9 +24,8 @@ data = []
 
 holding = {}
 
-symbols = [
-    'QQQ', 'HIMS', 'CHWY'
-]
+#symbols = load_symbols()
+symbols = [ 'QQQ', 'CHWY', 'HIMS' ]
 
 year = 2024
 
@@ -61,6 +61,8 @@ while (start.year == 2024):
             if not actual_df.empty:
                 actual = actual_df.iloc[-1]['close']
                 current = actual_df.iloc[0]['close']
+                diff = actual - current
+                pdiff = predicted - actual
                 data.append({
                     'symbol': symbol,
                     'date': start,
@@ -73,7 +75,11 @@ while (start.year == 2024):
                     'rsi': w['rsi'],
                     'macd': w['macd'],
                     'obv': w['obv'],
-                    'res_sup': w['res_sup']
+                    'roc': w['roc'],
+                    'res_sup': w['res_sup'],
+                    'next_day_diff': diff,
+                    'predicted_diff': pdiff,
+                    'weight_correct': (w['weight'] ^ diff) >= 0,
                 })
 
     start = start + timedelta(days=1)

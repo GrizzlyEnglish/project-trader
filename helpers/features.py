@@ -2,6 +2,7 @@ from sklearn.cluster import KMeans
 
 import numpy as np
 import os
+import pandas as pd
 
 small_window = 50
 large_window = 200
@@ -14,7 +15,6 @@ def fully_feature_engineer(df):
 def feature_engineer_df(df):
     df.loc[:, 'ma_short'] = df['close'].rolling(window=small_window).mean()
     df.loc[:, 'ma_long'] = df['close'].rolling(window=large_window).mean()
-    df.loc[:, 'close_var'] = get_percentage_diff(df['open'], df['close'])
     df.loc[:, 'gap'] = df['close'] - df['open']
     df.loc[:, 'next_open'] = df['open'].shift(-1)
     df.loc[:, 'change'] = df['close'].diff()
@@ -25,12 +25,22 @@ def feature_engineer_df(df):
     df.loc[:, 'macd'] = df['ema_short'] - df['ema_long']
     df.loc[:, 'signal'] = df['macd'].ewm(span=9).mean()
 
+    df.loc[:, 'roc'] = df['close'].pct_change()
+
+    df = close_variance(df)
+
     df = obv(df)
 
     df = rsi(df)
 
     df = support_resistance(df)
 
+    return df
+
+def close_variance(df):
+    df.loc[:, 'difference'] = df['open'] - df['close']
+    df.loc[:, 'close_var'] = (df['difference'] / ((df['open'] + df['close']) / 2)) * 100
+    df.pop('difference')
     return df
 
 def feature_engineer_future_df(df):

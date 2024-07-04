@@ -92,6 +92,30 @@ def rsi_trend(df):
 
     return 'hold'
 
+def roc_trend(df):
+    dfc = df.copy()
+
+    dfc['roc_n'] = dfc['roc'].shift(-1)
+
+    dfc['roc_s'] = np.where((dfc['roc'] * dfc['roc_n']) >= 0, True, False)
+
+    arr = dfc[dfc['roc_s'] == True]
+    if not arr.empty:
+        last_index = arr.index[-1]
+        i = list(np.array(dfc.index)).index(last_index)
+
+        roc_len = len(df)
+        half_len = roc_len/2
+
+        if i > half_len and i < roc_len:
+            next = dfc[i+1:]
+            if (next['roc'] > 0).all():
+                return 'buy'
+            elif (next['roc'] < 0).all():
+                return 'sell'
+        
+    return 'hold'
+
 def support_resistance_trend(df):
     s1 = df.iloc[-1]['support']
     s2 = df.iloc[-2]['support']
@@ -109,14 +133,15 @@ def support_resistance_trend(df):
 def current_status(s, full_bars):
     graph = (os.getenv('GRAPH_CROSSOVERS', 'False') == 'True')
 
-    df = full_bars.copy().tail(40)
+    df = full_bars.copy().tail(15)
 
-    crossover_status = crossover_trend(df['ma_short'].tail(15), df['ma_long'].tail(15), graph)
+    crossover_status = crossover_trend(df['ma_short'], df['ma_long'], graph)
 
     macd_status = macd_trend(df['macd'], df['signal'], graph)
     obv_status = obv_trend(df)
     rsi_status = rsi_trend(df)
     res_sup_status = support_resistance_trend(df)
+    roc_status = roc_trend(df)
 
     print("[%s] MA %s S: %s L: %s | MACD %s M: %s S: %s | RSI %s %s | OBV %s %s" % (
         s,
@@ -137,7 +162,8 @@ def current_status(s, full_bars):
         'macd': macd_status,
         'obv': obv_status,
         'cross': crossover_status,
-        'res_sup': res_sup_status
+        'res_sup': res_sup_status,
+        'roc': roc_status
     }
 
 def weight_symbol_current_status(symbols, market_client, start, force_model=False):
@@ -148,6 +174,7 @@ def weight_symbol_current_status(symbols, market_client, start, force_model=Fals
     macd_weight = float(os.getenv('MACD_WEIGHT'))
     obv_weight = float(os.getenv('OBV_WEIGHT'))
     supres_weight = float(os.getenv('SUPRES_WEIGHT'))
+    roc_weight = float(os.getenv('ROC_WEIGHT'))
     prediction_weight = float(os.getenv('PREDICTION_WEIGHT'))
     prediction_cross_weight = float(os.getenv('PREDICTION_CROSS_WEIGHT'))
     until = start - timedelta(days=days)
@@ -168,6 +195,7 @@ def weight_symbol_current_status(symbols, market_client, start, force_model=Fals
             weight += get_buy_sell_weight(current_stats['macd'], macd_weight)
             weight += get_buy_sell_weight(current_stats['obv'], obv_weight)
             weight += get_buy_sell_weight(current_stats['res_sup'], supres_weight)
+            weight += get_buy_sell_weight(current_stats['roc'], roc_weight)
 
             prediction = predict_status(s, market_client, start, force_model)
             weight += get_buy_sell_weight(prediction['predicted_status'], prediction_weight)
