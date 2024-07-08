@@ -74,11 +74,11 @@ def enter_option(buying_power, entries, trading_client, send_trade):
         shield = future_close
 
         if is_put:
-            options = get_option_put(s, math.floor(future_close), trading_client)
+            option = get_option_put(s, math.floor(future_close), trading_client)
         else:
-            options = get_option_call(s, math.ceil(future_close), trading_client)
+            option = get_option_call(s, math.ceil(future_close), trading_client)
 
-        if options == None or options.option_contracts == None:
+        if option == None or option.option_contracts == None:
             otype = ''
             if is_put:
                 otype = 'put'
@@ -87,10 +87,14 @@ def enter_option(buying_power, entries, trading_client, send_trade):
             send_alpaca_message("No %s options for %s with current close at %s and predicted close at %s" % (otype, s, cp, future_close))
             continue
 
-        for o in options.option_contracts:
+        # Check on the ones with the highest interest
+        contracts = [x for x in option.option_contracts if x.open_interest != None]
+        contracts.sort(key=lambda x: float(x.open_interest), reverse=True)
+
+        for o in contracts:
             o_buying_power = min(buying_power, half_power)
             dte = (o.expiration_date - datetime.now().date()).days
-            if o.close_price != None and o.size != None and o.open_interest != None and dte > 1:
+            if o.close_price != None and o.size != None and dte > 1:
                 size = float(o.size)
                 close_price = float(o.close_price)
                 strike_price = float(o.strike_price)
@@ -104,7 +108,7 @@ def enter_option(buying_power, entries, trading_client, send_trade):
                 is_within_bounds = abs(get_percentage_diff(shield, breakeven_price)) <= option_gaurd
                 if qty > 0 and is_within_bounds:
                     if send_trade:
-                        send_alpaca_message("[ENTER] Option %s closed at %s with strike of %s and break even of %s" % (o.symbol, close_price, strike_price, breakeven_price))
+                        send_alpaca_message("[ENTER] %s closed: %s predicting close: %s strike: %s break even: %s" % (o.symbol, cp, future_close, strike_price, breakeven_price))
                         submit_order(o.symbol, qty, trading_client)
                     buying_power = buying_power - (option_price * qty)
                     entered_options.append({
@@ -112,5 +116,6 @@ def enter_option(buying_power, entries, trading_client, send_trade):
                         'symbol': e['symbol'],
                         'qty': qty
                     })
+                    break
 
     return entered_options

@@ -2,7 +2,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
-from strats.entry import enter_option
+from strats.entry import enter_option, get_option_call
 from datetime import datetime
 from helpers.load_stocks import load_symbols
 
@@ -22,7 +22,8 @@ assets = load_symbols()
 
 start = datetime(2024, 6, 28, 13)
 
-weighted_assets = weight_symbol_current_status(assets, market_client, start)
+#weighted_assets = weight_symbol_current_status(assets, market_client, start)
 
-option = enter_option(weighted_assets, trading_client, market_client, False)
+#option = enter_option(weighted_assets, trading_client, market_client, False)
+option = get_option_call('RIVN', 16, trading_client)
 print(option)

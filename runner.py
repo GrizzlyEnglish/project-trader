@@ -1,5 +1,6 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.trading.enums import AssetClass
 from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
 from strats.entry import enter, get_stock_entry 
@@ -27,6 +28,13 @@ assets = load_symbols()
 
 while (True):
     start = datetime.now()
+
+    current_positions = trading_client.get_all_positions()
+    pos = [p.symbol for p in current_positions]
+
+    for p in current_positions:
+        if p.asset_class == AssetClass.US_OPTION and p.symbol not in assets:
+            assets.append(p.symbol)
 
     # get the weight of the assets
     weighted_assets = weight_symbol_current_status(assets, market_client, start)
