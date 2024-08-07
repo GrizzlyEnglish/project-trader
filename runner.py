@@ -3,8 +3,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.trading.enums import AssetClass
 from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
-from strats.entry import enter, get_stock_entry 
-from strats.exit import get_exit_symbols, exit
+from strats.weights import enter, get_stock_entry, get_exit_symbols, exit
 from datetime import datetime, timedelta
 from messaging.discord import send_stock_info_messages
 from helpers.load_stocks import load_symbols

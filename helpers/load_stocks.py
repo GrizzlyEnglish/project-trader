@@ -1,6 +1,6 @@
-def load_symbols():
+def load_symbols(fileName = 'stocks.txt'):
     symbols = []
-    with open('stocks.txt') as file:
+    with open(fileName) as file:
         for line in file:
             symbols.append(line.strip())
     return symbols

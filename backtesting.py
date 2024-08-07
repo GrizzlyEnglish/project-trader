@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 from helpers.trend_logic import weight_symbol_current_status
 from helpers.get_data import get_bars
 from helpers.features import get_percentage_diff
-from strats.entry import get_option_entry, get_stock_entry
-from strats.exit import get_exit_symbols, determine_if_exiting
+from strats.weights import get_option_entry, get_stock_entry, get_exit_symbols, determine_if_exiting
 from datetime import datetime, timedelta
 from helpers.load_stocks import load_symbols
 

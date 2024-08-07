@@ -1,8 +1,8 @@
 from sklearn.cluster import KMeans
+from stock_indicators import indicators, Quote
 
 import numpy as np
-import os
-import pandas as pd
+import math
 
 small_window = 50
 large_window = 200
@@ -25,7 +25,7 @@ def feature_engineer_df(df):
     df.loc[:, 'macd'] = df['ema_short'] - df['ema_long']
     df.loc[:, 'signal'] = df['macd'].ewm(span=9).mean()
 
-    df.loc[:, 'roc'] = df['close'].pct_change()
+    df = rate_of_change(df)
 
     df = close_variance(df)
 
@@ -34,6 +34,26 @@ def feature_engineer_df(df):
     df = rsi(df)
 
     df = support_resistance(df)
+
+    return df
+
+def rate_of_change(df):
+    bars_i = df.reset_index()
+    quotes = [ 
+        Quote(date, open, high, low, close, volume) 
+            for date, open, high, low, close, volume 
+            in zip(bars_i['timestamp'],
+                bars_i['open'], 
+                bars_i['high'], 
+                bars_i['low'],
+                bars_i['close'], 
+                bars_i['volume'], strict=True)]
+    
+    results = indicators.get_roc(quotes, 14)
+
+    df.loc[:, 'roc'] = [r.roc for r in results]
+    df.loc[:, 'roc_sma'] = [r.roc_sma for r in results]
+    df.loc[:, 'roc_momentum'] = [r.momentum for r in results]
 
     return df
 
@@ -93,7 +113,7 @@ def rma(x, n):
     return a
 
 def support_resistance(df):
-    cluster_count = int(os.getenv('RS_CLUSTER_COUNT'))
+    cluster_count = math.floor(len(df.index) * .4)
     close = np.array(df['close']).reshape(-1, 1)
     kmeans = KMeans(n_clusters=cluster_count).fit(close)
     clusters = kmeans.predict(close)
