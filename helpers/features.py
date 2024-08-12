@@ -27,13 +27,11 @@ def feature_engineer_df(df):
 
     df = rate_of_change(df)
 
-    df = close_variance(df)
-
     df = obv(df)
 
     df = rsi(df)
 
-    df = support_resistance(df)
+    #df = support_resistance(df)
 
     return df
 
@@ -52,7 +50,8 @@ def rate_of_change(df):
     results = indicators.get_roc(quotes, 14)
 
     df.loc[:, 'roc'] = [r.roc for r in results]
-    df.loc[:, 'roc_sma'] = [r.roc_sma for r in results]
+    df.loc[:, 'roc_abs'] = [abs(r.momentum) if r.roc is not None else None for r in results]
+    #df.loc[:, 'roc_sma'] = [r.roc_sma for r in results]
     df.loc[:, 'roc_momentum'] = [r.momentum for r in results]
 
     return df
@@ -76,14 +75,16 @@ def obv(df):
     df.loc[:, 'obv'] = (np.sign(df['close'].diff()) * df['volume']).fillna(0).cumsum()
     return df
 
-def get_percentage_diff(previous, current):
+def get_percentage_diff(previous, current, round_value=True):
     try:
         absolute_diff = current - previous
         average_value = (current + previous) / 2
         percentage = (absolute_diff / average_value) * 100.0
-        rounded_percentage = round(percentage)
+
+        if round_value:
+            percentage = round(percentage)
         
-        return rounded_percentage
+        return percentage
     except ZeroDivisionError:
         return float('inf')  # Infinity
     
@@ -142,3 +143,69 @@ def support_resistance(df):
     df['support'] = support
 
     return df
+
+def long_classification(df):
+    day_bars = (60 * 5)
+
+    df['1d_close'] = df['close'].shift(-day_bars)
+    df['5d_close'] = df['close'].shift(-(day_bars * 5))
+
+    def label(row):
+        if math.isnan(row['1d_close']) or math.isnan(row['5d_close']):
+            return 'hold'
+
+        long_s_diff = get_percentage_diff(row['close'], row['1d_close'],False)
+        long_l_diff = get_percentage_diff(row['close'], row['5d_close'],False)
+
+        if long_l_diff > 3 and long_s_diff > 1:
+            return 'buy_long' 
+        elif long_l_diff < -3 and long_s_diff < -1:
+            return 'sell_long' 
+        else:
+            return 'hold'
+
+    df['label'] = df.apply(label, axis=1)
+
+    df.pop('1d_close')
+    df.pop('5d_close')
+
+    return df
+
+def short_classification(df):
+    df['15m_close'] = df['close'].shift(-15)
+    df['1h_close'] = df['close'].shift(-60)
+
+    def label(row):
+        if math.isnan(row['15m_close']) or math.isnan(row['1h_close']):
+            return 'hold'
+
+        short_s_diff = get_percentage_diff(row['close'], row['15m_close'],False)
+        short_l_diff = get_percentage_diff(row['close'], row['1h_close'],False)
+
+        if short_s_diff > 0 and short_l_diff > short_s_diff and short_l_diff > 0:
+            return 'buy_short' 
+        elif short_s_diff < 0 and abs(short_l_diff) > abs(short_s_diff) and short_l_diff < 0:
+            return 'sell_short' 
+        else:
+            return 'hold'
+
+    df['label'] = df.apply(label, axis=1)
+
+    df.pop('15m_close')
+    df.pop('1h_close')
+
+    return df
+
+def label_to_int(row):
+    if row == 'buy_long': return 0
+    elif row == 'sell_long': return 1
+    elif row == 'buy_short': return 2
+    elif row == 'sell_short': return 3
+    elif row == 'hold': return 4
+
+def int_to_label(row):
+    if row == 0: return 'Buy long'
+    elif row == 1: return 'Sell long'
+    elif row == 2: return 'Buy short'
+    elif row == 3: return 'Sell short'
+    elif row == 4: return 'Hold'

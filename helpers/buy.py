@@ -43,7 +43,7 @@ def buy_symbol(stock, trading_client, market_client, buying_power):
 
     return submit_order(stock, qty, trading_client)
 
-def submit_order(stock, qty, trading_client):
+def submit_order(stock, qty, trading_client, send_discord):
     market_order_data = MarketOrderRequest(
                         symbol=stock,
                         qty=qty,
@@ -61,10 +61,12 @@ def submit_order(stock, qty, trading_client):
             price = "unknown"
 
         #TODO: Store in database?
-        send_alpaca_message("[ENTER] Bought: %s of %s at %s" % (qty, stock, price))
+        if send_discord:
+            send_alpaca_message("[ENTER] Bought: %s of %s at %s" % (qty, stock, price))
 
         return True
     except APIError as e:
         print(e)
-        send_alpaca_message("[ENTER] Failed to enter %s due to %s" % (stock, e))
+        if send_discord:
+            send_alpaca_message("[ENTER] Failed to enter %s due to %s" % (stock, e))
         return False

@@ -3,6 +3,26 @@ from helpers import get_data, features
 
 import os
 
+def get_roc_power(symbol, start, end, market_client):
+    bars = get_data.get_bars(symbol, start, end, market_client, 1)
+    if bars.empty:
+        return None
+
+    bars = features.rate_of_change(bars)
+
+    bars = bars.tail(60)
+
+    power = bars['roc'].sum()
+
+    # Determine if recently there was a configured amount of bars that were + or -, getting their power
+
+    print(f"{symbol} ROC power={power} ")
+
+    return {
+        'power': power,
+        'close': bars["close"].iloc[-1]
+    }
+
 # Steps
 # 1. Get the last 1 hour of 1 min bars for symbol, get the ROC
 # 2. Setup the amount of bars above/below 0
@@ -12,49 +32,55 @@ def enter(symbols, market_client, end = datetime.now()):
     enter = []
     for symbol in symbols:
         start = end - timedelta(days=1)
-        bars = get_data.get_bars(symbol, start, end, market_client, 1)
-        if bars.empty:
-            continue
 
-        bars = features.rate_of_change(bars)
+        roc_power = get_roc_power(symbol, start, end, market_client)
 
-        bars = bars.tail(60)
+        diff = roc_power['diff']
+        power = roc_power['power']
+        close = roc_power['close']
 
-        power = bars['roc'].sum()
-        c_power = bars[bars['roc'] > 0]['roc'].sum()
-        p_power = bars[bars['roc'] < 0]['roc'].sum()
-        print(f"{symbol} ROC power={power} call={c_power} put={p_power}")
-        abs_p_power = abs(p_power)
-        diff = abs(abs_p_power - c_power)
-        if abs(power) > 8 and diff > 5:
-            t = ""
-            if abs_p_power > c_power:
-                t = "put"
-            elif abs_p_power < c_power:
+        t = ""
+        if diff > 75:
+            if power > 10:
                 t = "call"
-            
-            if t != "":
-                enter.append({
-                    "symbol": symbol,
-                    "type": t,
-                    "price": bars["close"].iloc[-1]
-                })
+            elif power < -10:
+                t = "put"
+
+        if t != "":
+            enter.append({
+                "symbol": symbol,
+                "type": t,
+                "price": close
+            })
     return enter
 
 # Sell if strength is flipped, -20% loss, or +30% gain
-def exit(entries, positions):
+def exit(positions, symbols, end, market_client):
     stop_loss = float(os.getenv('STOP_LOSS'))
+    secure_gains = float(os.getenv('SECURE_GAINS'))
     exits = []
     for position in positions:
         pl = float(position.unrealized_plpc)
-        symbol = position.symbol
+        contract = position.symbol
+        symbol = next((s for s in symbols if s in contract), None)
 
-        entry = next((s for s in entries if symbol in s['symbol']), None)
+        print(f'{symbol} P/L % {pl}')
 
-        if pl < stop_loss or pl > .3:
-            exit.append(symbol)
-        elif entry != None:
-            if 'C' in symbol[4:] and entry['type'] == 'P' or 'P' in symbol[4:] and entry['type'] == 'C':
-                exit.append(symbol)
+        if pl < -stop_loss: 
+            exits.append(contract)
+        else:
+            start = end - timedelta(days=1)
 
-    return exit
+            roc_power = get_roc_power(symbol, start, end, market_client)
+
+            c_power = roc_power['c_power']
+            p_power = roc_power['p_power']
+
+            if 'C' in symbol:
+                if c_power < 15 and pl > secure_gains or c_power < 10:
+                    exits.append(contract)
+            elif 'P' in symbol:
+                if p_power < -15 and pl > secure_gains or c_power < -10:
+                    exits.append(contract)
+
+    return exits

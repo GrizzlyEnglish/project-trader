@@ -1,6 +1,7 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.trading.enums import AssetClass
+from alpaca.common.exceptions import APIError
 from dotenv import load_dotenv
 from helpers.load_stocks import load_symbols
 from helpers import options, get_data, buy
@@ -21,22 +22,32 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 
 assets = load_symbols('scalp_symbols.txt')
 
-enters = scalp.enter(assets, market_client, datetime.now())
+while (True):
+    enters = scalp.enter(assets, market_client, datetime.now())
 
-for enter in enters:
-    contracts = []
-    if enter['type'] == 'call':
-        contracts = options.get_option_call_itm(enter['symbol'], enter['price'], trading_client).option_contracts
-    else:
-        contracts = options.get_option_putt_itm(enter['symbol'], enter['price'], trading_client).option_contracts
-    contract = contracts[1]
-    buying_power = get_data.get_buying_power(trading_client)
-    qty = options.get_option_buying_power(contract, buying_power, enter['type'] == 'put')['qty']
-    buy.submit_order(contract.symbol, qty, trading_client)
+    current_positions = trading_client.get_all_positions()
 
-current_positions = trading_client.get_all_positions()
-positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
-exits = scalp.exit(enters, positions)
+    for enter in enters:
+        contracts = []
+        if enter['type'] == 'call':
+            contracts = options.get_option_call_itm(enter['symbol'], enter['price'], trading_client)[-3:]
+        else:
+            contracts = options.get_option_put_itm(enter['symbol'], enter['price'], trading_client)[:3]
+        
+        for contract in contracts:
+            owned = next((cp for cp in current_positions if enter['symbol'] in cp.symbol), None)
 
-for exit in exits:
-    trading_client.close_position(exit)
+            if owned == None:
+                buying_power = get_data.get_buying_power(trading_client)
+                qty = options.get_option_buying_power(contract, buying_power, enter['type'] == 'put')['qty']
+                if qty != None and qty > 0:
+                    buy.submit_order(contract.symbol, qty, trading_client, False)
+
+    positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
+    exits = scalp.exit(positions, assets, datetime.now(), market_client)
+
+    for exit in exits:
+        try:
+            trading_client.close_position(exit)
+        except APIError as e:
+            print(e)
