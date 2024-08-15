@@ -17,21 +17,13 @@ import tensorflow as tf
 import time
 import joblib
 
-def create_model(symbol, window_data, type, evaluate=False):
+def create_model(symbol, window_data, time_window, evaluate=False):
     df = window_data.copy().dropna()
 
     if df.empty or df.shape[0] < 100:
         print("%s has no data or not enough data to generate a model" % symbol)
         return None
     
-    if type == 'short':
-        df = features.short_classification(df)
-    elif type == 'long':
-        df = features.long_classification(df)
-    else:
-        print("Wrong type passed")
-        return None
-
     df = df.dropna()
 
     print(df)
@@ -58,8 +50,6 @@ def create_model(symbol, window_data, type, evaluate=False):
         rec = metrics.recall_score(y_test, y_pred, average='weighted')
         f1 = metrics.f1_score(y_test, y_pred,average='weighted')
         kappa = metrics.cohen_kappa_score(y_test, y_pred)
-
-        y_pred_proba = model.predict_proba(x_test)[::,1]
 
         cm = metrics.confusion_matrix(y_test, y_pred)
         print('Accuracy:', acc)

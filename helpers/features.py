@@ -1,5 +1,5 @@
 from sklearn.cluster import KMeans
-from stock_indicators import indicators, Quote
+from stock_indicators import indicators, Quote, CandlePart
 
 import numpy as np
 import math
@@ -7,35 +7,24 @@ import math
 small_window = 50
 large_window = 200
 
+def drop_prices(df):
+    # Drop price based colums
+    df.pop('open')
+    df.pop('high')
+    df.pop('low')
+    df.pop('close')
+    df.pop('next_open')
+    df.pop('support')
+    df.pop('resistance')
+
+    return df
+
 def fully_feature_engineer(df):
     feature_engineer_df(df)
     feature_engineer_future_df(df)
     return df
 
 def feature_engineer_df(df):
-    df.loc[:, 'ma_short'] = df['close'].rolling(window=small_window).mean()
-    df.loc[:, 'ma_long'] = df['close'].rolling(window=large_window).mean()
-    df.loc[:, 'gap'] = df['close'] - df['open']
-    df.loc[:, 'next_open'] = df['open'].shift(-1)
-    df.loc[:, 'change'] = df['close'].diff()
-
-    df.loc[:, 'ema_short'] = df['close'].ewm(span=12).mean()
-    df.loc[:, 'ema_long'] = df['close'].ewm(span=26).mean()
-
-    df.loc[:, 'macd'] = df['ema_short'] - df['ema_long']
-    df.loc[:, 'signal'] = df['macd'].ewm(span=9).mean()
-
-    df = rate_of_change(df)
-
-    df = obv(df)
-
-    df = rsi(df)
-
-    #df = support_resistance(df)
-
-    return df
-
-def rate_of_change(df):
     bars_i = df.reset_index()
     quotes = [ 
         Quote(date, open, high, low, close, volume) 
@@ -46,13 +35,59 @@ def rate_of_change(df):
                 bars_i['low'],
                 bars_i['close'], 
                 bars_i['volume'], strict=True)]
-    
+
+    df.loc[:, 'gap'] = df['close'] - df['open']
+    df.loc[:, 'next_open'] = df['open'].shift(-1)
+    df.loc[:, 'change'] = df['close'].diff()
+
+    df = moving_average(df, quotes)
+
+    df = macd(df, quotes)
+
+    df = rate_of_change(df, quotes)
+
+    df = obv(df, quotes)
+
+    df = rsi(df, quotes)
+
+    df = vortex_indicator(df, quotes)
+
+    df = support_resistance(df)
+
+    return df
+
+def vortex_indicator(df, quotes):
+    results = indicators.get_vortex(quotes, 14);
+
+    df.loc[:, 'pvi'] = [r.pvi for r in results]
+    df.loc[:, 'nvi'] = [r.nvi for r in results]
+
+    return df
+
+def moving_average(df, quotes):
+    results = indicators.get_kama(quotes, 10, small_window, large_window)
+
+    df.loc[:, 'efficiency_ratio'] = [r.efficiency_ratio for r in results]
+    df.loc[:, 'kama'] = [r.kama for r in results]
+
+    return df
+
+def macd(df, quotes):
+    results = indicators.get_macd(quotes, 12, 26, 9)
+
+    df.loc[:, 'macd'] = [r.macd for r in results]
+    df.loc[:, 'signal'] = [r.signal for r in results]
+    df.loc[:, 'fast_ema'] = [r.fast_ema for r in results]
+    df.loc[:, 'slow_ema'] = [r.slow_ema for r in results]
+    df.loc[:, 'histogram'] = [r.histogram for r in results]
+
+    return df
+
+def rate_of_change(df, quotes): 
     results = indicators.get_roc(quotes, 14)
 
     df.loc[:, 'roc'] = [r.roc for r in results]
-    df.loc[:, 'roc_abs'] = [abs(r.momentum) if r.roc is not None else None for r in results]
-    #df.loc[:, 'roc_sma'] = [r.roc_sma for r in results]
-    df.loc[:, 'roc_momentum'] = [r.momentum for r in results]
+    #df.loc[:, 'roc_momentum'] = [r.momentum for r in results]
 
     return df
 
@@ -71,8 +106,15 @@ def feature_engineer_future_df(df):
 
     return df
 
-def obv(df):
-    df.loc[:, 'obv'] = (np.sign(df['close'].diff()) * df['volume']).fillna(0).cumsum()
+def obv(df, quotes):
+    results = indicators.get_obv(quotes)
+    df.loc[:, 'obv'] = [r.obv for r in results]
+    return df
+
+def rsi(df, quotes):
+    results = indicators.get_rsi(quotes, 14)
+    df.loc[:, 'rsi'] = [r.rsi for r in results]
+    
     return df
 
 def get_percentage_diff(previous, current, round_value=True):
@@ -87,22 +129,6 @@ def get_percentage_diff(previous, current, round_value=True):
         return percentage
     except ZeroDivisionError:
         return float('inf')  # Infinity
-    
-def rsi(df):
-    df.loc[:, 'gain'] = df.change.mask(df.change < 0, 0.0)
-    df.loc[:, 'loss'] = -df.change.mask(df.change > 0, -0.0)
-    df.loc[:, 'avg_gain'] = rma(df.gain.to_numpy(), 14)
-    df.loc[:, 'avg_loss'] = rma(df.loss.to_numpy(), 14)
-    df.loc[:, 'rs'] = df.avg_gain / df.avg_loss
-    df.loc[:, 'rsi'] = 100 - (100 / (1 + df.rs))
-
-    df.pop('gain')
-    df.pop('loss',)
-    df.pop('avg_gain')
-    df.pop('avg_loss')
-    df.pop('rs')
-    
-    return df
 
 #@numba.jit
 def rma(x, n):
@@ -171,28 +197,35 @@ def long_classification(df):
 
     return df
 
-def short_classification(df):
-    df['15m_close'] = df['close'].shift(-15)
-    df['1h_close'] = df['close'].shift(-60)
+def short_classification(df, time_window):
+    one_hour = math.floor(60 / time_window)
+
+    df['1h_close'] = df['close'].shift(3)
+    df['2h_close'] = df['close'].shift(1)
 
     def label(row):
-        if math.isnan(row['15m_close']) or math.isnan(row['1h_close']):
-            return 'hold'
+        if math.isnan(row['1h_close']) or math.isnan(row['2h_close']):
+            return None
+        
+        one_diff = row['1h_close'] - row['close']
+        three_diff = row['2h_close'] - row['close']
 
-        short_s_diff = get_percentage_diff(row['close'], row['15m_close'],False)
-        short_l_diff = get_percentage_diff(row['close'], row['1h_close'],False)
+        growth = one_diff > 0 and three_diff > 0
+        shrink = one_diff < 0 and three_diff < 0
 
-        if short_s_diff > 0 and short_l_diff > short_s_diff and short_l_diff > 0:
+        if growth:
+            # and row['roc'] > 0 and (row['pvi'] > row['nvi']) and row['macd'] > 0:
             return 'buy_short' 
-        elif short_s_diff < 0 and abs(short_l_diff) > abs(short_s_diff) and short_l_diff < 0:
+        elif shrink:
+            # and row['roc'] < 0 and (row['pvi'] < row['nvi']) and row['macd'] > 0:
             return 'sell_short' 
         else:
             return 'hold'
 
     df['label'] = df.apply(label, axis=1)
 
-    df.pop('15m_close')
     df.pop('1h_close')
+    df.pop('2h_close')
 
     return df
 

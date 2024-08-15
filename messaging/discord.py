@@ -8,6 +8,11 @@ def send_alpaca_message(message):
     discord = DiscordWebhook(alpaca_discord_url, content=message, rate_limit_retry=True)
     discord.execute()
 
+def send_stock_message(message):
+    alpaca_discord_url = os.getenv('STOCK_DISCORD_URL')
+    discord = DiscordWebhook(alpaca_discord_url, content=message, rate_limit_retry=True)
+    discord.execute()
+
 def create_symbol_weight_message(entries):
     lines = []
     for e in entries:

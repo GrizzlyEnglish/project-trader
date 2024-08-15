@@ -1,374 +1,1645 @@
-,symbol,date,current_price,predicted_price,actual_price,weight,cross,predicted_cross,rsi,macd,obv,res_sup
-0,QQQ,2024-01-02 12:30:00,404.3,399.88,401.59,-5.0,hold,buy,hold,sell,hold,sell
-1,HIMS,2024-01-02 12:30:00,8.83,8.68,9.64,-5.0,hold,hold,hold,sell,hold,buy
-2,CHWY,2024-01-02 12:30:00,23.34,21.12,22.35,-4.0,hold,hold,hold,sell,buy,buy
-3,QQQ,2024-01-03 12:30:00,399.62,399.84,397.04,4.0,hold,buy,buy,buy,hold,sell
-4,HIMS,2024-01-03 12:30:00,9.35,8.68,9.065,-4.0,hold,hold,hold,buy,sell,sell
-5,CHWY,2024-01-03 12:30:00,21.53,21.08,20.885,3.0,hold,hold,buy,buy,buy,hold
-6,QQQ,2024-01-04 12:30:00,396.18,399.79,395.29,0.0,hold,hold,hold,sell,sell,hold
-7,HIMS,2024-01-04 12:30:00,9.16,8.68,8.475,-11.0,sell,hold,buy,sell,buy,sell
-8,CHWY,2024-01-04 12:30:00,20.67,21.08,20.72,-1.0,hold,hold,hold,sell,hold,sell
-9,QQQ,2024-01-05 12:30:00,394.32,399.73,395.7,3.0,hold,hold,buy,sell,sell,hold
-10,HIMS,2024-01-05 12:30:00,8.2,8.68,8.335,7.0,hold,hold,buy,sell,buy,buy
-11,CHWY,2024-01-05 12:30:00,20.63,21.09,20.43,2.0,hold,hold,hold,sell,sell,buy
-12,QQQ,2024-01-08 12:30:00,396.36,399.9,403.56,9.0,hold,hold,buy,buy,sell,hold
-13,HIMS,2024-01-08 12:30:00,8.43,8.68,8.8,4.0,hold,hold,buy,sell,hold,hold
-14,CHWY,2024-01-08 12:30:00,20.29,21.1,20.68,0.0,hold,hold,hold,sell,sell,hold
-15,QQQ,2024-01-09 12:30:00,401.15,399.8,404.52,-11.0,hold,hold,sell,sell,buy,sell
-16,HIMS,2024-01-09 12:30:00,8.71,8.68,8.54,-9.0,hold,hold,sell,sell,sell,buy
-17,CHWY,2024-01-09 12:30:00,20.78,21.07,21.15,-2.0,hold,hold,sell,sell,hold,hold
-18,QQQ,2024-01-10 12:30:00,404.45,399.94,407.72,-2.0,hold,hold,hold,buy,buy,sell
-19,HIMS,2024-01-10 12:30:00,8.5,8.68,8.63,5.0,hold,hold,buy,sell,sell,buy
-20,CHWY,2024-01-10 12:30:00,20.24,21.1,19.95,-1.0,hold,hold,buy,buy,sell,sell
-21,QQQ,2024-01-11 12:30:00,407.69,399.92,407.99,-8.0,hold,hold,sell,sell,hold,buy
-22,HIMS,2024-01-11 12:30:00,8.63,8.68,8.755,0.0,hold,hold,sell,sell,hold,buy
-23,CHWY,2024-01-11 12:30:00,20.305,21.1,20.02,2.0,hold,hold,hold,sell,buy,hold
-24,QQQ,2024-01-12 12:30:00,408.31,399.93,407.87,-4.0,buy,hold,sell,sell,hold,hold
-25,HIMS,2024-01-12 12:30:00,8.84,8.68,8.57,-1.0,hold,hold,sell,buy,buy,buy
-26,CHWY,2024-01-12 12:30:00,20.025,21.13,19.13,2.0,hold,hold,hold,sell,buy,hold
-27,QQQ,2024-01-16 12:30:00,406.3,399.83,408.42,-8.0,hold,hold,hold,sell,sell,hold
-28,HIMS,2024-01-16 12:30:00,8.45,8.68,8.45,-6.0,sell,hold,hold,sell,sell,hold
-29,CHWY,2024-01-16 12:30:00,18.495,21.1,18.77,9.0,hold,hold,buy,buy,buy,sell
-30,QQQ,2024-01-17 12:30:00,405.58,399.68,405.86,-2.0,hold,sell,hold,buy,buy,buy
-31,HIMS,2024-01-17 12:30:00,8.305,8.68,8.41,9.0,hold,hold,hold,buy,hold,buy
-32,CHWY,2024-01-17 12:30:00,18.445,21.1,18.995,3.0,hold,hold,hold,sell,hold,buy
-33,QQQ,2024-01-18 12:30:00,409.85,399.7,412.12,-3.0,hold,hold,sell,buy,buy,hold
-34,HIMS,2024-01-18 12:30:00,8.495,8.68,8.425,6.0,hold,hold,hold,buy,sell,hold
-35,CHWY,2024-01-18 12:30:00,19.26,21.09,19.285,3.0,hold,hold,sell,buy,sell,hold
-36,QQQ,2024-01-19 12:30:00,415.03,399.9,420.65,-15.0,hold,sell,sell,sell,sell,hold
-37,HIMS,2024-01-19 12:30:00,8.23,8.68,8.32,-2.0,hold,hold,hold,sell,sell,sell
-38,CHWY,2024-01-19 12:30:00,19.48,21.09,19.345,7.0,hold,hold,sell,buy,buy,buy
-39,QQQ,2024-01-22 12:30:00,422.93,399.97,420.43,-13.0,hold,sell,sell,sell,buy,hold
-40,HIMS,2024-01-22 12:30:00,8.74,8.68,8.685,3.0,hold,hold,hold,sell,hold,buy
-41,CHWY,2024-01-22 12:30:00,19.74,21.08,19.64,-5.0,hold,hold,sell,sell,sell,sell
-42,QQQ,2024-01-23 12:30:00,421.12,399.74,422.9,-10.0,hold,hold,hold,sell,sell,sell
-43,HIMS,2024-01-23 12:30:00,8.7,8.68,8.75,-2.0,hold,hold,sell,buy,hold,buy
-44,CHWY,2024-01-23 12:30:00,20.22,21.1,19.86,7.0,hold,hold,buy,buy,sell,sell
-45,QQQ,2024-01-24 12:30:00,425.56,399.71,424.59,4.0,buy,hold,sell,buy,hold,buy
-46,HIMS,2024-01-24 12:30:00,8.86,8.68,8.935,-3.0,hold,sell,hold,buy,hold,buy
-47,CHWY,2024-01-24 12:30:00,20.08,21.1,19.45,8.0,hold,hold,hold,buy,sell,buy
-48,QQQ,2024-01-25 12:30:00,426.23,399.88,423.95,-3.0,hold,hold,buy,sell,sell,buy
-49,HIMS,2024-01-25 12:30:00,8.96,8.68,9.09,-5.0,hold,hold,hold,sell,hold,buy
-50,CHWY,2024-01-25 12:30:00,19.31,21.09,19.86,-5.0,sell,hold,buy,sell,sell,sell
-51,QQQ,2024-01-26 12:30:00,423.12,399.96,421.87,-8.0,hold,sell,buy,sell,hold,hold
-52,HIMS,2024-01-26 12:30:00,9.05,8.68,8.82,1.0,hold,hold,hold,buy,hold,buy
-53,CHWY,2024-01-26 12:30:00,19.94,21.1,19.375,5.0,hold,hold,sell,buy,sell,buy
-54,QQQ,2024-01-29 12:30:00,423.03,399.74,426.77,-8.0,hold,hold,hold,sell,sell,hold
-55,HIMS,2024-01-29 12:30:00,8.77,8.68,9.025,-13.0,sell,hold,buy,sell,sell,sell
-56,CHWY,2024-01-29 12:30:00,19.03,21.1,19.485,1.0,hold,hold,buy,sell,sell,sell
-57,QQQ,2024-01-30 12:30:00,425.85,399.65,421.4,-11.0,hold,hold,sell,sell,buy,sell
-58,HIMS,2024-01-30 12:30:00,8.965,8.68,8.86,0.0,hold,hold,hold,buy,sell,buy
-59,CHWY,2024-01-30 12:30:00,19.1,21.1,18.345,6.0,hold,hold,sell,buy,hold,buy
-60,QQQ,2024-01-31 12:30:00,420.22,399.97,416.27,-4.0,hold,hold,buy,sell,hold,hold
-61,HIMS,2024-01-31 12:30:00,8.75,8.68,8.58,-1.0,hold,hold,buy,buy,sell,sell
-62,CHWY,2024-01-31 12:30:00,18.28,21.11,17.805,2.0,hold,hold,buy,sell,hold,sell
-63,QQQ,2024-02-01 12:30:00,418.47,408.32,425.12,0.0,hold,hold,hold,buy,sell,buy
-64,HIMS,2024-02-01 12:30:00,8.64,8.68,8.915,1.0,hold,hold,buy,sell,sell,sell
-65,CHWY,2024-02-01 12:30:00,18.21,19.69,17.905,1.0,hold,hold,buy,sell,sell,sell
-66,QQQ,2024-02-02 12:30:00,423.16,408.15,426.95,-5.0,hold,hold,sell,buy,buy,sell
-67,HIMS,2024-02-02 12:30:00,8.685,8.67,8.865,-9.0,hold,hold,sell,sell,sell,buy
-68,CHWY,2024-02-02 12:30:00,17.35,19.69,17.835,6.0,hold,hold,hold,buy,sell,hold
-69,QQQ,2024-02-05 12:30:00,427.45,408.29,427.22,-9.0,hold,hold,hold,sell,hold,sell
-70,HIMS,2024-02-05 12:30:00,8.79,8.67,8.57,3.0,hold,hold,buy,buy,sell,buy
-71,CHWY,2024-02-05 12:30:00,17.19,19.69,16.895,-5.0,hold,hold,sell,sell,sell,sell
-72,QQQ,2024-02-06 12:30:00,428.17,408.25,425.96,-5.0,hold,hold,hold,sell,hold,buy
-73,HIMS,2024-02-06 12:30:00,8.605,8.67,9.41,-2.0,hold,hold,hold,sell,sell,sell
-74,CHWY,2024-02-06 12:30:00,16.81,19.69,17.135,1.0,hold,hold,buy,sell,sell,sell
-75,QQQ,2024-02-07 12:30:00,428.2,408.22,430.88,-4.0,hold,hold,hold,buy,sell,sell
-76,HIMS,2024-02-07 12:30:00,9.45,8.68,9.445,-7.0,hold,hold,sell,sell,buy,buy
-77,CHWY,2024-02-07 12:30:00,17.025,19.69,16.915,-2.0,hold,hold,hold,sell,sell,sell
-78,QQQ,2024-02-08 12:30:00,430.22,408.36,431.52,-12.0,hold,sell,hold,sell,sell,hold
-79,HIMS,2024-02-08 12:30:00,9.485,8.67,9.855,0.0,hold,hold,hold,buy,sell,buy
-80,CHWY,2024-02-08 12:30:00,16.81,19.68,16.575,3.0,hold,hold,hold,sell,hold,buy
-81,QQQ,2024-02-09 12:30:00,433.71,408.25,435.74,-2.0,hold,hold,hold,buy,sell,hold
-82,HIMS,2024-02-09 12:30:00,9.87,8.67,9.885,-6.0,hold,hold,sell,buy,hold,sell
-83,CHWY,2024-02-09 12:30:00,16.74,19.68,17.405,1.0,hold,sell,buy,sell,buy,hold
-84,QQQ,2024-02-12 12:30:00,435.81,408.22,433.03,-8.0,hold,hold,sell,sell,hold,buy
-85,HIMS,2024-02-12 12:30:00,9.87,8.67,9.96,-4.0,hold,hold,hold,buy,sell,sell
-86,CHWY,2024-02-12 12:30:00,17.74,19.69,17.53,-1.0,hold,hold,sell,sell,sell,buy
-87,QQQ,2024-02-13 12:30:00,431.28,408.17,427.8,-15.0,sell,sell,buy,sell,sell,hold
-88,HIMS,2024-02-13 12:30:00,9.46,8.67,9.475,-4.0,hold,hold,hold,buy,sell,sell
-89,CHWY,2024-02-13 12:30:00,16.93,19.68,16.735,5.0,hold,hold,hold,buy,hold,sell
-90,QQQ,2024-02-14 12:30:00,429.78,408.31,432.09,3.0,hold,hold,buy,buy,sell,buy
-91,HIMS,2024-02-14 12:30:00,9.77,8.68,9.99,-2.0,hold,hold,buy,sell,hold,buy
-92,CHWY,2024-02-14 12:30:00,16.92,19.69,17.44,12.0,hold,hold,buy,buy,hold,buy
-93,QQQ,2024-02-15 12:30:00,432.81,408.24,434.12,-3.0,hold,hold,sell,buy,buy,hold
-94,HIMS,2024-02-15 12:30:00,10.13,8.67,10.05,-4.0,hold,hold,hold,buy,sell,sell
-95,CHWY,2024-02-15 12:30:00,17.645,19.68,17.455,11.0,buy,hold,sell,buy,sell,buy
-96,QQQ,2024-02-16 12:30:00,433.57,408.3,428.73,-6.0,hold,hold,sell,buy,hold,sell
-97,HIMS,2024-02-16 12:30:00,9.96,8.67,10.04,-3.0,hold,hold,hold,buy,hold,sell
-98,CHWY,2024-02-16 12:30:00,16.99,19.69,16.785,2.0,hold,hold,hold,sell,sell,buy
-99,QQQ,2024-02-20 12:30:00,427.55,408.31,425.31,1.0,hold,hold,buy,buy,sell,hold
-100,HIMS,2024-02-20 12:30:00,9.865,8.67,9.595,-4.0,hold,hold,hold,buy,sell,sell
-101,CHWY,2024-02-20 12:30:00,16.85,19.69,16.5,3.0,hold,hold,buy,sell,sell,hold
-102,QQQ,2024-02-21 12:30:00,423.44,408.3,427.79,-9.0,hold,hold,hold,sell,hold,sell
-103,HIMS,2024-02-21 12:30:00,9.46,8.68,9.41,-5.0,hold,hold,hold,sell,hold,buy
-104,CHWY,2024-02-21 12:30:00,16.14,19.69,16.06,0.0,hold,hold,hold,sell,buy,sell
-105,QQQ,2024-02-22 12:30:00,433.15,408.3,436.3,0.0,hold,hold,buy,buy,hold,sell
-106,HIMS,2024-02-22 12:30:00,9.46,8.67,9.45,-8.0,hold,hold,sell,hold,sell,hold
-107,CHWY,2024-02-22 12:30:00,16.17,19.69,16.075,8.0,hold,hold,hold,buy,sell,buy
-108,QQQ,2024-02-23 12:30:00,437.66,408.21,435.04,-8.0,hold,hold,sell,sell,hold,buy
-109,HIMS,2024-02-23 12:30:00,9.48,8.67,9.515,-7.0,hold,hold,sell,buy,sell,sell
-110,CHWY,2024-02-23 12:30:00,16.175,19.68,16.11,4.0,hold,hold,hold,buy,sell,sell
-111,QQQ,2024-02-26 12:30:00,436.38,408.23,434.73,-8.0,hold,hold,hold,sell,sell,hold
-112,HIMS,2024-02-26 12:30:00,9.97,8.67,10.26,-12.0,hold,hold,sell,sell,hold,sell
-113,CHWY,2024-02-26 12:30:00,16.3,19.69,16.605,8.0,hold,hold,hold,buy,sell,buy
-114,QQQ,2024-02-27 12:30:00,435.89,408.21,436.48,-6.0,hold,hold,buy,sell,hold,sell
-115,HIMS,2024-02-27 12:30:00,12.38,8.68,13.43,-5.0,hold,hold,sell,buy,sell,hold
-116,CHWY,2024-02-27 12:30:00,16.695,19.68,17.235,8.0,hold,hold,hold,buy,sell,buy
-117,QQQ,2024-02-28 12:30:00,434.34,408.2,432.63,-11.0,hold,hold,sell,sell,sell,hold
-118,HIMS,2024-02-28 12:30:00,13.11,8.68,13.33,-7.0,hold,hold,hold,sell,hold,hold
-119,CHWY,2024-02-28 12:30:00,17.14,19.68,16.915,-1.0,hold,hold,hold,sell,hold,sell
-120,QQQ,2024-02-29 12:30:00,435.18,408.28,437.93,-5.0,hold,hold,hold,sell,hold,buy
-121,HIMS,2024-02-29 12:30:00,13.11,8.67,13.05,-9.0,hold,hold,hold,sell,hold,sell
-122,CHWY,2024-02-29 12:30:00,17.31,19.69,17.635,5.0,hold,hold,buy,sell,sell,buy
-123,QQQ,2024-03-01 12:30:00,438.7,408.39,444.02,0.0,hold,hold,hold,buy,buy,hold
-124,HIMS,2024-03-01 12:30:00,13.05,8.67,13.145,0.0,hold,hold,hold,buy,sell,buy
-125,CHWY,2024-03-01 12:30:00,17.47,19.68,18.03,4.0,hold,hold,sell,buy,hold,hold
-126,QQQ,2024-03-04 12:30:00,444.52,430.94,442.18,-9.0,hold,hold,sell,sell,buy,hold
-127,HIMS,2024-03-04 12:30:00,13.615,9.94,14.68,0.0,hold,hold,hold,buy,sell,buy
-128,CHWY,2024-03-04 12:30:00,17.91,17.0,17.72,0.0,hold,hold,hold,buy,sell,buy
-129,QQQ,2024-03-05 12:30:00,440.11,430.94,436.07,-5.0,hold,hold,buy,sell,sell,hold
-130,HIMS,2024-03-05 12:30:00,14.33,9.92,14.24,-12.0,hold,hold,sell,sell,hold,sell
-131,CHWY,2024-03-05 12:30:00,17.72,17.0,17.365,-10.0,hold,sell,hold,sell,sell,buy
-132,QQQ,2024-03-06 12:30:00,437.93,430.96,437.5,1.0,hold,hold,buy,buy,sell,hold
-133,HIMS,2024-03-06 12:30:00,13.77,9.93,13.995,-6.0,hold,hold,hold,sell,sell,buy
-134,CHWY,2024-03-06 12:30:00,17.695,17.0,17.26,5.0,hold,buy,hold,buy,hold,buy
-135,QQQ,2024-03-07 12:30:00,440.12,430.96,442.81,-2.0,hold,hold,hold,buy,buy,sell
-136,HIMS,2024-03-07 12:30:00,14.46,9.93,14.355,-8.0,hold,hold,hold,sell,sell,hold
-137,CHWY,2024-03-07 12:30:00,17.51,17.0,17.49,3.0,hold,hold,buy,buy,sell,buy
-138,QQQ,2024-03-08 12:30:00,443.74,430.96,438.12,-1.0,hold,hold,buy,sell,buy,buy
-139,HIMS,2024-03-08 12:30:00,14.28,9.95,14.27,-8.0,hold,hold,hold,sell,sell,hold
-140,CHWY,2024-03-08 12:30:00,17.79,17.0,17.69,-4.0,hold,hold,sell,buy,hold,hold
-141,QQQ,2024-03-11 12:30:00,435.63,430.94,436.71,-10.0,hold,sell,buy,sell,hold,sell
-142,HIMS,2024-03-11 12:30:00,14.305,9.92,14.49,-9.0,hold,hold,hold,sell,hold,sell
-143,CHWY,2024-03-11 12:30:00,18.18,17.0,18.255,-2.0,hold,buy,buy,sell,hold,sell
-144,QQQ,2024-03-12 12:30:00,439.55,430.95,441.32,-1.0,hold,hold,hold,buy,hold,hold
-145,HIMS,2024-03-12 12:30:00,14.51,9.94,14.62,-4.0,hold,hold,buy,sell,hold,hold
-146,CHWY,2024-03-12 12:30:00,18.33,17.0,17.98,-1.0,hold,hold,hold,buy,hold,hold
-147,QQQ,2024-03-13 12:30:00,441.32,430.95,439.9,-6.0,hold,hold,hold,sell,buy,hold
-148,HIMS,2024-03-13 12:30:00,14.67,9.94,15.13,-6.0,hold,hold,buy,sell,hold,sell
-149,CHWY,2024-03-13 12:30:00,18.17,17.0,18.0,-10.0,hold,hold,hold,sell,sell,sell
-150,QQQ,2024-03-14 12:30:00,439.9,430.94,437.58,0.0,hold,hold,hold,buy,sell,buy
-151,HIMS,2024-03-14 12:30:00,14.96,9.93,14.39,-5.0,hold,hold,hold,hold,sell,hold
-152,CHWY,2024-03-14 12:30:00,17.825,17.0,17.23,-8.0,hold,hold,hold,sell,sell,hold
-153,QQQ,2024-03-15 12:30:00,437.58,430.97,432.76,-1.0,hold,hold,buy,buy,sell,sell
-154,HIMS,2024-03-15 12:30:00,14.43,9.93,14.64,-4.0,hold,hold,hold,buy,sell,sell
-155,CHWY,2024-03-15 12:30:00,17.25,17.0,17.37,2.0,hold,buy,hold,buy,sell,hold
-156,QQQ,2024-03-18 12:30:00,437.72,430.94,433.9,-7.0,hold,hold,sell,buy,sell,sell
-157,HIMS,2024-03-18 12:30:00,14.55,9.91,15.68,-2.0,hold,hold,sell,buy,hold,buy
-158,CHWY,2024-03-18 12:30:00,17.205,17.0,16.82,-8.0,hold,hold,hold,sell,sell,hold
-159,QQQ,2024-03-19 12:30:00,433.9,430.94,438.18,-3.0,hold,hold,buy,sell,sell,buy
-160,HIMS,2024-03-19 12:30:00,15.64,9.92,15.635,-13.0,hold,hold,sell,sell,sell,sell
-161,CHWY,2024-03-19 12:30:00,16.61,17.0,16.685,-1.0,hold,sell,buy,sell,buy,sell
-162,QQQ,2024-03-20 12:30:00,438.37,430.95,447.46,-3.0,hold,hold,sell,buy,sell,buy
-163,HIMS,2024-03-20 12:30:00,15.87,9.92,16.48,0.0,hold,hold,hold,buy,sell,buy
-164,CHWY,2024-03-20 12:30:00,17.44,17.0,17.74,-2.0,hold,hold,hold,sell,sell,sell
-165,QQQ,2024-03-21 12:30:00,447.46,430.94,445.51,-2.0,hold,hold,sell,buy,hold,buy
-166,HIMS,2024-03-21 12:30:00,16.18,9.92,16.73,-5.0,hold,hold,hold,sell,hold,buy
-167,CHWY,2024-03-21 12:30:00,17.245,17.0,15.925,1.0,hold,buy,sell,buy,sell,buy
-168,QQQ,2024-03-22 12:30:00,444.1,430.98,445.14,0.0,hold,hold,buy,buy,hold,sell
-169,HIMS,2024-03-22 12:30:00,16.65,9.93,16.345,-10.0,hold,hold,sell,sell,hold,hold
-170,CHWY,2024-03-22 12:30:00,16.02,17.0,16.61,3.0,hold,hold,buy,sell,buy,sell
-171,QQQ,2024-03-25 12:30:00,443.48,430.96,444.15,-5.0,hold,hold,buy,sell,buy,sell
-172,HIMS,2024-03-25 12:30:00,16.855,9.94,16.31,0.0,hold,hold,hold,buy,sell,buy
-173,CHWY,2024-03-25 12:30:00,16.56,17.01,15.41,4.0,hold,buy,hold,sell,sell,hold
-174,QQQ,2024-03-26 12:30:00,446.21,430.93,443.39,-8.0,hold,hold,hold,sell,sell,hold
-175,HIMS,2024-03-26 12:30:00,16.3,9.92,15.81,-7.0,sell,hold,buy,sell,buy,buy
-176,CHWY,2024-03-26 12:30:00,15.375,17.0,15.265,3.0,hold,hold,buy,sell,buy,sell
-177,QQQ,2024-03-27 12:30:00,444.95,431.02,444.09,-7.0,sell,hold,buy,sell,buy,buy
-178,HIMS,2024-03-27 12:30:00,16.14,9.92,15.74,-7.0,hold,hold,buy,sell,sell,sell
-179,CHWY,2024-03-27 12:30:00,15.27,17.0,15.65,4.0,hold,hold,hold,buy,sell,sell
-180,QQQ,2024-03-28 12:30:00,444.09,430.94,443.22,-7.0,hold,hold,sell,buy,sell,sell
-181,HIMS,2024-03-28 12:30:00,15.78,9.9,15.49,0.0,hold,hold,hold,buy,sell,buy
-182,CHWY,2024-03-28 12:30:00,15.68,17.0,15.905,3.0,hold,hold,sell,buy,sell,hold
-183,QQQ,2024-04-01 12:30:00,444.41,430.94,442.35,1.0,hold,hold,hold,buy,hold,buy
-184,HIMS,2024-04-01 12:30:00,15.57,9.89,15.65,3.0,hold,hold,buy,buy,buy,hold
-185,CHWY,2024-04-01 12:30:00,15.915,17.0,16.1,6.0,hold,buy,hold,sell,sell,buy
-186,QQQ,2024-04-02 12:30:00,442.35,430.95,438.91,-10.0,hold,sell,hold,sell,sell,buy
-187,HIMS,2024-04-02 12:30:00,15.24,9.94,14.985,-2.0,hold,hold,hold,buy,sell,hold
-188,CHWY,2024-04-02 12:30:00,15.83,17.0,15.77,3.0,hold,hold,sell,buy,sell,hold
-189,QQQ,2024-04-03 12:30:00,438.8,431.0,443.82,-11.0,hold,hold,sell,sell,buy,sell
-190,HIMS,2024-04-03 12:30:00,14.95,9.92,15.485,-5.0,hold,hold,hold,hold,sell,hold
-191,CHWY,2024-04-03 12:30:00,15.52,17.0,15.76,7.0,hold,hold,hold,buy,hold,hold
-192,QQQ,2024-04-04 12:30:00,443.82,440.46,436.68,9.0,hold,buy,buy,buy,buy,buy
-193,HIMS,2024-04-04 12:30:00,15.3,15.37,14.685,-7.0,buy,hold,sell,sell,sell,sell
-194,CHWY,2024-04-04 12:30:00,16.06,16.98,16.37,-2.0,hold,sell,hold,sell,sell,buy
-195,QQQ,2024-04-05 12:30:00,436.68,440.46,439.89,1.0,sell,sell,buy,buy,sell,buy
-196,HIMS,2024-04-05 12:30:00,14.66,15.34,14.49,0.0,hold,hold,hold,sell,buy,sell
-197,CHWY,2024-04-05 12:30:00,16.43,16.98,17.085,3.0,hold,hold,sell,buy,buy,sell
-198,QQQ,2024-04-08 12:30:00,440.56,440.53,441.31,-2.0,hold,sell,hold,buy,buy,buy
-199,HIMS,2024-04-08 12:30:00,14.645,15.36,14.87,2.0,hold,hold,hold,sell,sell,buy
-200,CHWY,2024-04-08 12:30:00,17.1,16.97,16.825,-2.0,hold,hold,sell,buy,hold,buy
-201,QQQ,2024-04-09 12:30:00,441.31,440.55,436.1,-3.0,hold,sell,hold,buy,hold,buy
-202,HIMS,2024-04-09 12:30:00,14.92,15.37,14.55,0.0,hold,hold,sell,sell,hold,buy
-203,CHWY,2024-04-09 12:30:00,17.2,16.97,17.57,3.0,hold,hold,buy,sell,sell,hold
-204,QQQ,2024-04-10 12:30:00,436.1,440.48,437.27,-3.0,hold,sell,buy,sell,sell,sell
-205,HIMS,2024-04-10 12:30:00,14.575,15.37,14.545,10.0,hold,hold,hold,buy,buy,buy
-206,CHWY,2024-04-10 12:30:00,17.22,16.97,17.41,-5.0,hold,hold,sell,buy,sell,hold
-207,QQQ,2024-04-11 12:30:00,438.86,440.5,444.84,5.0,hold,buy,hold,sell,hold,hold
-208,HIMS,2024-04-11 12:30:00,14.58,15.36,14.58,6.0,hold,hold,hold,buy,buy,sell
-209,CHWY,2024-04-11 12:30:00,17.815,16.97,18.55,-10.0,hold,hold,sell,hold,sell,sell
-210,QQQ,2024-04-12 12:30:00,440.72,440.48,437.82,-9.0,hold,buy,sell,sell,sell,sell
-211,HIMS,2024-04-12 12:30:00,14.99,15.37,13.96,9.0,hold,hold,hold,buy,hold,buy
-212,CHWY,2024-04-12 12:30:00,18.08,16.97,17.65,-8.0,hold,hold,sell,sell,hold,buy
-213,QQQ,2024-04-15 12:30:00,440.15,440.42,430.43,9.0,hold,buy,sell,buy,sell,buy
-214,HIMS,2024-04-15 12:30:00,13.79,15.36,13.23,7.0,hold,hold,buy,buy,sell,sell
-215,CHWY,2024-04-15 12:30:00,17.74,16.98,16.55,-1.0,hold,hold,hold,buy,hold,hold
-216,QQQ,2024-04-16 12:30:00,431.16,440.49,430.67,14.0,hold,buy,buy,buy,hold,hold
-217,HIMS,2024-04-16 12:30:00,12.555,15.36,12.69,0.0,hold,hold,hold,sell,sell,hold
-218,CHWY,2024-04-16 12:30:00,16.245,16.97,16.55,1.0,hold,hold,buy,sell,sell,sell
-219,QQQ,2024-04-17 12:30:00,431.86,440.44,426.07,0.0,hold,hold,hold,sell,sell,hold
-220,HIMS,2024-04-17 12:30:00,12.735,15.37,12.4,2.0,hold,hold,hold,sell,sell,buy
-221,CHWY,2024-04-17 12:30:00,16.7,16.97,16.56,-1.0,hold,sell,buy,sell,buy,sell
-222,QQQ,2024-04-18 12:30:00,426.07,440.48,422.53,1.0,hold,sell,hold,buy,hold,sell
-223,HIMS,2024-04-18 12:30:00,12.3,15.36,12.345,6.0,hold,hold,buy,sell,hold,buy
-224,CHWY,2024-04-18 12:30:00,16.48,16.98,16.12,-4.0,hold,hold,sell,sell,hold,sell
-225,QQQ,2024-04-19 12:30:00,422.53,440.48,413.92,-1.0,hold,sell,buy,sell,sell,hold
-226,HIMS,2024-04-19 12:30:00,12.11,15.36,11.9,3.0,hold,hold,hold,sell,hold,buy
-227,CHWY,2024-04-19 12:30:00,16.29,16.98,16.14,2.0,hold,hold,buy,sell,hold,sell
-228,QQQ,2024-04-22 12:30:00,416.12,440.51,419.39,13.0,hold,buy,hold,buy,hold,buy
-229,HIMS,2024-04-22 12:30:00,11.88,15.36,11.875,4.0,hold,hold,hold,buy,sell,sell
-230,CHWY,2024-04-22 12:30:00,16.215,16.98,15.7,8.0,hold,buy,hold,buy,sell,sell
-231,QQQ,2024-04-23 12:30:00,419.39,440.48,425.59,2.0,hold,sell,sell,buy,hold,buy
-232,HIMS,2024-04-23 12:30:00,12.01,15.36,12.33,-1.0,hold,hold,sell,sell,sell,buy
-233,CHWY,2024-04-23 12:30:00,15.49,16.98,15.595,2.0,hold,hold,buy,sell,hold,sell
-234,QQQ,2024-04-24 12:30:00,427.53,440.47,422.32,7.0,hold,hold,hold,buy,hold,hold
-235,HIMS,2024-04-24 12:30:00,12.42,15.37,12.345,1.0,hold,hold,hold,sell,hold,hold
-236,CHWY,2024-04-24 12:30:00,15.545,16.98,15.075,2.0,hold,hold,buy,sell,hold,sell
-237,QQQ,2024-04-25 12:30:00,420.05,440.5,428.36,7.0,hold,buy,buy,sell,sell,hold
-238,HIMS,2024-04-25 12:30:00,12.05,15.37,12.27,1.0,hold,hold,sell,buy,sell,sell
-239,CHWY,2024-04-25 12:30:00,14.99,16.98,15.4,1.0,hold,hold,buy,sell,sell,sell
-240,QQQ,2024-04-26 12:30:00,428.36,440.58,430.32,10.0,buy,buy,sell,sell,hold,buy
-241,HIMS,2024-04-26 12:30:00,12.435,15.37,12.49,2.0,hold,hold,hold,sell,sell,buy
-242,CHWY,2024-04-26 12:30:00,15.57,16.97,15.83,2.0,hold,hold,sell,hold,sell,buy
-243,QQQ,2024-04-29 12:30:00,432.33,440.52,429.5,4.0,hold,buy,hold,sell,sell,hold
-244,HIMS,2024-04-29 12:30:00,12.71,15.37,12.545,7.0,hold,hold,buy,buy,sell,sell
-245,CHWY,2024-04-29 12:30:00,16.15,16.98,15.765,11.0,hold,hold,buy,buy,sell,buy
-246,QQQ,2024-04-30 12:30:00,429.5,440.5,422.21,6.0,hold,buy,buy,sell,hold,sell
-247,HIMS,2024-04-30 12:30:00,12.35,15.36,12.53,8.0,hold,hold,hold,buy,sell,buy
-248,CHWY,2024-04-30 12:30:00,15.29,16.98,14.99,8.0,hold,hold,buy,buy,hold,sell
-249,QQQ,2024-05-01 12:30:00,422.21,440.48,424.82,5.0,hold,hold,buy,sell,sell,buy
-250,HIMS,2024-05-01 12:30:00,12.465,15.36,12.495,6.0,hold,hold,hold,buy,sell,hold
-251,CHWY,2024-05-01 12:30:00,14.95,16.97,15.05,2.0,hold,hold,buy,sell,hold,sell
-252,QQQ,2024-05-02 12:30:00,424.82,440.5,432.56,4.0,hold,hold,sell,buy,hold,hold
-253,HIMS,2024-05-02 12:30:00,11.87,15.37,12.26,5.0,buy,hold,sell,sell,sell,buy
-254,CHWY,2024-05-02 12:30:00,15.18,16.98,15.94,-1.0,hold,hold,sell,sell,sell,buy
-255,QQQ,2024-05-03 12:30:00,432.56,440.55,435.28,1.0,hold,sell,sell,buy,sell,buy
-256,HIMS,2024-05-03 12:30:00,12.32,15.36,11.235,12.0,hold,hold,buy,buy,hold,buy
-257,CHWY,2024-05-03 12:30:00,16.36,16.98,15.89,-3.0,hold,sell,sell,sell,buy,buy
-258,QQQ,2024-05-06 12:30:00,436.25,430.94,439.28,-3.0,hold,hold,sell,buy,sell,buy
-259,HIMS,2024-05-06 12:30:00,11.73,12.55,11.65,9.0,hold,hold,buy,buy,sell,hold
-260,CHWY,2024-05-06 12:30:00,16.195,16.24,15.98,1.0,hold,hold,sell,buy,sell,sell
-261,QQQ,2024-05-07 12:30:00,438.89,430.9,437.46,-9.0,hold,sell,sell,buy,sell,hold
-262,HIMS,2024-05-07 12:30:00,13.2,12.56,12.37,8.0,hold,hold,buy,buy,hold,sell
-263,CHWY,2024-05-07 12:30:00,15.82,16.24,15.47,-2.0,hold,hold,hold,sell,sell,sell
-264,QQQ,2024-05-08 12:30:00,437.46,430.87,439.85,-6.0,hold,sell,buy,sell,hold,buy
-265,HIMS,2024-05-08 12:30:00,11.86,12.55,12.15,0.0,hold,hold,hold,sell,buy,sell
-266,CHWY,2024-05-08 12:30:00,15.22,16.24,15.44,1.0,hold,hold,buy,sell,sell,sell
-267,QQQ,2024-05-09 12:30:00,439.85,430.99,442.21,-5.0,hold,hold,hold,sell,hold,buy
-268,HIMS,2024-05-09 12:30:00,12.485,12.56,12.91,5.0,hold,hold,sell,buy,sell,buy
-269,CHWY,2024-05-09 12:30:00,15.585,16.24,16.405,-2.0,hold,hold,sell,sell,hold,hold
-270,QQQ,2024-05-10 12:30:00,442.21,430.89,441.1,-3.0,hold,hold,sell,buy,sell,buy
-271,HIMS,2024-05-10 12:30:00,12.755,12.55,12.29,-5.0,hold,hold,hold,sell,hold,buy
-272,CHWY,2024-05-10 12:30:00,16.3,16.23,15.44,-9.0,hold,hold,sell,sell,sell,buy
-273,QQQ,2024-05-13 12:30:00,442.87,430.87,440.95,-6.0,hold,buy,hold,sell,sell,sell
-274,HIMS,2024-05-13 12:30:00,12.41,12.55,12.88,8.0,hold,hold,buy,buy,hold,sell
-275,CHWY,2024-05-13 12:30:00,15.96,16.24,16.105,11.0,hold,hold,buy,buy,sell,buy
-276,QQQ,2024-05-14 12:30:00,440.95,430.87,447.9,-3.0,hold,buy,buy,sell,sell,sell
-277,HIMS,2024-05-14 12:30:00,13.215,12.55,13.735,-7.0,hold,hold,sell,buy,sell,sell
-278,CHWY,2024-05-14 12:30:00,17.05,16.23,16.825,8.0,hold,hold,hold,buy,sell,buy
-279,QQQ,2024-05-15 12:30:00,447.9,430.88,452.74,3.0,hold,buy,sell,buy,buy,buy
-280,HIMS,2024-05-15 12:30:00,13.93,12.55,13.81,-10.0,hold,hold,sell,sell,hold,hold
-281,CHWY,2024-05-15 12:30:00,17.02,16.24,16.35,8.0,hold,buy,buy,buy,hold,buy
-282,QQQ,2024-05-16 12:30:00,452.74,430.89,452.02,2.0,hold,buy,sell,buy,hold,buy
-283,HIMS,2024-05-16 12:30:00,13.85,12.56,14.035,-3.0,hold,hold,hold,buy,hold,sell
-284,CHWY,2024-05-16 12:30:00,16.455,16.24,16.96,-7.0,hold,hold,buy,sell,sell,sell
-285,QQQ,2024-05-17 12:30:00,452.02,430.85,450.91,0.0,hold,hold,hold,buy,sell,buy
-286,HIMS,2024-05-17 12:30:00,14.065,12.56,14.565,-6.0,hold,hold,hold,sell,buy,hold
-287,CHWY,2024-05-17 12:30:00,16.33,16.24,16.05,-3.0,hold,hold,sell,buy,sell,buy
-288,QQQ,2024-05-20 12:30:00,451.87,430.9,453.3,7.0,hold,buy,buy,buy,sell,buy
-289,HIMS,2024-05-20 12:30:00,16.7,12.55,18.62,-1.0,hold,hold,hold,buy,hold,hold
-290,CHWY,2024-05-20 12:30:00,16.005,16.23,16.275,11.0,hold,hold,buy,buy,sell,buy
-291,QQQ,2024-05-21 12:30:00,453.3,430.82,454.95,-6.0,hold,buy,hold,sell,sell,sell
-292,HIMS,2024-05-21 12:30:00,18.51,12.55,17.55,-5.0,hold,hold,hold,sell,hold,buy
-293,CHWY,2024-05-21 12:30:00,16.14,16.23,16.715,-3.0,hold,hold,sell,buy,sell,buy
-294,QQQ,2024-05-22 12:30:00,454.95,430.84,460.53,-2.0,hold,hold,hold,buy,sell,hold
-295,HIMS,2024-05-22 12:30:00,16.785,12.55,16.195,-10.0,hold,hold,hold,sell,sell,sell
-296,CHWY,2024-05-22 12:30:00,16.87,16.24,16.39,-2.0,hold,hold,sell,buy,hold,buy
-297,QQQ,2024-05-23 12:30:00,460.53,430.85,452.81,13.0,buy,buy,buy,buy,sell,buy
-298,HIMS,2024-05-23 12:30:00,16.43,12.57,15.84,1.0,hold,hold,buy,buy,sell,hold
-299,CHWY,2024-05-23 12:30:00,16.305,16.23,16.26,-1.0,hold,hold,buy,buy,sell,sell
-300,QQQ,2024-05-24 12:30:00,454.87,430.94,457.25,-3.0,sell,buy,buy,buy,sell,sell
-301,HIMS,2024-05-24 12:30:00,16.145,12.55,16.875,1.0,hold,hold,buy,buy,sell,hold
-302,CHWY,2024-05-24 12:30:00,16.465,16.24,16.6,-1.0,hold,hold,buy,buy,sell,sell
-303,QQQ,2024-05-28 12:30:00,458.03,430.85,459.01,1.0,hold,hold,hold,buy,hold,buy
-304,HIMS,2024-05-28 12:30:00,17.395,12.54,19.105,-7.0,hold,hold,sell,buy,sell,sell
-305,CHWY,2024-05-28 12:30:00,16.61,16.24,16.905,8.0,buy,hold,hold,buy,buy,buy
-306,QQQ,2024-05-29 12:30:00,455.13,430.82,454.27,5.0,hold,buy,buy,buy,buy,sell
-307,HIMS,2024-05-29 12:30:00,18.61,12.55,19.52,1.0,hold,hold,hold,buy,hold,buy
-308,CHWY,2024-05-29 12:30:00,20.105,16.23,21.495,-2.0,hold,hold,sell,buy,hold,buy
-309,QQQ,2024-05-30 12:30:00,454.93,430.83,451.52,-3.0,hold,hold,buy,sell,sell,buy
-310,HIMS,2024-05-30 12:30:00,19.82,12.55,20.38,-3.0,hold,hold,hold,buy,hold,sell
-311,CHWY,2024-05-30 12:30:00,22.33,16.22,21.555,-3.0,hold,hold,hold,buy,hold,sell
-312,QQQ,2024-05-31 12:30:00,451.52,430.91,450.5,3.0,hold,hold,buy,buy,sell,buy
-313,HIMS,2024-05-31 12:30:00,20.5,12.56,19.42,3.0,hold,hold,buy,buy,sell,buy
-314,CHWY,2024-05-31 12:30:00,21.49,16.23,21.23,-10.0,hold,hold,hold,sell,sell,sell
-315,QQQ,2024-06-03 12:30:00,453.25,430.84,452.7,2.0,hold,buy,sell,buy,hold,buy
-316,HIMS,2024-06-03 12:30:00,20.375,12.54,20.48,1.0,hold,hold,hold,buy,hold,buy
-317,CHWY,2024-06-03 12:30:00,21.7,16.23,22.135,-6.0,hold,buy,sell,hold,sell,sell
-318,QQQ,2024-06-04 12:30:00,451.53,430.97,456.02,5.0,hold,buy,buy,buy,sell,hold
-319,HIMS,2024-06-04 12:30:00,20.15,12.56,20.82,1.0,hold,hold,buy,buy,sell,hold
-320,CHWY,2024-06-04 12:30:00,22.28,16.24,22.225,3.0,buy,hold,sell,buy,sell,buy
-321,QQQ,2024-06-05 12:30:00,456.53,430.93,463.0,1.0,hold,buy,sell,buy,sell,buy
-322,HIMS,2024-06-05 12:30:00,20.93,12.55,21.75,-8.0,hold,hold,hold,sell,sell,hold
-323,CHWY,2024-06-05 12:30:00,22.33,16.24,22.61,-3.0,hold,hold,hold,buy,hold,sell
-324,QQQ,2024-06-06 12:30:00,462.99,450.43,461.74,-4.0,hold,hold,sell,buy,hold,hold
-325,HIMS,2024-06-06 12:30:00,21.32,16.52,21.57,1.0,hold,hold,hold,buy,hold,buy
-326,CHWY,2024-06-06 12:30:00,22.725,16.51,23.865,-7.0,hold,hold,buy,sell,sell,sell
-327,QQQ,2024-06-07 12:30:00,461.74,450.39,462.02,-10.0,hold,hold,hold,sell,sell,sell
-328,HIMS,2024-06-07 12:30:00,21.35,16.5,20.77,-4.0,hold,hold,hold,buy,sell,sell
-329,CHWY,2024-06-07 12:30:00,23.69,16.49,22.775,-9.0,hold,hold,hold,sell,hold,sell
-330,QQQ,2024-06-10 12:30:00,461.83,450.26,462.76,1.0,hold,hold,buy,buy,sell,hold
-331,HIMS,2024-06-10 12:30:00,20.945,16.54,21.63,-10.0,hold,hold,hold,sell,sell,sell
-332,CHWY,2024-06-10 12:30:00,22.43,16.49,22.685,-5.0,hold,hold,buy,sell,buy,sell
-333,QQQ,2024-06-11 12:30:00,462.76,450.5,472.17,-10.0,hold,hold,hold,sell,sell,sell
-334,HIMS,2024-06-11 12:30:00,21.565,16.54,22.03,0.0,hold,hold,hold,buy,sell,buy
-335,CHWY,2024-06-11 12:30:00,22.51,16.46,22.845,-9.0,hold,hold,hold,sell,hold,sell
-336,QQQ,2024-06-12 12:30:00,472.17,450.35,477.99,-3.0,hold,hold,sell,buy,sell,buy
-337,HIMS,2024-06-12 12:30:00,23.0,16.51,23.76,-4.0,hold,hold,hold,buy,sell,sell
-338,CHWY,2024-06-12 12:30:00,23.24,16.47,22.4,-3.0,hold,hold,buy,sell,sell,buy
-339,QQQ,2024-06-13 12:30:00,477.99,450.45,476.2,-3.0,hold,hold,sell,buy,sell,buy
-340,HIMS,2024-06-13 12:30:00,24.2,16.55,24.36,-9.0,hold,hold,sell,sell,sell,buy
-341,CHWY,2024-06-13 12:30:00,22.775,16.48,23.255,-5.0,hold,hold,buy,sell,buy,sell
-342,QQQ,2024-06-14 12:30:00,475.46,450.41,478.53,-8.0,hold,hold,hold,sell,sell,hold
-343,HIMS,2024-06-14 12:30:00,23.93,16.47,23.76,-10.0,hold,hold,hold,sell,sell,sell
-344,CHWY,2024-06-14 12:30:00,23.175,16.48,22.13,-13.0,hold,hold,sell,sell,sell,sell
-345,QQQ,2024-06-17 12:30:00,478.71,450.41,483.83,-2.0,hold,hold,hold,buy,sell,hold
-346,HIMS,2024-06-17 12:30:00,24.87,16.51,24.11,-4.0,hold,hold,hold,buy,sell,sell
-347,CHWY,2024-06-17 12:30:00,22.27,16.5,22.825,3.0,hold,hold,buy,buy,sell,buy
-348,QQQ,2024-06-18 12:30:00,484.43,450.34,484.5,-10.0,hold,hold,sell,sell,hold,hold
-349,HIMS,2024-06-18 12:30:00,24.09,16.49,24.795,-10.0,hold,hold,hold,sell,sell,sell
-350,CHWY,2024-06-18 12:30:00,23.15,16.49,25.965,-1.0,buy,hold,sell,sell,buy,buy
-351,QQQ,2024-06-19 12:30:00,486.96,450.22,486.43,-2.0,hold,hold,hold,buy,sell,hold
-352,QQQ,2024-06-20 12:30:00,486.43,450.28,480.84,-5.0,hold,hold,sell,buy,buy,sell
-353,HIMS,2024-06-20 12:30:00,23.53,16.53,22.38,-5.0,hold,hold,buy,sell,buy,sell
-354,CHWY,2024-06-20 12:30:00,26.05,16.48,25.49,2.0,hold,hold,hold,buy,buy,buy
-355,QQQ,2024-06-21 12:30:00,480.72,450.48,480.07,5.0,hold,hold,buy,buy,buy,buy
-356,HIMS,2024-06-21 12:30:00,22.125,16.53,22.145,4.0,hold,hold,buy,buy,hold,buy
-357,CHWY,2024-06-21 12:30:00,25.325,16.46,25.48,3.0,hold,hold,buy,buy,sell,buy
-358,QQQ,2024-06-24 12:30:00,478.49,450.17,475.87,2.0,hold,buy,hold,buy,sell,hold
-359,HIMS,2024-06-24 12:30:00,22.245,16.49,22.18,0.0,hold,hold,hold,buy,sell,buy
-360,CHWY,2024-06-24 12:30:00,25.64,16.47,26.96,-3.0,hold,hold,sell,buy,sell,buy
-361,QQQ,2024-06-25 12:30:00,475.87,450.29,479.38,4.0,hold,hold,buy,buy,hold,buy
-362,HIMS,2024-06-25 12:30:00,22.23,16.46,23.18,-6.0,hold,hold,hold,sell,sell,buy
-363,CHWY,2024-06-25 12:30:00,28.02,16.48,30.05,-9.0,hold,hold,sell,sell,sell,buy
-364,QQQ,2024-06-26 12:30:00,479.38,450.47,478.8,-11.0,hold,hold,sell,sell,sell,hold
-365,HIMS,2024-06-26 12:30:00,23.0,16.5,21.555,-6.0,hold,hold,hold,sell,buy,hold
-366,CHWY,2024-06-26 12:30:00,29.57,16.48,28.92,-3.0,hold,hold,sell,buy,buy,hold
-367,QQQ,2024-06-27 12:30:00,479.98,450.38,482.07,-10.0,hold,hold,hold,sell,sell,sell
-368,HIMS,2024-06-27 12:30:00,19.89,16.52,20.015,0.0,hold,hold,hold,buy,buy,hold
-369,CHWY,2024-06-27 12:30:00,28.335,16.47,29.06,-6.0,hold,hold,buy,sell,hold,sell
-370,QQQ,2024-06-28 12:30:00,483.39,450.31,479.98,-3.0,hold,hold,hold,buy,hold,sell
-371,HIMS,2024-06-28 12:30:00,20.43,16.5,20.15,-4.0,hold,hold,hold,sell,buy,buy
-372,CHWY,2024-06-28 12:30:00,27.71,16.46,27.21,-5.0,buy,hold,sell,sell,sell,hold
+,symbol,class,date,current_price,1_bar_later,2_bar_later,3_bar_later
+0,SPY,Buy,2022-01-03 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-03 19:45:00+00:00    459.59
+Name: close, dtype: float64",459.72,459.75,459.3
+1,SPY,Buy,2022-01-03 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-03 21:45:00+00:00    459.87
+Name: close, dtype: float64",461.49,461.95,461.93
+2,SPY,Buy,2022-01-04 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 15:00:00+00:00    461.44
+Name: close, dtype: float64",461.74,460.72,459.92
+3,SPY,Buy,2022-01-04 15:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 15:30:00+00:00    460.72
+Name: close, dtype: float64",459.92,459.43,459.31
+4,SPY,Buy,2022-01-04 15:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 15:45:00+00:00    459.92
+Name: close, dtype: float64",459.43,459.31,459.9
+5,SPY,Sell,2022-01-04 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 18:00:00+00:00    459.29
+Name: close, dtype: float64",459.17,458.75,458.12
+6,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+7,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+8,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+9,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+10,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+11,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+12,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+13,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+14,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+15,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+16,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+17,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+18,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+19,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+20,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+21,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+22,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+23,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+24,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+25,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+26,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+27,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+28,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+29,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+30,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+31,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+32,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+33,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+34,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+35,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+36,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+37,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+38,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+39,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+40,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+41,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+42,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+43,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+44,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+45,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+46,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+47,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+48,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+49,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+50,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+51,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+52,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+53,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+54,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+55,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+56,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+57,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+58,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+59,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+60,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+61,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+62,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+63,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+64,SPY,Buy,2022-01-04 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-04 21:00:00+00:00    459.77
+Name: close, dtype: float64",459.77,459.82,459.73
+65,SPY,Buy,2022-01-05 13:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-05 13:30:00+00:00    459.56
+Name: close, dtype: float64",459.79,459.6,459.15
+66,SPY,Buy,2022-01-05 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-05 14:30:00+00:00    459.15
+Name: close, dtype: float64",459.58,459.31,460.04
+67,SPY,Sell,2022-01-05 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-05 15:15:00+00:00    460.04
+Name: close, dtype: float64",459.65,459.58,459.29
+68,SPY,Sell,2022-01-05 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-05 16:15:00+00:00    459.57
+Name: close, dtype: float64",458.86,458.93,459.25
+69,SPY,Buy,2022-01-10 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-10 21:45:00+00:00    448.08
+Name: close, dtype: float64",448.3,447.91,448.2
+70,SPY,Buy,2022-01-11 14:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 14:00:00+00:00    447.91
+Name: close, dtype: float64",448.2,445.5,445.74
+71,SPY,Buy,2022-01-11 16:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 16:45:00+00:00    450.23
+Name: close, dtype: float64",450.53,449.52,450.15
+72,SPY,Buy,2022-01-11 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 17:15:00+00:00    449.52
+Name: close, dtype: float64",450.15,450.53,450.35
+73,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+74,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+75,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+76,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+77,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+78,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+79,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+80,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+81,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+82,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+83,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+84,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+85,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+86,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+87,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+88,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+89,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+90,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+91,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+92,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+93,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+94,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+95,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+96,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+97,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+98,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+99,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+100,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+101,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+102,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+103,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+104,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+105,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+106,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+107,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+108,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+109,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+110,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+111,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+112,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+113,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+114,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+115,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+116,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+117,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+118,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+119,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+120,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+121,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+122,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+123,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+124,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+125,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+126,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+127,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+128,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+129,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+130,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+131,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+132,SPY,Buy,2022-01-11 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-11 20:30:00+00:00    451.88
+Name: close, dtype: float64",452.38,452.24,452.23
+133,SPY,Buy,2022-01-12 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 14:30:00+00:00    453.84
+Name: close, dtype: float64",455.13,455.53,454.86
+134,SPY,Buy,2022-01-12 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 15:15:00+00:00    454.86
+Name: close, dtype: float64",453.29,453.32,452.18
+135,SPY,Buy,2022-01-12 15:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 15:30:00+00:00    453.29
+Name: close, dtype: float64",453.32,452.18,453.0
+136,SPY,Buy,2022-01-12 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 16:00:00+00:00    452.18
+Name: close, dtype: float64",453.0,453.39,453.56
+137,SPY,Sell,2022-01-12 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 17:15:00+00:00    453.52
+Name: close, dtype: float64",453.73,454.24,453.75
+138,SPY,Sell,2022-01-12 17:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 17:30:00+00:00    453.73
+Name: close, dtype: float64",454.24,453.75,453.29
+139,SPY,Sell,2022-01-12 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 18:30:00+00:00    453.43
+Name: close, dtype: float64",453.01,453.06,453.71
+140,SPY,Buy,2022-01-12 19:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 19:30:00+00:00    452.97
+Name: close, dtype: float64",453.48,453.22,453.16
+141,SPY,Buy,2022-01-12 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-12 21:45:00+00:00    453.69
+Name: close, dtype: float64",454.62,454.84,454.83
+142,SPY,Buy,2022-01-13 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-13 15:00:00+00:00    453.88
+Name: close, dtype: float64",453.73,452.98,452.56
+143,SPY,Buy,2022-01-13 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-13 15:15:00+00:00    453.73
+Name: close, dtype: float64",452.98,452.56,452.23
+144,SPY,Sell,2022-01-19 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-19 17:15:00+00:00    441.15
+Name: close, dtype: float64",440.39,441.13,441.06
+145,SPY,Buy,2022-01-20 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-20 17:00:00+00:00    440.45
+Name: close, dtype: float64",440.54,440.68,439.84
+146,SPY,Buy,2022-01-20 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-20 17:45:00+00:00    439.84
+Name: close, dtype: float64",439.19,438.82,438.95
+147,SPY,Buy,2022-01-20 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-20 18:00:00+00:00    439.19
+Name: close, dtype: float64",438.82,438.95,438.51
+148,SPY,Buy,2022-01-25 15:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 15:45:00+00:00    415.12
+Name: close, dtype: float64",414.42,416.18,414.38
+149,SPY,Buy,2022-01-25 20:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:00:00+00:00    420.89
+Name: close, dtype: float64",419.21,419.71,418.42
+150,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+151,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+152,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+153,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+154,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+155,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+156,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+157,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+158,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+159,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+160,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+161,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+162,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+163,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+164,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+165,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+166,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+167,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+168,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+169,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+170,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+171,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+172,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+173,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+174,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+175,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+176,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+177,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+178,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+179,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+180,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+181,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+182,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+183,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+184,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+185,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+186,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+187,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+188,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+189,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+190,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+191,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+192,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+193,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+194,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+195,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+196,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+197,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+198,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+199,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+200,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+201,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+202,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+203,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+204,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+205,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+206,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+207,SPY,Buy,2022-01-25 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-25 20:45:00+00:00    418.42
+Name: close, dtype: float64",416.8,416.05,414.1
+208,SPY,Buy,2022-01-26 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-26 15:15:00+00:00    422.85
+Name: close, dtype: float64",421.83,422.93,424.15
+209,SPY,Buy,2022-01-26 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-26 17:45:00+00:00    425.6
+Name: close, dtype: float64",424.95,424.61,424.52
+210,SPY,Buy,2022-01-26 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-26 18:00:00+00:00    424.95
+Name: close, dtype: float64",424.61,424.52,424.43
+211,SPY,Buy,2022-01-26 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-26 19:00:00+00:00    422.71
+Name: close, dtype: float64",425.13,421.39,420.19
+212,SPY,Sell,2022-01-27 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-27 14:30:00+00:00    423.57
+Name: close, dtype: float64",424.03,424.79,421.25
+213,SPY,Sell,2022-01-27 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-27 14:45:00+00:00    424.03
+Name: close, dtype: float64",424.79,421.25,421.73
+214,SPY,Buy,2022-01-28 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-28 17:45:00+00:00    418.5
+Name: close, dtype: float64",420.09,419.51,420.05
+215,SPY,Buy,2022-01-28 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-28 18:15:00+00:00    419.51
+Name: close, dtype: float64",420.05,420.13,417.99
+216,SPY,Buy,2022-01-31 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 17:00:00+00:00    429.59
+Name: close, dtype: float64",429.87,429.9,430.82
+217,SPY,Buy,2022-01-31 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 18:00:00+00:00    430.6
+Name: close, dtype: float64",430.36,430.35,430.86
+218,SPY,Buy,2022-01-31 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 18:15:00+00:00    430.36
+Name: close, dtype: float64",430.35,430.86,431.27
+219,SPY,Buy,2022-01-31 19:30:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 19:30:00+00:00    431.7
+Name: close, dtype: float64",431.52,429.66,430.66
+220,SPY,Buy,2022-01-31 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 19:45:00+00:00    431.52
+Name: close, dtype: float64",429.66,430.66,431.59
+221,SPY,Buy,2022-01-31 20:00:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 20:00:00+00:00    429.66
+Name: close, dtype: float64",430.66,431.59,433.18
+222,SPY,Buy,2022-01-31 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-01-31 21:45:00+00:00    431.97
+Name: close, dtype: float64",432.51,433.13,432.37
+223,SPY,Buy,2022-02-01 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 15:00:00+00:00    432.37
+Name: close, dtype: float64",432.16,431.81,433.34
+224,SPY,Buy,2022-02-01 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 15:15:00+00:00    432.16
+Name: close, dtype: float64",431.81,433.34,434.09
+225,SPY,Buy,2022-02-01 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 16:15:00+00:00    433.24
+Name: close, dtype: float64",433.41,434.05,433.27
+226,SPY,Buy,2022-02-01 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 18:45:00+00:00    433.73
+Name: close, dtype: float64",433.61,433.49,433.72
+227,SPY,Buy,2022-02-01 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 19:00:00+00:00    433.61
+Name: close, dtype: float64",433.49,433.72,433.8
+228,SPY,Buy,2022-02-01 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-01 19:15:00+00:00    433.49
+Name: close, dtype: float64",433.72,433.8,434.94
+229,SPY,Buy,2022-02-02 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 14:45:00+00:00    437.72
+Name: close, dtype: float64",437.89,437.36,438.4
+230,SPY,Buy,2022-02-02 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 15:15:00+00:00    437.36
+Name: close, dtype: float64",438.4,438.25,436.48
+231,SPY,Buy,2022-02-02 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 16:00:00+00:00    436.48
+Name: close, dtype: float64",437.5,437.21,437.95
+232,SPY,Buy,2022-02-02 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 17:15:00+00:00    438.31
+Name: close, dtype: float64",438.86,439.94,439.31
+233,SPY,Buy,2022-02-02 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 18:15:00+00:00    438.79
+Name: close, dtype: float64",439.46,439.41,439.28
+234,SPY,Buy,2022-02-02 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 18:45:00+00:00    439.41
+Name: close, dtype: float64",439.28,439.39,440.25
+235,SPY,Buy,2022-02-02 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 19:00:00+00:00    439.28
+Name: close, dtype: float64",439.39,440.25,440.1
+236,SPY,Buy,2022-02-02 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 19:45:00+00:00    440.1
+Name: close, dtype: float64",440.15,440.45,440.74
+237,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+238,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+239,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+240,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+241,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+242,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+243,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+244,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+245,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+246,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+247,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+248,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+249,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+250,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+251,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+252,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+253,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+254,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+255,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+256,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+257,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+258,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+259,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+260,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+261,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+262,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+263,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+264,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+265,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+266,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+267,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+268,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+269,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+270,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+271,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+272,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+273,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+274,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+275,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+276,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+277,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+278,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+279,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+280,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+281,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+282,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+283,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+284,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+285,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+286,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+287,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+288,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+289,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+290,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+291,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+292,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+293,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+294,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+295,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+296,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+297,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+298,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+299,SPY,Buy,2022-02-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-02 20:45:00+00:00    440.28
+Name: close, dtype: float64",436.92,437.47,437.31
+300,SPY,Buy,2022-02-04 20:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-04 20:15:00+00:00    435.14
+Name: close, dtype: float64",434.2,432.16,431.72
+301,SPY,Sell,2022-02-07 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-07 14:45:00+00:00    433.36
+Name: close, dtype: float64",432.1,433.34,432.89
+302,SPY,Sell,2022-02-07 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-07 18:45:00+00:00    432.86
+Name: close, dtype: float64",432.36,433.4,433.72
+303,SPY,Buy,2022-02-07 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-07 19:45:00+00:00    433.32
+Name: close, dtype: float64",434.27,432.54,431.09
+304,SPY,Sell,2022-02-08 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-08 16:00:00+00:00    432.39
+Name: close, dtype: float64",432.41,433.2,433.43
+305,SPY,Buy,2022-02-08 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-08 17:45:00+00:00    433.93
+Name: close, dtype: float64",433.9,433.21,433.23
+306,SPY,Buy,2022-02-08 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-08 19:15:00+00:00    432.34
+Name: close, dtype: float64",432.05,432.05,433.85
+307,SPY,Buy,2022-02-09 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-09 14:45:00+00:00    438.59
+Name: close, dtype: float64",438.83,439.04,439.22
+308,SPY,Buy,2022-02-09 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-09 16:00:00+00:00    439.11
+Name: close, dtype: float64",439.33,439.11,439.01
+309,SPY,Buy,2022-02-09 16:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-09 16:45:00+00:00    439.01
+Name: close, dtype: float64",439.01,439.22,439.62
+310,SPY,Buy,2022-02-09 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-09 18:00:00+00:00    439.25
+Name: close, dtype: float64",439.69,439.81,439.87
+311,SPY,Buy,2022-02-09 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-09 19:45:00+00:00    439.76
+Name: close, dtype: float64",439.21,440.09,439.98
+312,SPY,Buy,2022-02-10 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-10 17:45:00+00:00    436.91
+Name: close, dtype: float64",436.98,434.82,434.77
+313,SPY,Buy,2022-02-15 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 14:45:00+00:00    427.63
+Name: close, dtype: float64",427.63,428.48,429.04
+314,SPY,Buy,2022-02-15 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 16:15:00+00:00    428.43
+Name: close, dtype: float64",428.93,429.11,428.39
+315,SPY,Buy,2022-02-15 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 17:00:00+00:00    428.39
+Name: close, dtype: float64",427.95,427.74,427.39
+316,SPY,Buy,2022-02-15 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 17:15:00+00:00    427.95
+Name: close, dtype: float64",427.74,427.39,428.03
+317,SPY,Buy,2022-02-15 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 18:30:00+00:00    428.83
+Name: close, dtype: float64",428.97,428.48,428.87
+318,SPY,Sell,2022-02-15 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 19:15:00+00:00    428.87
+Name: close, dtype: float64",429.07,428.84,429.25
+319,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+320,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+321,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+322,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+323,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+324,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+325,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+326,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+327,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+328,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+329,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+330,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+331,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+332,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+333,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+334,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+335,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+336,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+337,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+338,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+339,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+340,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+341,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+342,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+343,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+344,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+345,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+346,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+347,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+348,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+349,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+350,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+351,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+352,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+353,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+354,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+355,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+356,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+357,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+358,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+359,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+360,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+361,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+362,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+363,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+364,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+365,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+366,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+367,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+368,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+369,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+370,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+371,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+372,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+373,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+374,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+375,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+376,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+377,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+378,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+379,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+380,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+381,SPY,Buy,2022-02-15 21:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-15 21:00:00+00:00    428.66
+Name: close, dtype: float64",429.14,429.17,428.69
+382,SPY,Buy,2022-02-16 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-16 20:45:00+00:00    430.16
+Name: close, dtype: float64",429.78,429.96,429.77
+383,SPY,Buy,2022-02-16 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-16 21:45:00+00:00    429.51
+Name: close, dtype: float64",428.25,426.77,427.75
+384,SPY,Buy,2022-02-16 21:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-16 21:45:00+00:00    429.51
+Name: close, dtype: float64",428.25,426.77,427.75
+385,SPY,Buy,2022-02-25 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 14:45:00+00:00    412.69
+Name: close, dtype: float64",413.92,416.0,416.61
+386,SPY,Buy,2022-02-25 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 17:00:00+00:00    419.5
+Name: close, dtype: float64",420.46,420.97,419.69
+387,SPY,Buy,2022-02-25 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 17:45:00+00:00    419.69
+Name: close, dtype: float64",419.39,420.37,421.37
+388,SPY,Buy,2022-02-25 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 18:00:00+00:00    419.39
+Name: close, dtype: float64",420.37,421.37,420.5
+389,SPY,Buy,2022-02-25 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 18:45:00+00:00    420.5
+Name: close, dtype: float64",419.94,420.88,420.29
+390,SPY,Buy,2022-02-25 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 19:00:00+00:00    419.94
+Name: close, dtype: float64",420.88,420.29,419.94
+391,SPY,Buy,2022-02-25 19:30:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 19:30:00+00:00    420.29
+Name: close, dtype: float64",419.94,419.72,420.47
+392,SPY,Buy,2022-02-25 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 19:45:00+00:00    419.94
+Name: close, dtype: float64",419.72,420.47,420.82
+393,SPY,Buy,2022-02-25 20:00:00+00:00,"symbol  timestamp                
+SPY     2022-02-25 20:00:00+00:00    419.72
+Name: close, dtype: float64",420.47,420.82,421.47
+394,SPY,Buy,2022-02-28 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-02-28 17:15:00+00:00    418.63
+Name: close, dtype: float64",417.21,417.59,419.05
+395,SPY,Buy,2022-02-28 17:30:00+00:00,"symbol  timestamp                
+SPY     2022-02-28 17:30:00+00:00    417.21
+Name: close, dtype: float64",417.59,419.05,417.71
+396,SPY,Buy,2022-03-01 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-01 15:00:00+00:00    417.76
+Name: close, dtype: float64",418.57,416.54,416.54
+397,SPY,Buy,2022-03-02 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 16:15:00+00:00    420.55
+Name: close, dtype: float64",420.22,420.94,421.45
+398,SPY,Buy,2022-03-02 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 18:15:00+00:00    422.27
+Name: close, dtype: float64",422.73,422.53,422.8
+399,SPY,Buy,2022-03-02 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 19:15:00+00:00    422.22
+Name: close, dtype: float64",422.89,421.77,421.81
+400,SPY,Buy,2022-03-02 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 19:45:00+00:00    421.77
+Name: close, dtype: float64",421.81,422.46,422.48
+401,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+402,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+403,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+404,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+405,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+406,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+407,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+408,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+409,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+410,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+411,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+412,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+413,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+414,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+415,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+416,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+417,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+418,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+419,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+420,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+421,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+422,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+423,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+424,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+425,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+426,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+427,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+428,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+429,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+430,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+431,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+432,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+433,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+434,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+435,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+436,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+437,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+438,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+439,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+440,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+441,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+442,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+443,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+444,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+445,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+446,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+447,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+448,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+449,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+450,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+451,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+452,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+453,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+454,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+455,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+456,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+457,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+458,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+459,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+460,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+461,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+462,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+463,SPY,Buy,2022-03-02 20:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-02 20:45:00+00:00    421.6
+Name: close, dtype: float64",421.49,421.46,420.75
+464,SPY,Sell,2022-03-03 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-03 18:00:00+00:00    422.12
+Name: close, dtype: float64",422.71,421.61,421.75
+465,SPY,Sell,2022-03-03 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-03 18:15:00+00:00    422.71
+Name: close, dtype: float64",421.61,421.75,422.84
+466,SPY,Buy,2022-03-03 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-03 19:15:00+00:00    422.28
+Name: close, dtype: float64",421.11,420.15,419.2
+467,SPY,Buy,2022-03-03 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-03 19:45:00+00:00    420.15
+Name: close, dtype: float64",419.2,420.32,418.36
+468,SPY,Buy,2022-03-08 20:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-08 20:15:00+00:00    403.55
+Name: close, dtype: float64",402.13,400.91,400.45
+469,SPY,Buy,2022-03-09 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 14:45:00+00:00    408.44
+Name: close, dtype: float64",410.02,410.03,409.91
+470,SPY,Buy,2022-03-09 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 16:00:00+00:00    409.51
+Name: close, dtype: float64",409.67,411.08,411.56
+471,SPY,Buy,2022-03-09 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 18:00:00+00:00    412.22
+Name: close, dtype: float64",412.48,411.19,410.93
+472,SPY,Buy,2022-03-09 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 18:30:00+00:00    411.19
+Name: close, dtype: float64",410.93,411.33,411.39
+473,SPY,Buy,2022-03-09 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 18:45:00+00:00    410.93
+Name: close, dtype: float64",411.33,411.39,411.93
+474,SPY,Buy,2022-03-09 19:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 19:45:00+00:00    411.84
+Name: close, dtype: float64",412.84,412.95,412.81
+475,SPY,Sell,2022-03-09 21:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 21:15:00+00:00    411.54
+Name: close, dtype: float64",412.46,411.92,406.94
+476,SPY,Sell,2022-03-09 21:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 21:15:00+00:00    411.54
+Name: close, dtype: float64",412.46,411.92,406.94
+477,SPY,Sell,2022-03-09 21:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 21:15:00+00:00    411.54
+Name: close, dtype: float64",412.46,411.92,406.94
+478,SPY,Sell,2022-03-09 21:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-09 21:15:00+00:00    411.54
+Name: close, dtype: float64",412.46,411.92,406.94
+479,SPY,Buy,2022-03-11 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-11 14:45:00+00:00    411.33
+Name: close, dtype: float64",409.92,410.05,410.19
+480,SPY,Buy,2022-03-11 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-11 15:00:00+00:00    409.92
+Name: close, dtype: float64",410.05,410.19,411.28
+481,SPY,Buy,2022-03-11 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-11 16:15:00+00:00    409.51
+Name: close, dtype: float64",408.89,408.63,408.24
+482,SPY,Buy,2022-03-15 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-15 17:00:00+00:00    406.83
+Name: close, dtype: float64",406.52,406.99,407.58
+483,SPY,Buy,2022-03-15 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-15 17:15:00+00:00    406.52
+Name: close, dtype: float64",406.99,407.58,406.88
+484,SPY,Buy,2022-03-15 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-15 18:00:00+00:00    406.88
+Name: close, dtype: float64",406.48,407.37,408.95
+485,SPY,Buy,2022-03-16 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 15:00:00+00:00    416.87
+Name: close, dtype: float64",416.94,416.66,417.1
+486,SPY,Buy,2022-03-16 16:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 16:45:00+00:00    415.68
+Name: close, dtype: float64",414.5,414.73,414.94
+487,SPY,Sell,2022-03-16 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 17:15:00+00:00    414.73
+Name: close, dtype: float64",414.94,415.37,410.9
+488,SPY,Sell,2022-03-16 17:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 17:30:00+00:00    414.94
+Name: close, dtype: float64",415.37,410.9,410.61
+489,SPY,Sell,2022-03-16 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 17:45:00+00:00    415.37
+Name: close, dtype: float64",410.9,410.61,413.41
+490,SPY,Sell,2022-03-16 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 18:30:00+00:00    413.41
+Name: close, dtype: float64",414.07,415.09,416.95
+491,SPY,Sell,2022-03-16 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 18:45:00+00:00    414.07
+Name: close, dtype: float64",415.09,416.95,416.52
+492,SPY,Sell,2022-03-16 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 19:00:00+00:00    415.09
+Name: close, dtype: float64",416.95,416.52,419.56
+493,SPY,Sell,2022-03-16 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 19:15:00+00:00    416.95
+Name: close, dtype: float64",416.52,419.56,419.42
+494,SPY,Sell,2022-03-16 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-16 19:15:00+00:00    416.95
+Name: close, dtype: float64",416.52,419.56,419.42
+495,SPY,Buy,2022-03-17 13:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 13:30:00+00:00    418.41
+Name: close, dtype: float64",420.05,420.05,420.24
+496,SPY,Buy,2022-03-17 14:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 14:45:00+00:00    418.7
+Name: close, dtype: float64",418.63,419.27,420.01
+497,SPY,Buy,2022-03-17 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 15:00:00+00:00    418.63
+Name: close, dtype: float64",419.27,420.01,419.99
+498,SPY,Buy,2022-03-17 15:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 15:45:00+00:00    419.99
+Name: close, dtype: float64",420.25,421.36,421.31
+499,SPY,Buy,2022-03-17 17:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 17:00:00+00:00    421.0
+Name: close, dtype: float64",422.47,423.05,423.2
+500,SPY,Buy,2022-03-17 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 18:00:00+00:00    422.75
+Name: close, dtype: float64",422.08,422.86,423.15
+501,SPY,Buy,2022-03-17 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 18:15:00+00:00    422.08
+Name: close, dtype: float64",422.86,423.15,422.32
+502,SPY,Buy,2022-03-17 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 19:00:00+00:00    422.32
+Name: close, dtype: float64",422.87,423.97,424.74
+503,SPY,Buy,2022-03-17 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-17 20:30:00+00:00    422.53
+Name: close, dtype: float64",422.74,423.19,424.08
+504,SPY,Buy,2022-03-18 14:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 14:15:00+00:00    424.74
+Name: close, dtype: float64",424.22,424.56,425.1
+505,SPY,Buy,2022-03-18 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 14:30:00+00:00    424.22
+Name: close, dtype: float64",424.56,425.1,424.8
+506,SPY,Buy,2022-03-18 15:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 15:15:00+00:00    424.8
+Name: close, dtype: float64",425.02,424.98,425.35
+507,SPY,Buy,2022-03-18 15:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 15:45:00+00:00    424.98
+Name: close, dtype: float64",425.35,425.99,426.62
+508,SPY,Buy,2022-03-18 16:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 16:45:00+00:00    426.42
+Name: close, dtype: float64",426.77,427.23,426.96
+509,SPY,Buy,2022-03-18 17:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 17:30:00+00:00    426.96
+Name: close, dtype: float64",427.0,426.99,427.11
+510,SPY,Buy,2022-03-18 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-18 18:30:00+00:00    427.04
+Name: close, dtype: float64",427.5,428.28,428.92
+511,SPY,Buy,2022-03-21 13:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-21 13:45:00+00:00    428.85
+Name: close, dtype: float64",428.33,427.95,428.54
+512,SPY,Buy,2022-03-21 14:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-21 14:00:00+00:00    428.33
+Name: close, dtype: float64",427.95,428.54,429.75
+513,SPY,Buy,2022-03-21 14:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-21 14:15:00+00:00    427.95
+Name: close, dtype: float64",428.54,429.75,429.57
+514,SPY,Buy,2022-03-21 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-21 15:00:00+00:00    429.57
+Name: close, dtype: float64",430.33,429.62,430.29
+515,SPY,Buy,2022-03-21 15:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-21 15:30:00+00:00    429.62
+Name: close, dtype: float64",430.29,430.3,430.33
+516,SPY,Buy,2022-03-22 13:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 13:45:00+00:00    431.97
+Name: close, dtype: float64",432.76,433.31,433.66
+517,SPY,Buy,2022-03-22 15:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 15:30:00+00:00    433.37
+Name: close, dtype: float64",433.46,433.48,432.88
+518,SPY,Buy,2022-03-22 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 16:15:00+00:00    432.88
+Name: close, dtype: float64",432.95,433.74,434.09
+519,SPY,Buy,2022-03-22 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 17:15:00+00:00    433.7
+Name: close, dtype: float64",433.94,434.17,433.76
+520,SPY,Sell,2022-03-22 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 18:30:00+00:00    433.34
+Name: close, dtype: float64",433.72,434.16,433.77
+521,SPY,Sell,2022-03-22 18:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 18:45:00+00:00    433.72
+Name: close, dtype: float64",434.16,433.77,434.52
+522,SPY,Buy,2022-03-22 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 19:15:00+00:00    433.77
+Name: close, dtype: float64",434.52,434.31,434.29
+523,SPY,Buy,2022-03-22 20:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-22 20:00:00+00:00    434.29
+Name: close, dtype: float64",434.28,431.71,431.32
+524,SPY,Buy,2022-03-24 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 16:00:00+00:00    432.55
+Name: close, dtype: float64",432.02,432.33,432.48
+525,SPY,Buy,2022-03-24 16:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 16:15:00+00:00    432.02
+Name: close, dtype: float64",432.33,432.48,432.55
+526,SPY,Buy,2022-03-24 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 18:15:00+00:00    432.88
+Name: close, dtype: float64",432.71,433.0,433.51
+527,SPY,Buy,2022-03-24 18:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 18:30:00+00:00    432.71
+Name: close, dtype: float64",433.0,433.51,434.31
+528,SPY,Buy,2022-03-24 19:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 19:30:00+00:00    433.95
+Name: close, dtype: float64",435.1,435.03,435.34
+529,SPY,Buy,2022-03-24 20:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-24 20:30:00+00:00    435.32
+Name: close, dtype: float64",435.34,435.5,435.47
+530,SPY,Buy,2022-03-25 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 15:00:00+00:00    434.69
+Name: close, dtype: float64",433.8,434.65,434.02
+531,SPY,Sell,2022-03-25 17:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 17:30:00+00:00    435.16
+Name: close, dtype: float64",435.9,436.18,436.39
+532,SPY,Sell,2022-03-25 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 17:45:00+00:00    435.9
+Name: close, dtype: float64",436.18,436.39,436.5
+533,SPY,Sell,2022-03-25 18:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 18:00:00+00:00    436.18
+Name: close, dtype: float64",436.39,436.5,436.63
+534,SPY,Sell,2022-03-25 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 18:15:00+00:00    436.39
+Name: close, dtype: float64",436.5,436.63,435.87
+535,SPY,Buy,2022-03-25 19:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 19:00:00+00:00    435.87
+Name: close, dtype: float64",434.8,435.36,437.25
+536,SPY,Buy,2022-03-25 19:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-25 19:15:00+00:00    434.8
+Name: close, dtype: float64",435.36,437.25,437.13
+537,SPY,Buy,2022-03-28 13:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 13:15:00+00:00    436.73
+Name: close, dtype: float64",437.1,438.08,437.33
+538,SPY,Buy,2022-03-28 14:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 14:00:00+00:00    437.33
+Name: close, dtype: float64",437.41,437.29,437.75
+539,SPY,Buy,2022-03-28 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 14:30:00+00:00    437.29
+Name: close, dtype: float64",437.75,437.37,436.81
+540,SPY,Buy,2022-03-28 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 15:00:00+00:00    437.37
+Name: close, dtype: float64",436.81,436.16,435.16
+541,SPY,Sell,2022-03-28 16:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 16:00:00+00:00    435.23
+Name: close, dtype: float64",435.25,435.98,436.27
+542,SPY,Sell,2022-03-28 17:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 17:15:00+00:00    436.9
+Name: close, dtype: float64",436.9,437.07,437.16
+543,SPY,Sell,2022-03-28 17:45:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 17:45:00+00:00    437.07
+Name: close, dtype: float64",437.16,437.5,437.87
+544,SPY,Sell,2022-03-28 18:15:00+00:00,"symbol  timestamp                
+SPY     2022-03-28 18:15:00+00:00    437.5
+Name: close, dtype: float64",437.87,438.95,438.8
+545,SPY,Buy,2022-03-29 14:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-29 14:00:00+00:00    442.03
+Name: close, dtype: float64",443.03,442.8,443.58
+546,SPY,Buy,2022-03-29 14:30:00+00:00,"symbol  timestamp                
+SPY     2022-03-29 14:30:00+00:00    442.8
+Name: close, dtype: float64",443.58,443.16,443.68
+547,SPY,Buy,2022-03-29 15:00:00+00:00,"symbol  timestamp                
+SPY     2022-03-29 15:00:00+00:00    443.16
+Name: close, dtype: float64",443.68,443.85,443.69

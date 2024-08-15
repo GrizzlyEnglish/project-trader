@@ -16,28 +16,26 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-asset = 'AAPL'
+asset = 'SPY'
 
-now = datetime(2024, 8, 8, 17, 17)
-bars = get_data.get_bars(asset, now - timedelta(days=60), now, market_client, 1)
+now = datetime(2024, 8, 1, 13)
+bars = get_data.get_bars(asset, now - timedelta(days=120), now, market_client, 15)
 bars = features.feature_engineer_df(bars)
 
-short_model = class_model.create_model(asset, bars, 'short', True)
-long_model = class_model.create_model(asset, bars, 'long', True)
+short_model = class_model.create_model(asset, bars, 'short', 15, 'generated/classification/SPY', True)
+#long_model = class_model.create_model(asset, bars, 'long', True)
 
-s = datetime(2024, 8, 9, 5)
-while(True):
-    if s.hour == 19 and s.minute == 59:
-        break
+s = datetime(2024, 8, 9, 19)
 
-    bars = get_data.get_bars(asset, s - timedelta(days=60), s, market_client, 1)
-    bars = features.feature_engineer_df(bars)
+bars = get_data.get_bars(asset, s - timedelta(days=120), s, market_client, 15)
+bars = features.feature_engineer_df(bars)
 
-    short_pred = short_model.predict(bars.tail(1))[0]
-    long_pred = long_model.predict(bars.tail(1))[0]
+bars = bars.tail(30)
 
-    print(f'{s} short: {features.int_to_label(short_pred)} long: {features.int_to_label(long_pred)}')
+for index in range(len(bars)):
+    bar = bars[index:index+1] 
+    short_pred = short_model.predict(bar)
+    short_pred = [features.int_to_label(p) for p in short_pred]
 
-    s = s + timedelta(minutes=5)
-
-print("done")
+    if all(x == short_pred[0] for x in short_pred) and short_pred[0] != 'Hold':
+        print(f'{bar.index} short: {short_pred}')
