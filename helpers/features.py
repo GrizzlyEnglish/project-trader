@@ -136,9 +136,9 @@ def classification(df):
         growth = shifted_diff > g_diff
         shrink = shifted_diff < s_diff
 
-        if growth and (row['pvi'] > row['nvi']) and row['macd'] > 0 and row['z_score'] > 0.5 and row['roc'] > 0:
+        if growth and (row['pvi'] > row['nvi']) and row['macd'] > 0 and row['z_score'] > 1 and row['roc'] > 0.5 and row['percent_b'] >= .8:
             return 'buy' 
-        elif shrink and (row['pvi'] < row['nvi']) and row['macd'] < 0 and row['z_score'] < -0.5 and row['roc'] < 0:
+        elif shrink and (row['pvi'] < row['nvi']) and row['macd'] < 0 and row['z_score'] < -1 and row['roc'] < -0.5 and row['percent_b'] <= .20:
             return 'sell' 
         else:
             return 'hold'

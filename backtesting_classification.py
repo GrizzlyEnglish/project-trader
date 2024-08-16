@@ -9,6 +9,7 @@ from helpers.load_stocks import load_symbols
 import os
 import pandas as pd
 import numpy as np
+import numbers
 
 load_dotenv()
 
@@ -20,14 +21,14 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-#assets = load_symbols('option_symbols.txt')
-assets = ['spy']
+assets = load_symbols('option_symbols.txt')
+#assets = ['spy']
 
 data = []
 accuracies = []
 time_window = 30
 
-for year in [2022, 2023]:
+for year in [2022]:#, 2023]:
     for s in assets:
         start = datetime(year, 1, 1, 12, 30)
         model = classification.generate_model(s, market_client, start - timedelta(days=60), start - timedelta(days=1), time_window)
@@ -43,10 +44,10 @@ for year in [2022, 2023]:
         for index,row in bars.iterrows():
             if index[1].month == 1:
                 start_idx = indexes.get_loc(index)
-                bars = bars[start_idx:]
+                bars_altered = bars[start_idx:]
                 break
 
-        for index, row in bars.iterrows():
+        for index, row in bars_altered.iterrows():
             h = bars.loc[[index]]
             h_pred = features.drop_prices(h.copy())
             pred = classification.predict(model, h_pred)
@@ -57,20 +58,26 @@ for year in [2022, 2023]:
                 price = row['close']
                 loc = indexes.get_loc(index) + 4
                 next_price = -1
+                next_date = ''
 
-                if loc < len(bars):
-                    next_price = bars.iloc[loc]['close']
+                if isinstance(loc, numbers.Number):
+                    if loc < len(bars):
+                        next_price = bars.iloc[loc]['close']
+                        next_date = indexes[loc][1] 
 
-                if (pred == 'Buy' and price < next_price and next_price != -1) or (pred == 'Sell' and price > next_price and next_price != -1):
-                    correct_actions = correct_actions + 1
+                    if (pred == 'Buy' and price < next_price and next_price != -1) or (pred == 'Sell' and price > next_price and next_price != -1):
+                        correct_actions = correct_actions + 1
 
-                data.append({
-                    'symbol': s,
-                    'class': pred,
-                    'date': index[1],
-                    'current_price': price, 
-                    'later_price': next_price,
-                    })
+                    data.append({
+                        'symbol': s,
+                        'class': pred,
+                        'date': index[1],
+                        'current_price': price, 
+                        'later_price': next_price,
+                        'later_date': next_date
+                        })
+                else:
+                    print('Location of index messed up')
         
         acc = correct_actions / total_actions
         accuracies.append({
