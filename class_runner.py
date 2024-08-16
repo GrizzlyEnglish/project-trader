@@ -1,7 +1,6 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.trading.enums import AssetClass
-from alpaca.common.exceptions import APIError
 from dotenv import load_dotenv
 from helpers.load_stocks import load_symbols
 from datetime import datetime

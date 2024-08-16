@@ -20,43 +20,67 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
+#assets = load_symbols('option_symbols.txt')
+assets = ['spy']
 
-assets = ['SPY'] 
+data = []
+accuracies = []
+time_window = 30
 
-for s in assets:
-    data = []
-    year = 2022
-    start = datetime(year, 1, 1, 12, 30)
-    model = classification.generate_model(s, market_client, start - timedelta(days=60), start - timedelta(days=1), 15)
+for year in [2022, 2023]:
+    for s in assets:
+        start = datetime(year, 1, 1, 12, 30)
+        model = classification.generate_model(s, market_client, start - timedelta(days=60), start - timedelta(days=1), time_window)
 
-    # Note: Get the previous bar and have it be on the same bar for more info, possibly add another indicator remove support/resistance
+        bars = get_data.get_bars(s, datetime(year, 1, 1) - timedelta(days=60), datetime(year, 12, 31), market_client, time_window)
+        bars = features.feature_engineer_df(bars)
 
-    while (start.year == 2022):
-        start = start + timedelta(minutes=16)
+        indexes = pd.Index(bars.index)
 
-        if start.weekday() <= 5 and start.hour < 21 and start.hour > 13:
-            start_format = datetime.strftime(start, "%m/%d/%Y")
+        total_actions = 0
+        correct_actions = 0
 
-            bars = get_data.get_bars(s, start - timedelta(days=60), start + timedelta(hours=1), market_client, 15)
-            bars = features.feature_engineer_df(bars)
-            if bars.empty:
-                continue
+        for index,row in bars.iterrows():
+            if index[1].month == 1:
+                start_idx = indexes.get_loc(index)
+                bars = bars[start_idx:]
+                break
 
-            tail = bars.tail(4)
-            h = tail.head(1)
-            pred = classification.predict(model, h)
+        for index, row in bars.iterrows():
+            h = bars.loc[[index]]
+            h_pred = features.drop_prices(h.copy())
+            pred = classification.predict(model, h_pred)
 
             if pred != 'Hold':
+                total_actions = total_actions + 1
+
+                price = row['close']
+                loc = indexes.get_loc(index) + 4
+                next_price = -1
+
+                if loc < len(bars):
+                    next_price = bars.iloc[loc]['close']
+
+                if (pred == 'Buy' and price < next_price and next_price != -1) or (pred == 'Sell' and price > next_price and next_price != -1):
+                    correct_actions = correct_actions + 1
+
                 data.append({
                     'symbol': s,
                     'class': pred,
-                    'date': h.index[0][1],
-                    'current_price': h.iloc[0]['close'], 
-                    '1_bar_later': tail.iloc[1]['close'],
-                    '2_bar_later': tail.iloc[2]['close'],
-                    '3_bar_later': tail.iloc[3]['close'],
+                    'date': index[1],
+                    'current_price': price, 
+                    'later_price': next_price,
                     })
+        
+        acc = correct_actions / total_actions
+        accuracies.append({
+            'symbol': s,
+            'accuracy': acc,
+            'year': year
+        })
 
+dfa = pd.DataFrame(accuracies)
+dfa.to_csv('backtest_acc.csv', index=True)
 
 df = pd.DataFrame(data)
 df.to_csv('backtest.csv', index=True)

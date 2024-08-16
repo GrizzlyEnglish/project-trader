@@ -1,23 +1,10 @@
-from sklearn.preprocessing import StandardScaler
-from sklearn import tree
 from sklearn.model_selection import train_test_split
 from helpers import features
 from sklearn import metrics
-from sklearn.svm import SVC
-from skmultilearn.problem_transform import BinaryRelevance
-from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.utils import shuffle
 
-import os
-import numpy as np
-import tensorflow as tf
-import time
-import joblib
-
-def create_model(symbol, window_data, time_window, evaluate=False):
+def create_model(symbol, window_data, evaluate=False):
     df = window_data.copy().dropna()
 
     if df.empty or df.shape[0] < 100:
@@ -26,7 +13,7 @@ def create_model(symbol, window_data, time_window, evaluate=False):
     
     df = df.dropna()
 
-    print(df)
+    #print(df)
 
     df['label'] = df['label'].apply(features.label_to_int)
 
@@ -36,10 +23,10 @@ def create_model(symbol, window_data, time_window, evaluate=False):
     x_train, x_test, y_train, y_test = train_test_split(feature, 
                                                         target, 
                                                         shuffle = True, 
-                                                        test_size=0.2, 
+                                                        test_size=0.65, 
                                                         random_state=1)
 
-    model = tree.DecisionTreeClassifier(random_state=0)
+    model = RandomForestClassifier(max_depth=30, random_state=0)
     model.fit(x_train, y_train)
 
     if evaluate:
@@ -52,6 +39,7 @@ def create_model(symbol, window_data, time_window, evaluate=False):
         kappa = metrics.cohen_kappa_score(y_test, y_pred)
 
         cm = metrics.confusion_matrix(y_test, y_pred)
+        print(f'{symbol}')
         print('Accuracy:', acc)
         print('Precision:', prec)
         print('Recall:', rec)

@@ -8,12 +8,12 @@ import os
 def generate_model(symbol, market_client, start, end, time_window):
     bars = get_data.get_bars(symbol, start, end, market_client, time_window)
     bars = features.feature_engineer_df(bars)
-    bars = features.short_classification(bars, time_window)
+    bars = features.classification(bars)
     bars = features.drop_prices(bars)
 
     model_bars = bars.head(len(bars) - 1)
 
-    return class_model.create_model(symbol, model_bars, 15, True)
+    return class_model.create_model(symbol, model_bars, True)
 
 def predict(model, bars):
     pred = model.predict(bars)
@@ -22,7 +22,7 @@ def predict(model, bars):
     class_type = "Hold"
     if len(pred) > 0 and all(x == pred[0] for x in pred):
         class_type = "Buy"
-        if pred[0] == 'Sell short':
+        if pred[0] == 'Sell':
             class_type = "Sell"
     return class_type
 
