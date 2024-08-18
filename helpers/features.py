@@ -7,12 +7,36 @@ import math
 small_window = 50
 large_window = 200
 
+def trending(row, label, amt, prepend = False, postpend = False):
+    arr = []
+
+    if prepend:
+        arr.append(row[label])
+
+    for i in range(amt):
+        arr.append(row[f'{label}_{i}'])
+
+    if postpend:
+        arr.append(row[label])
+    
+    if all(arr[i] <= arr[i+1] for i in range(len(arr) - 1)):
+        return 1
+    elif all(arr[i] >= arr[i+1] for i in range(len(arr) - 1)):
+        return -1
+    else:
+        return 0
+
 def drop_prices(df):
     # Drop price based colums
     df.pop('open')
     df.pop('high')
     df.pop('low')
     df.pop('close')
+    df.pop('vwap')
+    df.pop('roc_trending')
+    df.pop('macd_trending')
+    df.pop('pvi_trending')
+    df.pop('nvi_trending')
 
     return df
 
@@ -44,11 +68,38 @@ def feature_engineer_df(df):
 
     df = bands(df, quotes)
 
-    #shift
-    #df['prev_macd'] = df['macd'].shift(1)
-    #df['prev_rsi'] = df['rsi'].shift(1)
-    #df['prev_pvi'] = df['pvi'].shift(1)
-    #df['prev_nvi'] = df['nvi'].shift(1)
+    #Trends
+    shifting = 1
+    for i in range(shifting):
+        j = i + 1
+        df[f'macd_{i}'] = df['macd'].shift(j)
+        df[f'roc_{i}'] = df['roc'].shift(j)
+        df[f'pvi_{i}'] = df['pvi'].shift(j)
+        df[f'nvi_{i}'] = df['pvi'].shift(j)
+
+    def trending_macd(row):
+        return trending(row, 'macd', shifting, False, True)
+
+    def trending_roc(row):
+        return trending(row, 'roc', shifting, False, True)
+
+    def trending_pvi(row):
+        return trending(row, 'pvi', shifting, False, True)
+
+    def trending_nvi(row):
+        return trending(row, 'nvi', shifting, False, True)
+
+    df['macd_trending'] = df.apply(trending_macd, axis=1)
+    df['roc_trending'] = df.apply(trending_roc, axis=1)
+    df['pvi_trending'] = df.apply(trending_pvi, axis=1)
+    df['nvi_trending'] = df.apply(trending_nvi, axis=1)
+
+    for i in range(shifting):
+        j = i + 1
+        df.pop(f'macd_{i}')
+        df.pop(f'roc_{i}')
+        df.pop(f'pvi_{i}')
+        df.pop(f'nvi_{i}')
 
     return df
 
@@ -121,27 +172,31 @@ def get_percentage_diff(previous, current, round_value=True):
         return float('inf')  # Infinity
 
 def classification(df):
-    df['shifted_close'] = df['close'].shift(-4)
-    df['diff'] = df['close'] - df['shifted_close']
-
-    s_diff = ((df[df['diff'] < 0]['diff'].mean() + df[df['diff'] < 0]['diff'].max()) / 2)
-    g_diff = ((df[df['diff'] > 0]['diff'].mean() + df[df['diff'] > 0]['diff'].min()) / 2)
+    df[f'next_close'] = df['close'].shift(-12)
 
     def label(row):
-        if math.isnan(row['shifted_close']): 
-            return None
-        
-        shifted_diff = row['diff']
+        # growth indicators
+        growth = row['next_close'] > row['close'] 
+        z_score = row['z_score'] > 1
+        perb = row['percent_b'] >= 1
+        pvi = row['nvi_trending'] == -1
+        price_trending = (row['macd_trending'] == 1 and row['roc_trending'] != -1) or (row['macd_trending'] != -1 and row['roc_trending'] == 1)
 
-        growth = shifted_diff > g_diff
-        shrink = shifted_diff < s_diff
-
-        if growth and (row['pvi'] > row['nvi']) and row['macd'] > 0 and row['z_score'] > 1 and row['roc'] > 0.5 and row['percent_b'] >= .8:
+        if growth and pvi and z_score and perb and price_trending:
             return 'buy' 
-        elif shrink and (row['pvi'] < row['nvi']) and row['macd'] < 0 and row['z_score'] < -1 and row['roc'] < -0.5 and row['percent_b'] <= .20:
+
+        # shrink indicators
+        shrink = row['next_close'] < row['close']
+        z_score = row['z_score'] < -1
+        perb = row['percent_b'] <= 0
+        nvi = row['pvi_trending'] == -1
+        price_trending = (row['macd_trending'] == -1 and row['roc_trending'] != 1) or (row['macd_trending'] != 1 and row['roc_trending'] == -1)
+
+        if shrink and nvi and z_score and perb and nvi:
             return 'sell' 
-        else:
-            return 'hold'
+        
+        # dunno hold it
+        return 'hold'
 
     df['label'] = df.apply(label, axis=1)
 
@@ -151,8 +206,7 @@ def classification(df):
 
     print(f'buy count: {buys} sell count: {sells} hold count: {holds}')
 
-    df.pop('shifted_close')
-    df.pop('diff')
+    df.pop('next_close')
 
     return df
 

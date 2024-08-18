@@ -21,63 +21,84 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-assets = load_symbols('option_symbols.txt')
-#assets = ['spy']
+#assets = load_symbols('option_symbols.txt')
+assets = ['qqq']
 
 data = []
 accuracies = []
-time_window = 30
+time_window = 15
+years = [2024]
 
-for year in [2022]:#, 2023]:
+for year in years:
     for s in assets:
-        start = datetime(year, 1, 1, 12, 30)
+        start = datetime(year, 8, 1, 12, 30)
         model = classification.generate_model(s, market_client, start - timedelta(days=60), start - timedelta(days=1), time_window)
 
-        bars = get_data.get_bars(s, datetime(year, 1, 1) - timedelta(days=60), datetime(year, 12, 31), market_client, time_window)
-        bars = features.feature_engineer_df(bars)
+        for w in range(12):
+            print(start)
 
-        indexes = pd.Index(bars.index)
-
-        total_actions = 0
-        correct_actions = 0
-
-        for index,row in bars.iterrows():
-            if index[1].month == 1:
-                start_idx = indexes.get_loc(index)
-                bars_altered = bars[start_idx:]
+            if start > datetime.now():
                 break
 
-        for index, row in bars_altered.iterrows():
-            h = bars.loc[[index]]
-            h_pred = features.drop_prices(h.copy())
-            pred = classification.predict(model, h_pred)
+            start_dt = start - timedelta(days=60)
+            end_dt = start + timedelta(days=31)
+            bars = get_data.get_bars(s, start_dt, end_dt, market_client, time_window)
+            bars = features.feature_engineer_df(bars)
 
-            if pred != 'Hold':
-                total_actions = total_actions + 1
+            if bars.empty:
+                break
 
-                price = row['close']
-                loc = indexes.get_loc(index) + 4
-                next_price = -1
-                next_date = ''
+            indexes = pd.Index(bars.index)
 
-                if isinstance(loc, numbers.Number):
-                    if loc < len(bars):
-                        next_price = bars.iloc[loc]['close']
-                        next_date = indexes[loc][1] 
+            total_actions = 0
+            correct_actions = 0
 
-                    if (pred == 'Buy' and price < next_price and next_price != -1) or (pred == 'Sell' and price > next_price and next_price != -1):
-                        correct_actions = correct_actions + 1
+            for index,row in bars.iterrows():
+                if index[1].month == start.month:
+                    start_idx = indexes.get_loc(index)
+                    bars_altered = bars[start_idx:]
+                    break
 
-                    data.append({
-                        'symbol': s,
-                        'class': pred,
-                        'date': index[1],
-                        'current_price': price, 
-                        'later_price': next_price,
-                        'later_date': next_date
-                        })
-                else:
-                    print('Location of index messed up')
+            for index, row in bars_altered.iterrows():
+                h = bars.loc[[index]]
+                h_pred = features.drop_prices(h.copy())
+                pred = classification.predict(model, h_pred)
+
+                if pred != 'Hold':
+                    total_actions = total_actions + 1
+
+                    price = row['close']
+                    loc = indexes.get_loc(index)
+
+                    next_price = -1
+                    next_date = ''
+
+                    if isinstance(loc, numbers.Number):
+                        b = bars[loc:]
+                        r = pd.DataFrame()
+                        td = 'unknown'
+                        if pred == 'Sell':
+                            r = b[b['close'] > row['close']]
+                        else:
+                            r = b[b['close'] < row['close']]
+                        if not r.empty:
+                            idx = r.index[0][1]
+                            td = idx - index[1]
+
+                        if td != 'unknown' and td._m >= 30:
+                            correct_actions = correct_actions + 1
+
+                        data.append({
+                            'symbol': s,
+                            'class': pred,
+                            'date': index[1],
+                            'current_price': price, 
+                            'time_to_diff': td
+                            })
+                    else:
+                        print('Location of index messed up')
+
+            start = start + timedelta(days=31)
         
         acc = correct_actions / total_actions
         accuracies.append({
