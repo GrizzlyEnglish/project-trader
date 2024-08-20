@@ -28,15 +28,11 @@ def trending(row, label, amt, prepend = False, postpend = False):
 
 def drop_prices(df):
     # Drop price based colums
-    df.pop('open')
-    df.pop('high')
-    df.pop('low')
-    df.pop('close')
-    df.pop('vwap')
-    #df.pop('roc_trending')
-    df.pop('macd_trending')
-    df.pop('pvi_trending')
-    df.pop('nvi_trending')
+    #df.pop('open')
+    #df.pop('high')
+    #df.pop('low')
+    #df.pop('close')
+    #df.pop('vwap')
 
     return df
 
@@ -72,16 +68,8 @@ def feature_engineer_df(df):
     shifting = 1
     for i in range(shifting):
         j = i + 1
-        df[f'macd_{i}'] = df['macd'].shift(j)
-        df[f'roc_{i}'] = df['roc'].shift(j)
         df[f'pvi_{i}'] = df['pvi'].shift(j)
         df[f'nvi_{i}'] = df['pvi'].shift(j)
-
-    def trending_macd(row):
-        return trending(row, 'macd', shifting, False, True)
-
-    def trending_roc(row):
-        return trending(row, 'roc', shifting, False, True)
 
     def trending_pvi(row):
         return trending(row, 'pvi', shifting, False, True)
@@ -89,17 +77,8 @@ def feature_engineer_df(df):
     def trending_nvi(row):
         return trending(row, 'nvi', shifting, False, True)
 
-    df['macd_trending'] = df.apply(trending_macd, axis=1)
-    #df['roc_trending'] = df.apply(trending_roc, axis=1)
     df['pvi_trending'] = df.apply(trending_pvi, axis=1)
     df['nvi_trending'] = df.apply(trending_nvi, axis=1)
-
-    for i in range(shifting):
-        j = i + 1
-        #df.pop(f'macd_{i}')
-        #df.pop(f'roc_{i}')
-        #df.pop(f'pvi_{i}')
-        #df.pop(f'nvi_{i}')
 
     return df
 
@@ -124,7 +103,7 @@ def moving_average(df, quotes):
     results = indicators.get_kama(quotes, 10, small_window, large_window)
 
     df.loc[:, 'efficiency_ratio'] = [r.efficiency_ratio for r in results]
-    #df.loc[:, 'kama'] = [r.kama for r in results]
+    df.loc[:, 'kama'] = [r.kama for r in results]
 
     return df
 
@@ -133,8 +112,8 @@ def macd(df, quotes):
 
     df.loc[:, 'macd'] = [r.macd for r in results]
     df.loc[:, 'signal'] = [r.signal for r in results]
-    #df.loc[:, 'fast_ema'] = [r.fast_ema for r in results]
-    #df.loc[:, 'slow_ema'] = [r.slow_ema for r in results]
+    df.loc[:, 'fast_ema'] = [r.fast_ema for r in results]
+    df.loc[:, 'slow_ema'] = [r.slow_ema for r in results]
     df.loc[:, 'histogram'] = [r.histogram for r in results]
 
     return df
@@ -172,27 +151,29 @@ def get_percentage_diff(previous, current, round_value=True):
         return float('inf')  # Infinity
 
 def classification(df):
-    df[f'next_close'] = df['close'].shift(-12)
+    df[f'next_close'] = df['close'].shift(-8)
 
     def label(row):
         # growth indicators
         growth = row['next_close'] > row['close'] 
         z_score = row['z_score'] > 1
-        perb = row['percent_b'] >= 0.5
-        pvi = row['nvi_trending'] == -1 and row['pvi'] > 0
+        perb = row['percent_b'] >= 0.8
+        pvi = row['nvi_trending'] == -1 and row['pvi'] > 0 and row['pvi'] >= row['nvi']
         roc = row['roc'] > 0
+        macd = row['histogram'] > 0 
 
-        if growth and pvi and z_score and perb and roc:
+        if growth and pvi and z_score and perb and roc and macd:
             return 'buy' 
 
         # shrink indicators
         shrink = row['next_close'] < row['close']
         z_score = row['z_score'] < -1
-        perb = row['percent_b'] <= 0.5
-        nvi = row['pvi_trending'] == -1 and row['nvi'] > 0
+        perb = row['percent_b'] <= 0.2
+        nvi = row['pvi_trending'] == -1 and row['nvi'] > 0  and row['pvi'] <= row['nvi']
         roc = row['roc'] < 0
+        macd = row['histogram'] < 0
 
-        if shrink and nvi and z_score and perb and nvi and roc:
+        if shrink and nvi and z_score and perb and nvi and roc and macd:
             return 'sell' 
         
         # dunno hold it

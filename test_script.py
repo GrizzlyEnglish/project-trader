@@ -18,7 +18,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
 #assets = load_symbols('option_symbols.txt')
-assets = ['SPY', 'QQQ']
+assets = ['SPY', 'QQQ', 'NVDA']
 
 start = datetime(2024, 8, 1, 12, 30)
 s = start - timedelta(days=60)
