@@ -22,10 +22,13 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 assets = load_symbols('option_symbols.txt')
 classified_time = None
 
+time_window = float(os.getenv('TIME_WINDOW'))
+time_diff = time_window * 60
+
 while (True):
     classifications = []
 
-    if classified_time == None or time.time() - classified_time >= (60*15):
+    if (classified_time == None or time.time() - classified_time >= time_diff) and datetime.now().hour > 9:
         classifications = classification.classify_symbols(assets, market_client, datetime.now())
         classified_time = time.time() 
 
@@ -33,9 +36,9 @@ while (True):
     positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
 
     for c in classifications:
-        classification.enter(c, positions, trading_client)
+        classification.enter(c, positions, trading_client, market_client)
 
     for p in positions:
         classification.exit(p, classifications, trading_client)
 
-    time.sleep(30)
+    time.sleep(60)

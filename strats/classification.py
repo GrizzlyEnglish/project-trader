@@ -5,15 +5,16 @@ from alpaca.common.exceptions import APIError
 
 import os
 
-def generate_model(symbol, market_client, start, end, time_window):
+def generate_model(symbol, model_bars):
+    return class_model.create_model(symbol, model_bars, True)
+
+def get_model_bars(symbol, market_client, start, end, time_window):
     bars = get_data.get_bars(symbol, start, end, market_client, time_window)
     bars = features.feature_engineer_df(bars)
     bars = features.classification(bars)
     bars = features.drop_prices(bars)
 
-    model_bars = bars.head(len(bars) - 1)
-
-    return class_model.create_model(symbol, model_bars, True)
+    return bars
 
 def predict(model, bars):
     pred = model.predict(bars)
@@ -26,46 +27,55 @@ def predict(model, bars):
             class_type = "Sell"
     return class_type
 
-def classify_symbols(symbols, market_client, end = datetime.now(), time_window = 15):
+def classify_symbols(symbols, market_client, end = datetime.now()):
+    time_window = int(os.getenv('TIME_WINDOW'))
     classified = []
     for symbol in symbols:
-        model = generate_model(symbol, market_client, end - timedelta(days=60), end + timedelta(days=1), time_window)
-
-        bars = get_data.get_bars(symbol, end - timedelta(hours=1), end, market_client, time_window)
+        bars = get_model_bars(symbol, market_client, end - timedelta(days=60), end + timedelta(days=1), time_window)
+        model_bars = bars.head(len(bars) - 1)
         pred_bars = bars.tail(1)
 
-        class_type = predict(model, bars)
-        price = pred_bars["close"].iloc[-1]
+        pred_bars.pop("label")
 
-        print(f'{symbol} prediction: {class_type}')
+        model = generate_model(symbol, model_bars)
+
+        class_type = predict(model, pred_bars)
+
+        print(f'{symbol} classification={class_type}')
 
         classified.append({
             'symbol': symbol,
             'class': class_type,
-            'price': price 
         })
 
     return classified
 
-def enter(classification, current_positions, trading_client):
+def enter(classification, current_positions, trading_client, market_client):
+    if classification == "Hold" or next((cp for cp in current_positions if classification['symbol'] in cp.symbol), None) != None:
+        return
+
     is_put = classification['class'] == 'Sell'
 
     contracts = []
 
+    bars = get_data.get_bars(classification['symbol'], datetime.now() - timedelta(days=3), datetime.now() + timedelta(minutes=30), market_client, 15)
+    price = bars.iloc[-1]['close']
+
     if classification['class'] == 'Buy':
-        contracts = options.get_option_call_itm(classification['symbol'], classification['price'], trading_client)[-1:]
+        contracts = options.get_option_call_itm(classification['symbol'], price, trading_client)[-5:]
     elif is_put:
-        contracts = options.get_option_put_itm(classification['symbol'], classification['price'], trading_client)[:1]
+        contracts = options.get_option_put_itm(classification['symbol'], price, trading_client)[:5]
     
     for contract in contracts:
-        owned = next((cp for cp in current_positions if classification['symbol'] in cp.symbol), None)
+        dte = (contract.expiration_date - datetime.now().date()).days
 
-        if owned == None:
+        if dte >= 1:
             buying_power = get_data.get_buying_power(trading_client)
-            qty = options.get_option_buying_power(contract, buying_power, is_put)['qty']
+            qty = options.get_option_buying_power(contract, buying_power, is_put)
             if qty != None and qty > 0:
                 discord.send_alpaca_message(f'Bought {qty} of {contract.symbol}')
                 buy.submit_order(contract.symbol, qty, trading_client, False)
+                break
 
 def exit(position, classifications, trading_client):
     stop_loss = float(os.getenv('STOP_LOSS'))

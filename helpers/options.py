@@ -15,7 +15,7 @@ def get_option(symbol, type, current_price, top_price, trading_client):
         return None
 
     # specify expiration date range
-    now = datetime.now()
+    now = datetime.now()+ timedelta(days=1)
     until = now + timedelta(days=14)
 
     req = GetOptionContractsRequest(
@@ -38,7 +38,7 @@ def get_option_call_itm(symbol, current_price, trading_client):
         return None
 
     # specify expiration date range
-    now = datetime.now()
+    now = datetime.now() + timedelta(days=1)
     until = now + timedelta(days=14)
 
     bottom_out = current_price * .85
@@ -91,20 +91,13 @@ def get_option_buying_power(option_contract, buying_power, is_put):
 
     size = float(o.size)
     if o.close_price == None:
-        close_price = 0
+        return None
     else:
         close_price = float(o.close_price)
-    strike_price = float(o.strike_price)
+
+    if close_price > 3:
+        return None
+
     option_price = close_price * size
-    if is_put:
-        breakeven_price = strike_price - close_price
-    else:
-        breakeven_price = close_price + strike_price
-    if option_price == 0:
-        qty = 0
-    else:
-        qty = min(math.floor(buying_power / option_price), 2)
-    return {
-        'qty': qty,
-        'breakeven_price': breakeven_price
-    }
+
+    return min(math.floor(buying_power / option_price), 2)

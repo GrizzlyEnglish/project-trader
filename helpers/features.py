@@ -33,7 +33,7 @@ def drop_prices(df):
     df.pop('low')
     df.pop('close')
     df.pop('vwap')
-    df.pop('roc_trending')
+    #df.pop('roc_trending')
     df.pop('macd_trending')
     df.pop('pvi_trending')
     df.pop('nvi_trending')
@@ -90,16 +90,16 @@ def feature_engineer_df(df):
         return trending(row, 'nvi', shifting, False, True)
 
     df['macd_trending'] = df.apply(trending_macd, axis=1)
-    df['roc_trending'] = df.apply(trending_roc, axis=1)
+    #df['roc_trending'] = df.apply(trending_roc, axis=1)
     df['pvi_trending'] = df.apply(trending_pvi, axis=1)
     df['nvi_trending'] = df.apply(trending_nvi, axis=1)
 
     for i in range(shifting):
         j = i + 1
-        df.pop(f'macd_{i}')
-        df.pop(f'roc_{i}')
-        df.pop(f'pvi_{i}')
-        df.pop(f'nvi_{i}')
+        #df.pop(f'macd_{i}')
+        #df.pop(f'roc_{i}')
+        #df.pop(f'pvi_{i}')
+        #df.pop(f'nvi_{i}')
 
     return df
 
@@ -178,21 +178,21 @@ def classification(df):
         # growth indicators
         growth = row['next_close'] > row['close'] 
         z_score = row['z_score'] > 1
-        perb = row['percent_b'] >= 1
-        pvi = row['nvi_trending'] == -1
-        price_trending = (row['macd_trending'] == 1 and row['roc_trending'] != -1) or (row['macd_trending'] != -1 and row['roc_trending'] == 1)
+        perb = row['percent_b'] >= 0.5
+        pvi = row['nvi_trending'] == -1 and row['pvi'] > 0
+        roc = row['roc'] > 0
 
-        if growth and pvi and z_score and perb and price_trending:
+        if growth and pvi and z_score and perb and roc:
             return 'buy' 
 
         # shrink indicators
         shrink = row['next_close'] < row['close']
         z_score = row['z_score'] < -1
-        perb = row['percent_b'] <= 0
-        nvi = row['pvi_trending'] == -1
-        price_trending = (row['macd_trending'] == -1 and row['roc_trending'] != 1) or (row['macd_trending'] != 1 and row['roc_trending'] == -1)
+        perb = row['percent_b'] <= 0.5
+        nvi = row['pvi_trending'] == -1 and row['nvi'] > 0
+        roc = row['roc'] < 0
 
-        if shrink and nvi and z_score and perb and nvi:
+        if shrink and nvi and z_score and perb and nvi and roc:
             return 'sell' 
         
         # dunno hold it
