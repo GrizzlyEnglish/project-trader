@@ -26,19 +26,22 @@ time_window = float(os.getenv('TIME_WINDOW'))
 time_diff = time_window * 60
 
 while (True):
-    classifications = []
+    clock = trading_client.get_clock()
 
-    if (classified_time == None or time.time() - classified_time >= time_diff) and datetime.now().hour > 9:
-        classifications = classification.classify_symbols(assets, market_client, datetime.now())
-        classified_time = time.time() 
+    if clock.is_open:
+        classifications = []
 
-    current_positions = trading_client.get_all_positions()
-    positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
+        if (classified_time == None or time.time() - classified_time >= time_diff) and datetime.now().hour > 9:
+            classifications = classification.classify_symbols(assets, market_client, datetime.now())
+            classified_time = time.time() 
 
-    for c in classifications:
-        classification.enter(c, positions, trading_client, market_client)
+        current_positions = trading_client.get_all_positions()
+        positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
 
-    for p in positions:
-        classification.exit(p, classifications, trading_client)
+        for c in classifications:
+            classification.enter(c, positions, trading_client, market_client)
+
+        for p in positions:
+            classification.exit(p, classifications, trading_client)
 
     time.sleep(60)

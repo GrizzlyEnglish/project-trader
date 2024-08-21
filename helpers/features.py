@@ -158,7 +158,7 @@ def classification(df):
         growth = row['next_close'] > row['close'] 
         z_score = row['z_score'] > 1
         perb = row['percent_b'] >= 0.8
-        pvi = row['nvi_trending'] == -1 and row['pvi'] > 0 and row['pvi'] >= row['nvi']
+        pvi = row['nvi_trending'] == -1 and row['pvi'] > 1 and row['pvi'] >= row['nvi']
         roc = row['roc'] > 0
         macd = row['histogram'] > 0 
 
@@ -169,7 +169,7 @@ def classification(df):
         shrink = row['next_close'] < row['close']
         z_score = row['z_score'] < -1
         perb = row['percent_b'] <= 0.2
-        nvi = row['pvi_trending'] == -1 and row['nvi'] > 0  and row['pvi'] <= row['nvi']
+        nvi = row['pvi_trending'] == -1 and row['nvi'] > 1  and row['pvi'] <= row['nvi']
         roc = row['roc'] < 0
         macd = row['histogram'] < 0
 
