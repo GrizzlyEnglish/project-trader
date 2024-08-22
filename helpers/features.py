@@ -64,6 +64,8 @@ def feature_engineer_df(df):
 
     df = bands(df, quotes)
 
+    df = smi(df, quotes)
+
     #Trends
     shifting = 1
     for i in range(shifting):
@@ -137,6 +139,13 @@ def rsi(df, quotes):
     
     return df
 
+def smi(df, quotes):
+    results = indicators.get_smi(quotes, 10, 3, 3, 10)
+    df.loc[:, 'smi'] = [r.smi for r in results]
+
+    return df
+
+
 def get_percentage_diff(previous, current, round_value=True):
     try:
         absolute_diff = current - previous
@@ -151,7 +160,7 @@ def get_percentage_diff(previous, current, round_value=True):
         return float('inf')  # Infinity
 
 def classification(df):
-    df[f'next_close'] = df['close'].shift(-8)
+    df[f'next_close'] = df['close'].shift(-20)
 
     def label(row):
         # growth indicators
