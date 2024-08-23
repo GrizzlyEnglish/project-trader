@@ -23,7 +23,7 @@ assets = ['SPY', 'QQQ', 'NVDA']
 start = datetime(2024, 8, 1, 12, 30)
 s = start - timedelta(days=60)
 e = start + timedelta(days=1)
-time_window = 15
+time_window = 5
 
 for symbol in assets:
     bars = classification.get_model_bars(symbol, market_client, s, e, time_window)

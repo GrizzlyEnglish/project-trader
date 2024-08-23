@@ -22,17 +22,20 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
 #assets = load_symbols('option_symbols.txt')
-assets = ['qqq']
+assets = ['spy']
 
 data = []
 accuracies = []
-time_window = 15
+time_window = 5
 years = [2024]
 
 for year in years:
     for s in assets:
         start = datetime(year, 8, 1, 12, 30)
-        model = classification.generate_model(s, market_client, start - timedelta(days=60), start - timedelta(days=1), time_window)
+        st = start - timedelta(days=80)
+        end = start + timedelta(days=1)
+        bars = classification.get_model_bars(s, market_client, st, end, time_window)
+        model = classification.generate_model(s, bars)
 
         for w in range(12):
             print(start)
@@ -78,12 +81,14 @@ for year in years:
                         r = pd.DataFrame()
                         td = 'unknown'
                         if pred == 'Sell':
-                            r = b[b['close'] > row['close']]
+                            r = b[b['close'] > price]
                         else:
-                            r = b[b['close'] < row['close']]
+                            r = b[b['close'] < price]
                         if not r.empty:
-                            idx = r.index[0][1]
-                            td = idx - index[1]
+                            idx = r.index[0]
+                            idx_loc = indexes.get_loc(idx)
+                            td = idx[1] - index[1]
+                            idx_p = bars.iloc[idx_loc]['close']
 
                         if td != 'unknown' and td._m >= 30:
                             correct_actions = correct_actions + 1
@@ -93,7 +98,8 @@ for year in years:
                             'class': pred,
                             'date': index[1],
                             'current_price': price, 
-                            'time_to_diff': td
+                            'time_to_diff': td,
+                            'next_price': idx_p
                             })
                     else:
                         print('Location of index messed up')

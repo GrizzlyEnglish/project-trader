@@ -4,6 +4,8 @@ from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestClassifier
 
+import pandas as pd
+
 def create_model(symbol, window_data, evaluate=False):
     df = window_data.copy().dropna()
 
@@ -14,6 +16,12 @@ def create_model(symbol, window_data, evaluate=False):
     df = df.dropna()
 
     #print(df)
+
+    df = pd.concat([
+        df[df.label == 'buy'],
+        df[df.label == 'sell'],
+        df[df.label == 'hold'].sample(n=200)
+    ])
 
     df['label'] = df['label'].apply(features.label_to_int)
 
