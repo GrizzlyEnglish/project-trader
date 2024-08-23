@@ -66,22 +66,6 @@ def feature_engineer_df(df):
 
     df = smi(df, quotes)
 
-    #Trends
-    shifting = 1
-    for i in range(shifting):
-        j = i + 1
-        df[f'pvi_{i}'] = df['pvi'].shift(j)
-        df[f'nvi_{i}'] = df['pvi'].shift(j)
-
-    def trending_pvi(row):
-        return trending(row, 'pvi', shifting, False, True)
-
-    def trending_nvi(row):
-        return trending(row, 'nvi', shifting, False, True)
-
-    df['pvi_trending'] = df.apply(trending_pvi, axis=1)
-    df['nvi_trending'] = df.apply(trending_nvi, axis=1)
-
     return df
 
 def bands(df, quotes):
@@ -167,7 +151,7 @@ def classification(df):
         growth = row['next_close'] > row['close'] 
         z_score = row['z_score'] > 1
         perb = row['percent_b'] >= 0.8
-        pvi = row['nvi_trending'] == -1 and row['pvi'] > 1 and row['pvi'] >= row['nvi']
+        pvi = row['pvi'] > 1 and row['pvi'] >= row['nvi']
         roc = row['roc'] > 0
         macd = row['histogram'] > 0 
 
@@ -178,7 +162,7 @@ def classification(df):
         shrink = row['next_close'] < row['close']
         z_score = row['z_score'] < -1
         perb = row['percent_b'] <= 0.2
-        nvi = row['pvi_trending'] == -1 and row['nvi'] > 1  and row['pvi'] <= row['nvi']
+        nvi = row['nvi'] > 1  and row['pvi'] <= row['nvi']
         roc = row['roc'] < 0
         macd = row['histogram'] < 0
 
