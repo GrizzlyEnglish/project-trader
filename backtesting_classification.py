@@ -22,7 +22,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
 #assets = load_symbols('option_symbols.txt')
-assets = ['spy']
+assets = ['nvda']
 
 data = []
 accuracies = []

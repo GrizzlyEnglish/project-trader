@@ -20,7 +20,7 @@ def create_model(symbol, window_data, evaluate=False):
     df = pd.concat([
         df[df.label == 'buy'],
         df[df.label == 'sell'],
-        df[df.label == 'hold'].sample(n=200)
+        df[df.label == 'hold'].sample(n=400)
     ])
 
     df['label'] = df['label'].apply(features.label_to_int)

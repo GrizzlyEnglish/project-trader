@@ -4,11 +4,12 @@ from sklearn.preprocessing import MinMaxScaler
 
 import numpy as np
 import math
+import statistics
 
 small_window = 50
 large_window = 200
 
-def trending(row, label, amt, prepend = False, postpend = False):
+def trending(row, label, amt, prepend = False, postpend = False, reverse = True):
     arr = []
 
     if prepend:
@@ -20,7 +21,8 @@ def trending(row, label, amt, prepend = False, postpend = False):
     if postpend:
         arr.append(row[label])
 
-    arr.reverse()
+    if reverse:
+        arr.reverse()
 
     if any(math.isnan(x) for x in arr):
         return 0
@@ -98,6 +100,10 @@ def trends(df):
         df[f'pvi_{i}'] = df['pvi'].shift(j)
         df[f'nvi_{i}'] = df['nvi'].shift(j)
         df[f'smi_{i}'] = df['smi'].shift(j)
+        df[f'roc_{i}'] = df['roc'].shift(j)
+        df[f'macd_{i}'] = df['macd'].shift(j)
+        df[f'histogram_{i}'] = df['histogram'].shift(j)
+        df[f'percent_b_{i}'] = df['percent_b'].shift(j)
 
     def close_trend(row):
         return trending(row, 'close', trend_shift, True, False)
@@ -111,13 +117,26 @@ def trends(df):
     def smi_trend(row):
         return trending(row, 'smi', trend_shift, True, False)
 
+    def macd_trend(row):
+        return trending(row, 'macd', trend_shift, True, False)
+
+    def roc_trend(row):
+        return trending(row, 'roc', trend_shift, True, False)
+
+    def histogram_trend(row):
+        return trending(row, 'histogram', trend_shift, True, False)
+
+    def percent_b_trend(row):
+        return trending(row, 'percent_b', trend_shift, True, False)
+
     df['close_trend'] = df.apply(close_trend, axis=1)
     df['pvi_trend'] = df.apply(pvi_trend, axis=1)
     df['nvi_trend'] = df.apply(nvi_trend, axis=1)
     df['smi_trend'] = df.apply(smi_trend, axis=1)
-
-    #scaler = MinMaxScaler(feature_range=(-1, 1))
-    #df[['pvi_trend', 'nvi_trend', 'close_trend', 'smi_trend']] = scaler.fit_transform(df[['pvi_trend', 'nvi_trend', 'close_trend', 'smi_trend']])
+    df['macd_trend'] = df.apply(macd_trend, axis=1)
+    df['roc_trend'] = df.apply(roc_trend, axis=1)
+    df['histogram_trend'] = df.apply(histogram_trend, axis=1)
+    df['percent_b_trend'] = df.apply(percent_b_trend, axis=1)
 
     return df
 
@@ -197,33 +216,40 @@ def get_percentage_diff(previous, current, round_value=True):
         return float('inf')  # Infinity
 
 def classification(df):
-    df[f'next_close'] = df['close'].shift(-20)
+    trend_shift = 6
 
+    for i in range(trend_shift):
+        j = i + 1
+        df[f'next_close_{i}'] = df['close'].shift(-j)
+
+    def next_close_trend(row):
+        return trending(row, 'next_close', trend_shift, False, False, False)
+
+    df[f'next_close'] = df.apply(next_close_trend, axis=1)
+    
     def label(row):
         # growth indicators
-        growth = row['next_close'] > row['close']
+        growth = row['next_close'] > 0
         p_trend = row['close_trend'] > 0
-        z_score = row['z_score'] > 1
-        perb = row['percent_b'] >= 0.8
-        pvi = row['pvi'] >= row['nvi'] and row['pvi_trend'] > 0 and row['nvi_trend'] < 0
-        roc = row['roc'] > 0
-        macd = row['histogram'] > 0 
-        smi = row['smi_trend'] > 10
+        perb = row['percent_b'] < 0.5 and row['percent_b_trend'] > 0
+        pvi = row['pvi_trend'] > 0
+        roc = row['roc_trend'] > 0
+        macd = row['histogram_trend'] > 0
+        smi = row['smi_trend'] > 0
 
-        if growth and pvi and z_score and perb and roc and macd and smi and p_trend:
+        if growth and pvi and perb and roc and macd and smi and p_trend:
             return 'buy' 
 
         # shrink indicators
-        shrink = row['next_close'] < row['close']
+        shrink = row['next_close'] < 0
         p_trend = row['close_trend'] < 0
-        z_score = row['z_score'] < -1
-        perb = row['percent_b'] <= 0.2
-        nvi = row['nvi_trend'] < 0
-        roc = row['roc'] < 0
-        macd = row['macd'] < -1
+        perb = row['percent_b'] > 0.5 and row['percent_b_trend'] < 0
+        nvi = row['nvi_trend'] > 0
+        roc = row['roc_trend'] < 0
+        macd = row['histogram_trend'] < 0
         smi = row['smi_trend'] < 0
 
-        if shrink and nvi and z_score and perb and nvi and roc and macd and smi and p_trend:
+        if shrink and nvi and perb and nvi and roc and macd and smi and p_trend:
             return 'sell' 
         
         return 'hold'
@@ -236,6 +262,9 @@ def classification(df):
 
     print(f'buy count: {buys} sell count: {sells} hold count: {holds}')
 
+    for i in range(trend_shift):
+        j = i + 1
+        df.pop(f'next_close_{i}')
     df.pop('next_close')
 
     return df
