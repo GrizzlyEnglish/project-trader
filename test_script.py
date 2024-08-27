@@ -29,7 +29,7 @@ for symbol in assets:
     bars = classification.get_model_bars(symbol, market_client, s, e, time_window)
 
     b_bars = bars[bars['label'] == 'buy']
-    b_bars.to_csv(f'{symbol}_buy_signals.csv', index=True)
+    b_bars.to_csv(f'{symbol}_signals.csv', index=True)
 
     s_bars = bars[bars['label'] == 'sell']
     s_bars.to_csv(f'{symbol}_sell_signals.csv', index=True)

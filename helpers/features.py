@@ -69,30 +69,22 @@ def feature_engineer_df(df):
 
 def drop_prices(df):
     # Drop price based colums
-    #df.pop('open')
-    #df.pop('high')
-    #df.pop('low')
-    #df.pop('close')
-    #df.pop('vwap')
-
-    trend_shift = 4
+    trend_shift = 3
 
     for i in range(trend_shift):
-        j = i + 1
         df.pop(f'close_{i}')
         df.pop(f'pvi_{i}')
         df.pop(f'nvi_{i}')
         df.pop(f'smi_{i}')
-
-    #df.pop('close_trend')
-    #df.pop('pvi_trend')
-    #df.pop('nvi_trend')
-    #df.pop('smi_trend')
+        df.pop(f'roc_{i}')
+        df.pop(f'macd_{i}')
+        df.pop(f'histogram_{i}')
+        df.pop(f'percent_b_{i}')
 
     return df
 
 def trends(df):
-    trend_shift = 4
+    trend_shift = 3
 
     for i in range(trend_shift):
         j = i + 1
@@ -229,8 +221,8 @@ def classification(df):
     
     def label(row):
         # growth indicators
-        growth = row['next_close'] > 0
-        p_trend = row['close_trend'] > 0
+        growth = row['next_close'] > 0.03
+        p_trend = row['close_trend'] >= -0.3 and row['close_trend'] <= 0.3
         perb = row['percent_b'] < 0.5 and row['percent_b_trend'] > 0
         pvi = row['pvi_trend'] > 0
         roc = row['roc_trend'] > 0
@@ -241,8 +233,7 @@ def classification(df):
             return 'buy' 
 
         # shrink indicators
-        shrink = row['next_close'] < 0
-        p_trend = row['close_trend'] < 0
+        shrink = row['next_close'] < -0.03
         perb = row['percent_b'] > 0.5 and row['percent_b_trend'] < 0
         nvi = row['nvi_trend'] > 0
         roc = row['roc_trend'] < 0

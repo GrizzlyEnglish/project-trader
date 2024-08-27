@@ -37,6 +37,9 @@ for year in years:
         bars = classification.get_model_bars(s, market_client, st, end, time_window)
         model = classification.generate_model(s, bars)
 
+        total_actions = 0
+        correct_actions = 0
+
         for w in range(12):
             print(start)
 
@@ -52,9 +55,6 @@ for year in years:
                 break
 
             indexes = pd.Index(bars.index)
-
-            total_actions = 0
-            correct_actions = 0
 
             for index,row in bars.iterrows():
                 if index[1].month == start.month:
@@ -90,7 +90,7 @@ for year in years:
                             td = idx[1] - index[1]
                             idx_p = bars.iloc[idx_loc]['close']
 
-                        if td != 'unknown' and td._m >= 30:
+                        if td != 'unknown' and (td._m >= 30 or td._h > 0):
                             correct_actions = correct_actions + 1
 
                         data.append({
