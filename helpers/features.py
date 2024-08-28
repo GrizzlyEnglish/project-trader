@@ -220,13 +220,14 @@ def classification(df):
     df[f'next_close'] = df.apply(next_close_trend, axis=1)
     
     def label(row):
+        p_trend = row['close_trend'] >= -0.3 and row['close_trend'] <= 0.3
+
         # growth indicators
         growth = row['next_close'] > 0.03
-        p_trend = row['close_trend'] >= -0.3 and row['close_trend'] <= 0.3
         perb = row['percent_b'] < 0.5 and row['percent_b_trend'] > 0
         pvi = row['pvi_trend'] > 0
-        roc = row['roc_trend'] > 0
-        macd = row['histogram_trend'] > 0
+        roc = row['roc_trend'] > 0 and row['roc'] < 0
+        macd = row['histogram_trend'] > 0 and row['histogram'] < 0
         smi = row['smi_trend'] > 0
 
         if growth and pvi and perb and roc and macd and smi and p_trend:
@@ -236,8 +237,8 @@ def classification(df):
         shrink = row['next_close'] < -0.03
         perb = row['percent_b'] > 0.5 and row['percent_b_trend'] < 0
         nvi = row['nvi_trend'] > 0
-        roc = row['roc_trend'] < 0
-        macd = row['histogram_trend'] < 0
+        roc = row['roc_trend'] < 0 and row['roc'] > 0
+        macd = row['histogram_trend'] < 0 and row['histogram'] > 0
         smi = row['smi_trend'] < 0
 
         if shrink and nvi and perb and nvi and roc and macd and smi and p_trend:
@@ -255,8 +256,8 @@ def classification(df):
 
     for i in range(trend_shift):
         j = i + 1
-        df.pop(f'next_close_{i}')
-    df.pop('next_close')
+        #df.pop(f'next_close_{i}')
+    #df.pop('next_close')
 
     return df
 

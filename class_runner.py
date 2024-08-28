@@ -8,6 +8,7 @@ from strats import classification
 
 import os
 import time
+import pandas as pd
 
 load_dotenv()
 
@@ -25,13 +26,15 @@ classified_time = None
 time_window = float(os.getenv('TIME_WINDOW'))
 time_diff = time_window * 60
 
+contract_history = pd.DataFrame()
+
 while (True):
     clock = trading_client.get_clock()
 
     if clock.is_open:
         classifications = []
 
-        if (classified_time == None or time.time() - classified_time >= time_diff) and datetime.now().hour > 9:
+        if (classified_time == None or time.time() - classified_time >= time_diff):# and datetime.now().hour > 9:
             classifications = classification.classify_symbols(assets, market_client, datetime.now())
             classified_time = time.time() 
 

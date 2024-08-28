@@ -41,7 +41,8 @@ def get_option_call_itm(symbol, current_price, trading_client):
     now = datetime.now() + timedelta(days=1)
     until = now + timedelta(days=14)
 
-    bottom_out = current_price * .85
+    top = current_price + 1
+    bottom_out = current_price * .95
 
     req = GetOptionContractsRequest(
         underlying_symbol=[symbol],                 
@@ -50,7 +51,7 @@ def get_option_call_itm(symbol, current_price, trading_client):
         expiration_date_lte=until.strftime(format="%Y-%m-%d"),  
         root_symbol=symbol,                                    
         type='call',                                          
-        strike_price_lte=str(current_price),
+        strike_price_lte=str(top),
         strike_price_gte=str(bottom_out),
         limit=100,                                           
         page=None
@@ -94,9 +95,6 @@ def get_option_buying_power(option_contract, buying_power, is_put):
         return None
     else:
         close_price = float(o.close_price)
-
-    if close_price > 3:
-        return None
 
     option_price = close_price * size
 
