@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from helpers import get_data, features, class_model, options, get_data, buy
+from helpers import get_data, features, class_model, options, get_data, buy, short_classification
 from messaging import discord
 from alpaca.common.exceptions import APIError
-from alpaca.trading.requests import OrderRequest, StopLossRequest, TakeProfitRequest
-from alpaca.trading.enums import OrderSide, OrderType, TimeInForce, OrderClass
 
 import os
+import pandas as pd
 
 def generate_model(symbol, model_bars):
     return class_model.create_model(symbol, model_bars, True)
@@ -13,14 +12,22 @@ def generate_model(symbol, model_bars):
 def get_model_bars(symbol, market_client, start, end, time_window):
     bars = get_data.get_bars(symbol, start, end, market_client, time_window)
     bars = features.feature_engineer_df(bars)
-    bars = features.classification(bars)
+    bars = short_classification.classification(bars)
     bars = features.drop_prices(bars)
+
+    bars = pd.concat([
+        bars[bars.label == 'buy'],
+        bars[bars.label == 'sell'],
+        bars[bars.label == 'hold'].sample(n=400)
+    ])
+
+    bars['label'] = bars['label'].apply(short_classification.label_to_int)
 
     return bars
 
 def predict(model, bars):
     pred = model.predict(bars)
-    pred = [features.int_to_label(p) for p in pred]
+    pred = [short_classification.int_to_label(p) for p in pred]
     pred = [s for s in pred if s != 'Hold']
     class_type = "Hold"
     if len(pred) > 0 and all(x == pred[0] for x in pred):
@@ -31,9 +38,10 @@ def predict(model, bars):
 
 def classify_symbols(symbols, market_client, end = datetime.now()):
     time_window = int(os.getenv('TIME_WINDOW'))
+    day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
     classified = []
     for symbol in symbols:
-        bars = get_model_bars(symbol, market_client, end - timedelta(days=80), end + timedelta(days=1), time_window)
+        bars = get_model_bars(symbol, market_client, end - timedelta(days=day_span), end + timedelta(days=1), time_window)
         model_bars = bars.head(len(bars) - 1)
         pred_bars = bars.tail(1)
 

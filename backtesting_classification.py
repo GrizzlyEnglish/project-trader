@@ -1,7 +1,7 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from strats import classification
+from strats import short_classification
 from helpers import get_data, features
 from datetime import datetime, timedelta
 from helpers.load_stocks import load_symbols
@@ -22,31 +22,32 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
 #assets = load_symbols('option_symbols.txt')
-assets = ['nvda']
+assets = ['spy', 'qqq']
 
 data = []
 accuracies = []
-time_window = 5
+time_window = int(os.getenv('TIME_WINDOW'))
+day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
 years = [2024]
 
 for year in years:
     for s in assets:
         start = datetime(year, 8, 1, 12, 30)
-        st = start - timedelta(days=80)
-        end = start + timedelta(days=1)
-        bars = classification.get_model_bars(s, market_client, st, end, time_window)
-        model = classification.generate_model(s, bars)
 
         total_actions = 0
         correct_actions = 0
 
         for w in range(12):
-            print(start)
+            st = start - timedelta(days=day_span-1)
+            end = start - timedelta(days=1)
+            print(f'Model start {st} model end {end}')
+            bars = short_classification.get_model_bars(s, market_client, st, end, time_window)
+            model = short_classification.generate_model(s, bars)
 
             if start > datetime.now():
                 break
 
-            start_dt = start - timedelta(days=60)
+            start_dt = start
             end_dt = start + timedelta(days=31)
             bars = get_data.get_bars(s, start_dt, end_dt, market_client, time_window)
             bars = features.feature_engineer_df(bars)
@@ -65,7 +66,7 @@ for year in years:
             for index, row in bars_altered.iterrows():
                 h = bars.loc[[index]]
                 h_pred = features.drop_prices(h.copy())
-                pred = classification.predict(model, h_pred)
+                pred = short_classification.predict(model, h_pred)
 
                 if pred != 'Hold':
                     total_actions = total_actions + 1

@@ -14,17 +14,7 @@ def create_model(symbol, window_data, evaluate=False):
         return None
     
     df = df.dropna()
-
-    #print(df)
-
-    df = pd.concat([
-        df[df.label == 'buy'],
-        df[df.label == 'sell'],
-        df[df.label == 'hold'].sample(n=400)
-    ])
-
-    df['label'] = df['label'].apply(features.label_to_int)
-
+ 
     target = df['label']
     feature = df.drop('label', axis=1)
 
