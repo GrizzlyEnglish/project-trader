@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from helpers import get_data, features, class_model, options, get_data, buy, short_classification
+from helpers import get_data, features, class_model, options, get_data, buy, short_classification, tracker
 from messaging import discord
 from alpaca.common.exceptions import APIError
 
@@ -15,11 +15,17 @@ def get_model_bars(symbol, market_client, start, end, time_window):
     bars = short_classification.classification(bars)
     bars = features.drop_prices(bars)
 
+    buys = len(bars[bars.label == 'buy'])
+    sells = len(bars[bars.label == 'sell'])
+    holds = (buys + sells) * 2
+
     bars = pd.concat([
         bars[bars.label == 'buy'],
         bars[bars.label == 'sell'],
-        bars[bars.label == 'hold'].sample(n=400)
+        bars[bars.label == 'hold'].sample(n=holds)
     ])
+
+    print(f'Model bars buy count: {buys} sell count: {sells} hold count: {holds}')
 
     bars['label'] = bars['label'].apply(short_classification.label_to_int)
 
@@ -68,15 +74,13 @@ def enter(classification, current_positions, trading_client, market_client):
 
     contracts = []
 
-    bars = get_data.get_bars(classification['symbol'], datetime.now() - timedelta(days=3), datetime.now() + timedelta(minutes=30), market_client, 15)
-    price = bars.iloc[-1]['close']
-
     if classification['class'] == 'Buy':
-        contracts = options.get_option_call_itm(classification['symbol'], price, trading_client)[-5:]
+        contracts = options.get_option_calls(classification['symbol'], market_client, trading_client)
     elif is_put:
-        contracts = options.get_option_put_itm(classification['symbol'], price, trading_client)[:5]
+        contracts = options.get_option_puts(classification['symbol'], market_client, trading_client)
     
     for contract in contracts:
+        # TODO: We can do 0dte, but we need it to be ITM, or before say 2pm
         dte = (contract.expiration_date - datetime.now().date()).days
 
         if dte >= 1:
@@ -87,31 +91,54 @@ def enter(classification, current_positions, trading_client, market_client):
                 buy.submit_order(contract.symbol, qty, trading_client, False)
                 break
 
+'''
+Three cases for an exit
+1. The current cost of the contract(s) is below the defined risk level
+2. The model predicts a reverse, we are better off just exiting
+3. We are above the defined reward level and a dip occurred - THIS MAY CHANGE A BIT
+'''
 def exit(position, classifications, trading_client):
-    stop_loss = float(os.getenv('STOP_LOSS'))
-    secure_gains = float(os.getenv('SECURE_GAINS'))
-
     pl = float(position.unrealized_plpc)
     price = float(position.current_price)
+    size = float(position.size)
     qty = float(position.qty)
+    cost = (price * size) * qty
     contract = position.symbol
 
-    print(f'{contract} P/L % {pl}')
+    stop_loss = cost * .9
+    secure_gains = cost * 1.3
+
+    print(f'{contract} P/L % {pl} stop loss of {stop_loss} and secure gains of {secure_gains}')
 
     exit = False
-    classification = next((s for s in classifications if s['symbol'] in contract), None)
 
-    if classification != None:
-        if 'C' in contract[5:] and classification['class'] == 'Sell':
-            exit = True
-        elif 'P' in contract[5:] and classification['class'] == 'Buy':
-            exit = True
-
-    if pl < -stop_loss or pl > secure_gains:
+    # If we have dropped below the stop loss amount we need to just sell it
+    if cost < stop_loss:
         exit = True
+    else:
+        # See if we are predicting a reverse if so sell it
+        classification = next((s for s in classifications if s['symbol'] in contract), None)
+
+        if classification != None:
+            if 'C' in contract[5:] and classification['class'] == 'Sell':
+                exit = True
+            elif 'P' in contract[5:] and classification['class'] == 'Buy':
+                exit = True
+
+        # If we are above secure gains and recently had a pull back sell it
+        elif cost > secure_gains:
+            hst = tracker.get(contract)
+            if not hst.empty:
+                # TODO: Maybe see about making this a percent barrier, rather than just sell if it dips
+                if hst[0]['p/l'] > pl:
+                    exit = True
 
     try:
         if exit:
             trading_client.close_position(contract)
+            tracker.clear(contract)
+        else:
+            # If we don't sell we need to keep track
+            tracker.track(contract, pl)
     except APIError as e:
         print(e)

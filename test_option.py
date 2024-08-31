@@ -1,10 +1,7 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from helpers.trend_logic import weight_symbol_current_status
-from strats.entry import enter_option, get_option_call
-from datetime import datetime
-from helpers.load_stocks import load_symbols
+from helpers import options, load_stocks
 
 import os
 
@@ -18,12 +15,18 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-assets = load_symbols()
+assets = load_stocks.load_symbols('option_symbols.txt')
+#assets = ['AAPL']
 
-start = datetime(2024, 6, 28, 13)
+for symbol in assets:
+    calls = options.get_option_calls(symbol, market_client, trading_client)
+    puts = options.get_option_puts(symbol, market_client, trading_client)
 
-#weighted_assets = weight_symbol_current_status(assets, market_client, start)
+    calls = [c for c in calls if float(c.close_price) < 4]
+    puts = [c for c in puts if float(c.close_price) < 4]
 
-#option = enter_option(weighted_assets, trading_client, market_client, False)
-option = get_option_call('RIVN', 16, trading_client)
-print(option)
+    call_strikes = [c.strike_price for c in calls]
+    put_strikes = [c.strike_price for c in puts]
+
+    print(f'{symbol} Call strikes {list(set(call_strikes))}')
+    print(f'{symbol} Put strikes {list(set(put_strikes))}')

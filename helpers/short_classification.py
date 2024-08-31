@@ -1,7 +1,7 @@
 from helpers import features
 
 def classification(df):
-    trend_shift = 6
+    trend_shift = 3
 
     for i in range(trend_shift):
         j = i + 1
@@ -11,12 +11,17 @@ def classification(df):
         return features.trending(row, 'next_close', trend_shift, False, False, False)
 
     df[f'next_close'] = df.apply(next_close_trend, axis=1)
+
+    g_trend = (df[df['next_close'] > 0]['next_close'].mean() / 4)
+    s_trend = (df[df['next_close'] < 0]['next_close'].mean() / 4)
+
+    print(f'Growth {g_trend} Shrink {s_trend}')
     
     def label(row):
         p_trend = row['close_trend'] >= -0.05 and row['close_trend'] <= 0.05
 
         # growth indicators
-        growth = row['next_close'] > 0.03
+        growth = row['next_close'] > g_trend
         perb = row['percent_b_trend'] > 0
         pvi = row['pvi_trend'] > 0
         roc = row['roc_trend'] > 0 and row['roc'] < 0
@@ -27,7 +32,7 @@ def classification(df):
             return 'buy' 
 
         # shrink indicators
-        shrink = row['next_close'] < -0.03
+        shrink = row['next_close'] < s_trend
         perb = row['percent_b_trend'] < 0
         nvi = row['nvi_trend'] > 0
         roc = row['roc_trend'] < 0 and row['roc'] > 0
