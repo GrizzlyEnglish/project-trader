@@ -16,10 +16,11 @@ def get_options(symbol, type, market_client, trading_client):
     now = datetime.now()
     until = now + timedelta(days=14)
 
-    top = current_price * 1.15
-    bottom_out = current_price * 0.9
+    var = min(2, current_price * 0.05)
+    top = current_price + var
+    bottom_out = current_price - var
 
-    print(f'{symbol} option strike top {top} bottom {bottom_out}')
+    print(f'{symbol} option strike top {top} bottom {bottom_out} var {var}')
 
     req = GetOptionContractsRequest(
         underlying_symbol=[symbol],                 
@@ -39,13 +40,13 @@ def get_options(symbol, type, market_client, trading_client):
 
 def get_option_calls(symbol, market_client, trading_client):
     contracts = get_options(symbol, 'call', market_client, trading_client)
-    contracts = sorted(contracts, key=lambda x: float(x.strike_price), reverse=False) 
+    contracts = sorted(contracts, key=lambda x: (-float(x.strike_price), x.expiration_date)) 
 
     return contracts
 
 def get_option_puts(symbol, market_client, trading_client):
     contracts = get_options(symbol, 'put', market_client, trading_client)
-    contracts = sorted(contracts, key=lambda x: float(x.strike_price), reverse=True) 
+    contracts = sorted(contracts, key=lambda x: (float(x.strike_price), x.expiration_date)) 
 
     return contracts
 

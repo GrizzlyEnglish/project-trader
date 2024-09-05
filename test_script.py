@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from strats import short_classification
 from helpers.load_stocks import load_symbols
-from helpers.short_classification import label_to_int
+from helpers.short_classifier import label_to_int
 
 import os
 
@@ -20,7 +20,8 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 
 assets = load_symbols('option_symbols.txt')
 #assets = ['SPY', 'QQQ', 'NVDA', 'META']
-#assets = ['META']
+#assets = ['SPY']
+save = False 
 
 day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
 start = datetime(2024, 8, 29, 12, 30)
@@ -30,14 +31,15 @@ time_window = int(os.getenv('TIME_WINDOW'))
 
 for symbol in assets:
     bars = short_classification.get_model_bars(symbol, market_client, s, e, time_window)
+    model, model_bars = short_classification.generate_model(symbol, bars)
 
-    b_bars = bars[bars['label'] == label_to_int('buy')]
-    #b_bars.to_csv(f'{symbol}_buy_signals.csv', index=True)
+    if save:
+        b_bars = model_bars[model_bars['label'] == label_to_int('buy')]
+        b_bars.to_csv(f'{symbol}_buy_signals.csv', index=True)
 
-    s_bars = bars[bars['label'] == label_to_int('sell')]
-    #s_bars.to_csv(f'{symbol}_sell_signals.csv', index=True)
+        s_bars = model_bars[model_bars['label'] == label_to_int('sell')]
+        s_bars.to_csv(f'{symbol}_sell_signals.csv', index=True)
 
-    #bars.to_csv(f'{symbol}_bars.csv', index=True)
+        #model_bars.to_csv(f'{symbol}_bars.csv', index=True)
 
-    model = short_classification.generate_model(symbol, bars)
     print()

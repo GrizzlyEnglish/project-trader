@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import numpy as np
 import math
-import statistics
+import os
 
 small_window = 50
 large_window = 200
@@ -47,6 +47,22 @@ def feature_engineer_df(df):
 
     df.loc[:, 'change'] = df['close'].diff()
 
+    def get_hour(row):
+        idx = row.name[1]
+        return idx.hour
+
+    df['hour'] = df.apply(get_hour, axis=1)
+
+    def get_minutes(row):
+        idx = row.name[1]
+        return idx.minute
+
+    df['minutes'] = df.apply(get_minutes, axis=1)
+
+    # candle sticks
+    df['candle_bar'] = df['open'] - df['close']
+    df['candle_lines'] = df['high'] - df['low']
+
     df = moving_average(df, quotes)
 
     df = macd(df, quotes)
@@ -65,15 +81,13 @@ def feature_engineer_df(df):
 
     df = trends(df)
 
-    df = supres(df)
-
     df = mfi(df, quotes)
 
     return df
 
 def drop_prices(df):
-    # Drop price based colums
-    trend_shift = 6
+    time_window = int(os.getenv('TIME_WINDOW'))
+    trend_shift = int(30/time_window)
 
     for i in range(trend_shift):
         df.pop(f'close_{i}')
@@ -88,7 +102,8 @@ def drop_prices(df):
     return df
 
 def trends(df):
-    trend_shift = 6
+    time_window = int(os.getenv('TIME_WINDOW'))
+    trend_shift = int(30/time_window)
 
     for i in range(trend_shift):
         j = i + 1
@@ -139,18 +154,6 @@ def trends(df):
 def mfi(df, quotes):
     results = indicators.get_mfi(quotes, 14)
     df.loc[:, 'mfi'] = [r.mfi for r in results]
-
-    return df
-
-def supres(df):
-    high = df['high']
-    low = df['low']
-
-    rolling_max = high.rolling(20).max().mean()
-    rolling_min = low.rolling(20).min().mean()
-
-    df['support'] = rolling_min
-    df['resistance'] = rolling_max
 
     return df
 

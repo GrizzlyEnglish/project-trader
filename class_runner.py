@@ -47,4 +47,4 @@ while (True):
         for p in positions:
             short_classification.exit(p, classifications, trading_client)
 
-    time.sleep(60)
+    time.sleep(30)

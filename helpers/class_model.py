@@ -9,7 +9,7 @@ import pandas as pd
 def create_model(symbol, window_data, evaluate=False):
     df = window_data.copy().dropna()
 
-    if df.empty or df.shape[0] < 100:
+    if df.empty:
         print("%s has no data or not enough data to generate a model" % symbol)
         return None
     
@@ -30,19 +30,12 @@ def create_model(symbol, window_data, evaluate=False):
     if evaluate:
         y_pred = model.predict(x_test)
 
-        acc = metrics.accuracy_score(y_test, y_pred)
-        prec = metrics.precision_score(y_test, y_pred, average='weighted')
-        rec = metrics.recall_score(y_test, y_pred, average='weighted')
-        f1 = metrics.f1_score(y_test, y_pred,average='weighted')
         kappa = metrics.cohen_kappa_score(y_test, y_pred)
 
         cm = metrics.confusion_matrix(y_test, y_pred)
         print(f'{symbol}')
-        print('Accuracy:', acc)
-        print('Precision:', prec)
-        print('Recall:', rec)
-        print('F1 Score:', f1)
         print('Cohens Kappa Score:', kappa)
+        print(f'Ryans Score: {(cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1])}')
         print('Confusion Matrix:\n', cm)
 
     return model

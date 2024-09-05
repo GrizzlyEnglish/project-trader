@@ -10,9 +10,11 @@ def track(symbol, pl):
 
 def get(symbol):
     global _TRACKING_PD
+    if (_TRACKING_PD.empty): return _TRACKING_PD
     df = _TRACKING_PD[_TRACKING_PD['symbol'] == symbol]
     return df.sort_values(by='timestamp', ascending=False)
 
 def clear(symbol):
     global _TRACKING_PD
+    if (_TRACKING_PD.empty): return
     _TRACKING_PD = _TRACKING_PD.drop(_TRACKING_PD[_TRACKING_PD['symbol'] == symbol].index)
