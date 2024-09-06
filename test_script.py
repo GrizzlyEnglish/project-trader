@@ -21,7 +21,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 assets = load_symbols('option_symbols.txt')
 #assets = ['SPY', 'QQQ', 'NVDA', 'META']
 #assets = ['SPY']
-save = False 
+save = False
 
 day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
 start = datetime(2024, 8, 29, 12, 30)
@@ -30,6 +30,7 @@ e = start + timedelta(days=1)
 time_window = int(os.getenv('TIME_WINDOW'))
 
 for symbol in assets:
+    start = datetime.now()
     bars = short_classification.get_model_bars(symbol, market_client, s, e, time_window)
     model, model_bars = short_classification.generate_model(symbol, bars)
 
@@ -40,6 +41,8 @@ for symbol in assets:
         s_bars = model_bars[model_bars['label'] == label_to_int('sell')]
         s_bars.to_csv(f'{symbol}_sell_signals.csv', index=True)
 
-        #model_bars.to_csv(f'{symbol}_bars.csv', index=True)
+        #bars.to_csv(f'{symbol}_bars.csv', index=True)
 
-    print()
+    end = datetime.now()
+
+    print(f'Took {symbol} {end - start}')

@@ -5,14 +5,14 @@ import numpy as np
 
 def classification(df):
     time_window = int(os.getenv('TIME_WINDOW'))
-    trend_shift = int(60/time_window)
+    look_forward = int(os.getenv('LOOK_FORWARD'))
 
-    for i in range(trend_shift):
+    for i in range(look_forward):
         j = i + 1
         df[f'next_close_{i}'] = df['close'].shift(-j)
 
     def next_close_trend(row):
-        return features.trending(row, 'next_close', trend_shift, False, False, False)
+        return features.trending(row, 'next_close', look_forward, False, False, False)
 
     df[f'next_close'] = df.apply(next_close_trend, axis=1)
 
@@ -30,22 +30,24 @@ def classification(df):
     def label(row):
         # growth indicators
         growth = row['next_close'] > g_trend
-        p_trend = row['close_trend'] < 0
-        roc = row['roc_momentum'] < 0
-        bands = row['percent_b'] < 0.3
-        red_candle = row['candle_bar'] > 0
+        p_trend = row['close_trend'] > 0
+        roc = row['roc_trend'] > 0
+        bands = row['percent_b'] > 0.5
+        green_candle = row['candle_bar'] < 0
+        pvi = row['pvi_trend'] > 0 and abs(row['pvi_trend']) > abs(row['nvi_trend'])
 
-        if growth and p_trend and roc and bands and red_candle:
+        if growth and p_trend and roc and bands and green_candle and pvi:
             return 'buy' 
 
         # shrink indicators
         shrink = row['next_close'] < s_trend
-        p_trend = row['close_trend'] > 0
-        roc = row['roc_momentum'] > 0
-        bands = row['percent_b'] > 0.7
-        green_candle = row['candle_bar'] < 0
+        p_trend = row['close_trend'] < 0
+        roc = row['roc_trend'] < 0
+        bands = row['percent_b'] < 0.5
+        red_candle = row['candle_bar'] > 0
+        nvi = row['nvi_trend'] > 0 and abs(row['pvi_trend']) < abs(row['nvi_trend'])
 
-        if shrink and p_trend and roc and green_candle:
+        if shrink and p_trend and roc and red_candle and nvi:
             return 'sell' 
         
         return 'hold'
@@ -58,7 +60,7 @@ def classification(df):
 
     print(f'buy count: {buys} sell count: {sells} hold count: {holds}')
 
-    for i in range(trend_shift):
+    for i in range(look_forward):
         j = i + 1
         df.pop(f'next_close_{i}')
     df.pop('next_close')

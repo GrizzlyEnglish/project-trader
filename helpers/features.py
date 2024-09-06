@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import math
 import os
+import pandas as pd
 
 small_window = 50
 large_window = 200
@@ -24,14 +25,17 @@ def trending(row, label, amt, prepend = False, postpend = False, reverse = True)
     if reverse:
         arr.reverse()
 
-    if any(math.isnan(x) for x in arr):
+    if any(x == None or math.isnan(x) for x in arr):
         return 0
 
+    return slope(arr)
+
+def slope(arr):
+    if len(arr) <= 1:
+        return 0
     coeffs = np.polyfit(range(len(arr)), arr, 1)
     slope = coeffs[-2]
     return float(slope)
-
-    #return sum([0]+[(arr[n+1]-arr[n])/arr[n]*100 if arr[n] else 0 for n in range(len(arr)-2)])
 
 def feature_engineer_df(df):
     bars_i = df.reset_index()
@@ -86,10 +90,9 @@ def feature_engineer_df(df):
     return df
 
 def drop_prices(df):
-    time_window = int(os.getenv('TIME_WINDOW'))
-    trend_shift = int(30/time_window)
+    look_back = int(os.getenv('LOOK_BACK'))
 
-    for i in range(trend_shift):
+    for i in range(look_back):
         df.pop(f'close_{i}')
         df.pop(f'pvi_{i}')
         df.pop(f'nvi_{i}')
@@ -102,44 +105,42 @@ def drop_prices(df):
     return df
 
 def trends(df):
-    time_window = int(os.getenv('TIME_WINDOW'))
-    trend_shift = int(30/time_window)
+    look_back = int(os.getenv('LOOK_BACK'))
 
-    for i in range(trend_shift):
+    for i in range(look_back):
         j = i + 1
-        df[f'close_{i}'] = df['close'].shift(j)
-        df[f'pvi_{i}'] = df['pvi'].shift(j)
-        df[f'nvi_{i}'] = df['nvi'].shift(j)
-        df[f'smi_{i}'] = df['smi'].shift(j)
-        df[f'roc_{i}'] = df['roc'].shift(j)
-        df[f'macd_{i}'] = df['macd'].shift(j)
-        df[f'histogram_{i}'] = df['histogram'].shift(j)
-        df[f'percent_b_{i}'] = df['percent_b'].shift(j)
+        df2 = df[['close', 'pvi', 'nvi', 'smi', 'roc', 'macd', 'histogram', 'percent_b', 'height']]
+        df2 = df2.add_suffix(f'_{i}')
+        df2 = df2.shift(j)
+        df = pd.concat([df, df2], axis=1)
 
     def close_trend(row):
-        return trending(row, 'close', trend_shift, True, False)
+        return trending(row, 'close', look_back, True, False)
 
     def pvi_trend(row):
-        return trending(row, 'pvi', trend_shift, True, False)
+        return trending(row, 'pvi', look_back, True, False)
 
     def nvi_trend(row):
-        return trending(row, 'nvi', trend_shift, True, False)
+        return trending(row, 'nvi', look_back, True, False)
 
     def smi_trend(row):
-        return trending(row, 'smi', trend_shift, True, False)
+        return trending(row, 'smi', look_back, True, False)
 
     def macd_trend(row):
-        return trending(row, 'macd', trend_shift, True, False)
+        return trending(row, 'macd', look_back, True, False)
 
     def roc_trend(row):
-        return trending(row, 'roc', trend_shift, True, False)
+        return trending(row, 'roc', look_back, True, False)
 
     def histogram_trend(row):
-        return trending(row, 'histogram', trend_shift, True, False)
+        return trending(row, 'histogram', look_back, True, False)
 
     def percent_b_trend(row):
-        return trending(row, 'percent_b', trend_shift, True, False)
+        return trending(row, 'percent_b', look_back, True, False)
 
+    def height_trend(row):
+        return trending(row, 'height', look_back, True, False)
+    
     df['close_trend'] = df.apply(close_trend, axis=1)
     df['pvi_trend'] = df.apply(pvi_trend, axis=1)
     df['nvi_trend'] = df.apply(nvi_trend, axis=1)
@@ -148,6 +149,7 @@ def trends(df):
     df['roc_trend'] = df.apply(roc_trend, axis=1)
     df['histogram_trend'] = df.apply(histogram_trend, axis=1)
     df['percent_b_trend'] = df.apply(percent_b_trend, axis=1)
+    df['height_trend'] = df.apply(height_trend, axis=1)
 
     return df
 
@@ -162,12 +164,16 @@ def bands(df, quotes):
 
     df.loc[:, 'percent_b'] = [r.percent_b for r in results]
     df.loc[:, 'width'] = [r.width for r in results]
+    df.loc[:, 'upper_band'] = [r.upper_band for r in results]
+    df.loc[:, 'lower_band'] = [r.lower_band for r in results]
     df.loc[:, 'z_score'] = [r.z_score for r in results]
+
+    df['height'] = df['upper_band'] - df['lower_band']
 
     return df
 
 def vortex_indicator(df, quotes):
-    results = indicators.get_vortex(quotes, 14);
+    results = indicators.get_vortex(quotes, 14)
 
     df.loc[:, 'pvi'] = [r.pvi for r in results]
     df.loc[:, 'nvi'] = [r.nvi for r in results]

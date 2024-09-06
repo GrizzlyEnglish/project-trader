@@ -21,7 +21,7 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-#assets = load_symbols('option_symbols.txt')
+assets = load_symbols('option_symbols.txt')
 assets = ['spy', 'qqq']
 
 data = []
@@ -29,10 +29,11 @@ accuracies = []
 time_window = int(os.getenv('TIME_WINDOW'))
 day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
 years = [2024]
+next_close_bars = int(60/time_window)
 
 for year in years:
     for s in assets:
-        start = datetime(year, 8, 1, 12, 30)
+        start = datetime(year, 1, 1, 12, 30)
 
         total_actions = 0
         correct_actions = 0
@@ -42,13 +43,14 @@ for year in years:
             end = start - timedelta(days=1)
             print(f'Model start {st} model end {end}')
             bars = short_classification.get_model_bars(s, market_client, st, end, time_window)
-            model = short_classification.generate_model(s, bars)
+            model, model_bars = short_classification.generate_model(s, bars)
 
             if start > datetime.now():
                 break
 
             start_dt = start
             end_dt = start + timedelta(days=31)
+            print(f'Predict start {start_dt} model end {end_dt}')
             bars = get_data.get_bars(s, start_dt, end_dt, market_client, time_window)
             bars = features.feature_engineer_df(bars)
 
@@ -78,29 +80,44 @@ for year in years:
                     next_date = ''
 
                     if isinstance(loc, numbers.Number):
-                        b = bars[loc:]
-                        r = pd.DataFrame()
-                        td = 'unknown'
-                        if pred == 'Sell':
-                            r = b[b['close'] > price]
-                        else:
-                            r = b[b['close'] < price]
-                        if not r.empty:
-                            idx = r.index[0]
-                            idx_loc = indexes.get_loc(idx)
-                            td = idx[1] - index[1]
-                            idx_p = bars.iloc[idx_loc]['close']
+                        next_close_bars = bars[loc+1:loc+7]
 
-                        if td != 'unknown' and (td._m >= 30 or td._h > 0):
+                        if next_close_bars.empty:
+                            continue
+
+                        next_closes = next_close_bars['close']
+
+                        max_nc = max(next_closes)
+                        min_nc = min(next_closes)
+
+                        slope = features.slope(next_closes)
+                        correct = False
+                        dist = -1
+                        rev_bar = pd.DataFrame()
+
+                        if pred == 'Sell':
+                            correct = slope < 0
+                            rev_bar = next_close_bars[next_close_bars['close'] > price]
+                        else:
+                            correct = slope > 0
+                            rev_bar = next_close_bars[next_close_bars['close'] < price]
+
+                        if not rev_bar.empty:
+                            idx = rev_bar.index[0]
+                            idx_loc = indexes.get_loc(idx)
+                            dist = idx_loc - loc
+
+                        if correct:
                             correct_actions = correct_actions + 1
 
                         data.append({
                             'symbol': s,
                             'class': pred,
-                            'date': index[1],
-                            'current_price': price, 
-                            'time_to_diff': td,
-                            'next_price': idx_p
+                            'trade_time': index[1],
+                            'trade_price': price, 
+                            'dist_to_reversal': dist,
+                            'next_close_slope': slope,
+                            'correct': correct
                             })
                     else:
                         print('Location of index messed up')

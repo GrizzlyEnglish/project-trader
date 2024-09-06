@@ -92,12 +92,12 @@ def enter(classification, current_positions, trading_client, market_client):
 
         print(f'DTE for {contract.symbol} is {dte} at {current_price}')
 
-        if dte >= 1 and current_price < 5:
+        if dte >= 1 and current_price < 5 and current_price > 1:
             buying_power = get_data.get_buying_power(trading_client)
             qty = options.get_option_buying_power(contract, buying_power, is_put)
             if qty != None and qty > 0:
                 discord.send_alpaca_message(f'Bought {qty} of {contract.symbol} at ${current_price}')
-                buy.submit_order(contract.symbol, qty, trading_client, False)
+                buy.submit_order(contract.symbol, qty, current_price, trading_client)
                 break
 
 '''
@@ -113,8 +113,9 @@ def exit(position, classifications, trading_client):
     market_value = float(position.market_value)
     contract = position.symbol
 
-    stop_loss = cost * .9
-    secure_gains = cost * 1.15
+    risk = cost * .85
+    stop_loss = cost - risk
+    secure_gains = cost + (risk * 3)
 
     print(f'{contract} P/L % {pl} stop loss of {stop_loss} and secure gains of {secure_gains} current cost {market_value}')
 
@@ -136,11 +137,12 @@ def exit(position, classifications, trading_client):
         # If we are above secure gains and recently had a pull back sell it
         elif pl > 0:
             hst = tracker.get(contract)
-            if not hst.empty:
+            if not hst.empty and len(hst) > 2:
                 # TODO: Maybe see about making this a percent barrier, rather than just sell if it dips
+                last_pl_2 = hst.iloc[-2]['p/l']
                 last_pl = hst.iloc[-1]['p/l']
-                print(f'{contract} last p/l {last_pl} and current p/l {pl}')
-                if last_pl > pl:
+                print(f'{contract} last p/l {last_pl} and second last p/l {last_pl_2} current p/l {pl}')
+                if last_pl > pl and last_pl_2 > last_pl:
                     exit = True
 
     try:
@@ -151,7 +153,7 @@ def exit(position, classifications, trading_client):
                 discord.send_alpaca_message(f'Selling {contract} at a loss of {pl_amt}')
             trading_client.close_position(contract)
             tracker.clear(contract)
-        elif market_value > secure_gains:
+        else:
             # If we don't sell we need to keep track
             tracker.track(contract, pl)
     except APIError as e:

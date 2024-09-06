@@ -1,5 +1,5 @@
 from alpaca.data.requests import StockLatestQuoteRequest
-from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.requests import LimitOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 from alpaca.common.exceptions import APIError
 from messaging.discord import send_alpaca_message
@@ -43,10 +43,11 @@ def buy_symbol(stock, trading_client, market_client, buying_power):
 
     return submit_order(stock, qty, trading_client)
 
-def submit_order(stock, qty, trading_client, send_discord):
-    market_order_data = MarketOrderRequest(
+def submit_order(stock, qty, price, trading_client):
+    market_order_data = LimitOrderRequest(
                         symbol=stock,
                         qty=qty,
+                        limit_price=price,
                         side=OrderSide.BUY,
                         type=OrderType.MARKET,
                         time_in_force=TimeInForce.DAY,
@@ -60,13 +61,7 @@ def submit_order(stock, qty, trading_client, send_discord):
         if price == None:
             price = "unknown"
 
-        #TODO: Store in database?
-        if send_discord:
-            send_alpaca_message("[ENTER] Bought: %s of %s at %s" % (qty, stock, price))
-
         return True
     except APIError as e:
         print(e)
-        if send_discord:
-            send_alpaca_message("[ENTER] Failed to enter %s due to %s" % (stock, e))
         return False

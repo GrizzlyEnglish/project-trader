@@ -3,6 +3,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from alpaca.trading.requests import StopLimitOrderRequest, StopLossRequest, TakeProfitRequest
 from alpaca.trading.enums import OrderSide, OrderType, TimeInForce, OrderClass
+from helpers import buy
 
 import os
 
@@ -16,22 +17,4 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-current_positions = trading_client.get_all_positions()
-
-position = current_positions[0]
-
-price = float(position.current_price)
-qty = float(position.qty)
-contract = position.symbol
-
-stop_loss_order = StopLimitOrderRequest(
-    symbol=contract,
-    qty=qty, 
-    side=OrderSide.SELL,
-    type=OrderType.STOP,
-    time_in_force=TimeInForce.DAY,
-    stop_price=price-0.05,
-    limit_price=price-0.10,
-    order_type=OrderType.STOP_LIMIT
-)
-trading_client.submit_order(stop_loss_order)
+buy.submit_order('SPY240909P00546000', 1, 4, trading_client)
