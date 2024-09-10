@@ -1,10 +1,14 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical.option import OptionHistoricalDataClient, OptionLatestTradeRequest, OptionLatestQuoteRequest, OptionBarsRequest
+from alpaca.data.timeframe import TimeFrame
 from dotenv import load_dotenv
-from helpers import options, load_stocks
+from helpers import options, load_stocks, features
 from alpaca.trading.enums import AssetClass
+from datetime import datetime, timedelta
 
 import os
+import numpy as np
 
 load_dotenv()
 
@@ -15,12 +19,15 @@ sleep_time = os.getenv("SLEEP_TIME")
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
+option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 current_positions = trading_client.get_all_positions()
 positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
 
 #assets = load_stocks.load_symbols('option_symbols.txt')
 assets = ['AAPL']
+
+close_slope = features.slope(np.array(bars['close']))
 
 for symbol in assets:
     calls = options.get_option_calls(symbol, market_client, trading_client)

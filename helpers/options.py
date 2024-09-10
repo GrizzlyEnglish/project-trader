@@ -1,9 +1,19 @@
 from alpaca.trading.enums import AssetStatus
 from alpaca.trading.requests import GetOptionContractsRequest
 from alpaca.data.requests import StockLatestTradeRequest
+from alpaca.data.historical.option import OptionLatestQuoteRequest, OptionBarsRequest
+from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
 
 import math
+
+def get_bars(contract, option_client):
+    bars = option_client.get_option_bars(OptionBarsRequest(symbol_or_symbols=contract, timeframe=TimeFrame.Minute))
+    return bars.df
+
+def get_ask_price(contract, option_client):
+    last_quote = option_client.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=contract))
+    return last_quote[contract].ask_price
 
 def get_options(symbol, type, market_client, trading_client):
     quote = market_client.get_stock_latest_trade(StockLatestTradeRequest(symbol_or_symbols=symbol))

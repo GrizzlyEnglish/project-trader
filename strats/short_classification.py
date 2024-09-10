@@ -5,6 +5,7 @@ from alpaca.common.exceptions import APIError
 
 import os
 import pandas as pd
+import numpy as np
 
 def generate_model(symbol, bars):
     buys = len(bars[bars.label == 'buy'])
@@ -72,7 +73,7 @@ Steps to enter
 3. If less than 7 dte, buy ITM, if greater OTM is ok
 4. Make sure to not risk more than what is configured
 '''
-def enter(classification, current_positions, trading_client, market_client):
+def enter(classification, current_positions, trading_client, market_client, option_client):
     if classification == "Hold" or next((cp for cp in current_positions if classification['symbol'] in cp.symbol), None) != None:
         return
 
@@ -88,32 +89,31 @@ def enter(classification, current_positions, trading_client, market_client):
     for contract in contracts:
         # TODO: We can do 0dte, but we need it to be ITM, or before say 2pm
         dte = (contract.expiration_date - datetime.now().date()).days
-        current_price = float(contract.close_price)
+        ask_price = options.get_ask_price(contract.symbol, option_client)
 
-        print(f'DTE for {contract.symbol} is {dte} at {current_price}')
+        print(f'DTE for {contract.symbol} is {dte} at {ask_price}')
 
-        if dte >= 1 and current_price < 5 and current_price > 1:
+        if dte >= 1 and ask_price < 5 and ask_price > 1:
             buying_power = get_data.get_buying_power(trading_client)
             qty = options.get_option_buying_power(contract, buying_power, is_put)
             if qty != None and qty > 0:
-                discord.send_alpaca_message(f'Bought {qty} of {contract.symbol} at ${current_price}')
-                buy.submit_order(contract.symbol, qty, current_price, trading_client)
+                discord.send_alpaca_message(f'Bought {qty} of {contract.symbol} at ${ask_price}')
+                buy.submit_order(contract.symbol, qty, ask_price, trading_client)
                 break
 
 '''
 Three cases for an exit
 1. The current cost of the contract(s) is below the defined risk level
-2. The model predicts a reverse, we are better off just exiting
-3. We are above the defined reward level and a dip occurred - THIS MAY CHANGE A BIT
+2. We are above the defined reward level and a dip occurred - THIS MAY CHANGE A BIT
 '''
-def exit(position, classifications, trading_client):
+def exit(position, trading_client, option_client):
     pl = float(position.unrealized_plpc)
     pl_amt = float(position.unrealized_pl)
     cost = float(position.cost_basis)
     market_value = float(position.market_value)
     contract = position.symbol
 
-    risk = cost * .85
+    risk = cost * .15
     stop_loss = cost - risk
     secure_gains = cost + (risk * 3)
 
@@ -121,28 +121,36 @@ def exit(position, classifications, trading_client):
 
     exit = False
 
+    # TODO: Get the last hour of bars, see how it is trending
+    bars = options.get_bars(contract, option_client)
+    close_slope = 0
+
+    if not bars.empty:
+        # Just want the last few bars
+        bars = bars[-20:]
+        close_slope = features.slope(np.array(bars['close']))
+        print(f'{contract} has a close slope of {close_slope}')
+
     # If we have dropped below the stop loss amount we need to just sell it
     if market_value < stop_loss:
         exit = True
-    else:
-        # See if we are predicting a reverse if so sell it
-        classification = next((s for s in classifications if s['symbol'] in contract), None)
-
-        if classification != None and pl < 0:
-            if 'C' in contract[5:] and classification['class'] == 'Sell':
-                exit = True
-            elif 'P' in contract[5:] and classification['class'] == 'Buy':
-                exit = True
-
+    elif pl > 0:
         # If we are above secure gains and recently had a pull back sell it
-        elif pl > 0:
-            hst = tracker.get(contract)
-            if not hst.empty and len(hst) > 2:
+        hst = tracker.get(contract)
+        if market_value > secure_gains:
+            last_pl = hst.iloc[-1]['p/l']
+            if pl < last_pl:
+                exit = True
+        else:
+            # We are between 0 and secur gains, if we start trending down, it is probably worth selling
+            if close_slope < -0.01:
+                exit = True
+            # We can check the pl and see if it dipped a lot 
+            elif len(hst) > 1:
                 # TODO: Maybe see about making this a percent barrier, rather than just sell if it dips
-                last_pl_2 = hst.iloc[-2]['p/l']
                 last_pl = hst.iloc[-1]['p/l']
-                print(f'{contract} last p/l {last_pl} and second last p/l {last_pl_2} current p/l {pl}')
-                if last_pl > pl and last_pl_2 > last_pl:
+                print(f'{contract} last p/l {last_pl} current p/l {pl}')
+                if (pl - last_pl) > 0.15:
                     exit = True
 
     try:

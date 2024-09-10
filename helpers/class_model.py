@@ -35,7 +35,7 @@ def create_model(symbol, window_data, evaluate=False):
         cm = metrics.confusion_matrix(y_test, y_pred)
         print(f'{symbol}')
         print('Cohens Kappa Score:', kappa)
-        print(f'Ryans Score: {(cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1])}')
+        print(f'Ryans Score: {(cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])}')
         print('Confusion Matrix:\n', cm)
 
     return model

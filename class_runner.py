@@ -1,5 +1,6 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical.option import OptionHistoricalDataClient
 from alpaca.trading.enums import AssetClass
 from dotenv import load_dotenv
 from helpers.load_stocks import load_symbols
@@ -19,6 +20,7 @@ sleep_time = os.getenv("SLEEP_TIME")
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
+option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 assets = load_symbols('option_symbols.txt')
 classified_time = None
@@ -34,17 +36,18 @@ while (True):
     if clock.is_open:
         classifications = []
 
+        current_positions = trading_client.get_all_positions()
+        positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
+
+        for p in positions:
+            short_classification.exit(p, trading_client, option_client)
+
         if (classified_time == None or time.time() - classified_time >= time_diff):# and datetime.now().hour > 9:
             classifications = short_classification.classify_symbols(assets, market_client, datetime.now())
             classified_time = time.time() 
 
-        current_positions = trading_client.get_all_positions()
-        positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
-
         for c in classifications:
-            short_classification.enter(c, positions, trading_client, market_client)
+            short_classification.enter(c, positions, trading_client, market_client, option_client)
 
-        for p in positions:
-            short_classification.exit(p, classifications, trading_client)
 
     time.sleep(30)
