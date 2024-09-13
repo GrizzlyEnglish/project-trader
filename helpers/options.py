@@ -4,16 +4,31 @@ from alpaca.data.requests import StockLatestTradeRequest
 from alpaca.data.historical.option import OptionLatestQuoteRequest, OptionBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
+from helpers import features
 
 import math
+import numpy as np
+
+def get_contract_slope(contract, bar_amt, option_client):
+    bars = get_bars(contract, option_client)
+    close_slope = 0
+
+    if not bars.empty:
+        # Just want the last few bars
+        bars = bars[bar_amt:]
+        close_slope = features.slope(np.array(bars['close']))
+        print(f'{contract} has a close slope of {close_slope}')
+        return close_slope
+    
+    return 0
 
 def get_bars(contract, option_client):
     bars = option_client.get_option_bars(OptionBarsRequest(symbol_or_symbols=contract, timeframe=TimeFrame.Minute))
     return bars.df
 
-def get_ask_price(contract, option_client):
+def get_last_quote(contract, option_client):
     last_quote = option_client.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=contract))
-    return last_quote[contract].ask_price
+    return last_quote[contract]
 
 def get_options(symbol, type, market_client, trading_client):
     quote = market_client.get_stock_latest_trade(StockLatestTradeRequest(symbol_or_symbols=symbol))

@@ -2,9 +2,8 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from strats import short_classification
-from helpers.load_stocks import load_symbols
-from helpers.short_classifier import label_to_int
+from strats import short_enter
+from helpers import features, load_stocks
 
 import os
 
@@ -18,7 +17,7 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-assets = load_symbols('option_symbols.txt')
+assets = load_stocks.load_symbols('option_symbols.txt')
 #assets = ['SPY', 'QQQ', 'NVDA', 'META']
 #assets = ['SPY']
 save = False
@@ -29,10 +28,13 @@ s = start - timedelta(days=day_span)
 e = start + timedelta(days=1)
 time_window = int(os.getenv('TIME_WINDOW'))
 
+diff = features.get_percentage_diff(0.0023076923076923, 0.0038461538461538, True)
+diff2 = features.get_percentage_diff(0.0038461538461538, 0.0023076923076923, True)
+
 for symbol in assets:
     start = datetime.now()
-    bars = short_classification.get_model_bars(symbol, market_client, s, e, time_window)
-    model, model_bars = short_classification.generate_model(symbol, bars)
+    bars = short_enter.get_model_bars(symbol, market_client, s, e, time_window)
+    model, model_bars = short_enter.generate_model(symbol, bars)
 
     if save:
         b_bars = model_bars[model_bars['label'] == label_to_int('buy')]

@@ -1,7 +1,7 @@
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from strats import short_classification
+from strats import short_enter
 from helpers import get_data, features
 from datetime import datetime, timedelta
 from helpers.load_stocks import load_symbols
@@ -42,8 +42,8 @@ for year in years:
             st = start - timedelta(days=day_span-1)
             end = start - timedelta(days=1)
             print(f'Model start {st} model end {end}')
-            bars = short_classification.get_model_bars(s, market_client, st, end, time_window)
-            model, model_bars = short_classification.generate_model(s, bars)
+            bars = short_enter.get_model_bars(s, market_client, st, end, time_window)
+            model, model_bars = short_enter.generate_model(s, bars)
 
             if start > datetime.now():
                 break
@@ -68,7 +68,7 @@ for year in years:
             for index, row in bars_altered.iterrows():
                 h = bars.loc[[index]]
                 h_pred = features.drop_prices(h.copy())
-                pred = short_classification.predict(model, h_pred)
+                pred = short_enter.predict(model, h_pred)
 
                 if pred != 'Hold':
                     total_actions = total_actions + 1

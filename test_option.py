@@ -27,6 +27,8 @@ positions = [p for p in current_positions if p.asset_class == AssetClass.US_OPTI
 #assets = load_stocks.load_symbols('option_symbols.txt')
 assets = ['AAPL']
 
+bars = options.get_bars('GOOGL240920C00149000', option_client)
+
 close_slope = features.slope(np.array(bars['close']))
 
 for symbol in assets:

@@ -5,13 +5,13 @@ from alpaca.trading.enums import OrderSide, AssetClass
 from alpaca.data.enums import Adjustment,DataFeed
 from alpaca.trading.requests import GetOrdersRequest
 
-def get_bars(symbol, start, end, market_client, timeframe=5):
+def get_bars(symbol, start, end, market_client, timeframe=5, unit=TimeFrameUnit.Minute):
     full_data = market_client.get_stock_bars(StockBarsRequest(symbol_or_symbols=symbol,
                             start=start,
                             end=end,
                             adjustment=Adjustment.ALL,
                             feed=DataFeed.IEX,
-                            timeframe=TimeFrame(amount=timeframe, unit=TimeFrameUnit.Minute)))
+                            timeframe=TimeFrame(amount=timeframe, unit=unit)))
     return full_data.df
 
 def get_buying_power(trading_client):
@@ -37,3 +37,7 @@ def check_option_gaurd(trading_client):
     orders = trading_client.get_orders(GetOrdersRequest(status='closed', after=previous_date, side=OrderSide.BUY))
     options_orders = sum(1 for o in orders if o.asset_class == AssetClass.US_OPTION)
     return options_orders > 5
+
+def get_positions(trading_client):
+    current_positions = trading_client.get_all_positions()
+    return [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]

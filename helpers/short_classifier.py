@@ -4,7 +4,6 @@ import os
 import numpy as np
 
 def classification(df):
-    time_window = int(os.getenv('TIME_WINDOW'))
     look_forward = int(os.getenv('LOOK_FORWARD'))
 
     for i in range(look_forward):
@@ -58,7 +57,7 @@ def classification(df):
     sells = len(df[df['label'] == 'sell'])
     holds = len(df[df['label'] == 'hold'])
 
-    print(f'buy count: {buys} sell count: {sells} hold count: {holds}')
+    print(f'short buy count: {buys} sell count: {sells} hold count: {holds}')
 
     for i in range(look_forward):
         j = i + 1
@@ -66,13 +65,3 @@ def classification(df):
     df.pop('next_close')
 
     return df
-
-def label_to_int(row):
-    if row == 'buy': return 0
-    elif row == 'sell': return 1
-    elif row == 'hold': return 2
-
-def int_to_label(row):
-    if row == 0: return 'Buy'
-    elif row == 1: return 'Sell'
-    elif row == 2: return 'Hold'
