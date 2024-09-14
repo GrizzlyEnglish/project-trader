@@ -23,7 +23,9 @@ def generate_model(symbol, bars):
 
     bars['label'] = bars['label'].apply(label_to_int)
 
-    return create_model(symbol, bars, True), bars
+    model, accuracy = create_model(symbol, bars)
+
+    return model, bars, accuracy
 
 def classify_symbols(symbols, classification, market_client, end, time_unit, time_window, day_span):
     classified = []
@@ -75,7 +77,7 @@ def predict(model, bars):
             class_type = "Sell"
     return class_type
 
-def create_model(symbol, window_data, evaluate=False):
+def create_model(symbol, window_data):
     df = window_data.copy().dropna()
 
     if df.empty:
@@ -96,15 +98,16 @@ def create_model(symbol, window_data, evaluate=False):
     model = RandomForestClassifier(max_depth=30, random_state=0)
     model.fit(x_train, y_train)
 
-    if evaluate:
-        y_pred = model.predict(x_test)
+    y_pred = model.predict(x_test)
 
-        kappa = metrics.cohen_kappa_score(y_test, y_pred)
+    kappa = metrics.cohen_kappa_score(y_test, y_pred)
 
-        cm = metrics.confusion_matrix(y_test, y_pred)
-        print(f'{symbol}')
-        print('Cohens Kappa Score:', kappa)
-        print(f'Ryans Score: {(cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])}')
-        print('Confusion Matrix:\n', cm)
+    cm = metrics.confusion_matrix(y_test, y_pred)
+    rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
 
-    return model
+    print(f'{symbol}')
+    print('Cohens Kappa Score:', kappa)
+    print(f'Ryans Kappa Score: {rys}')
+    print('Confusion Matrix:\n', cm)
+
+    return model, rys

@@ -9,6 +9,8 @@ import pandas as pd
 
 small_window = 50
 large_window = 200
+length_KC = 20
+mult_KC = 1.5
 
 def trending(row, label, amt, prepend = False, postpend = False, reverse = True):
     arr = []
@@ -87,6 +89,10 @@ def feature_engineer_df(df):
 
     df = mfi(df, quotes)
 
+    df = truerange(df)
+
+    df = squeeze(df)
+
     return df
 
 def drop_prices(df):
@@ -150,6 +156,27 @@ def trends(df):
     df['histogram_trend'] = df.apply(histogram_trend, axis=1)
     df['percent_b_trend'] = df.apply(percent_b_trend, axis=1)
     df['height_trend'] = df.apply(height_trend, axis=1)
+
+    return df
+
+def truerange(df):
+    # calculate true range
+    df['tr0'] = abs(df["high"] - df["low"])
+    df['tr1'] = abs(df["high"] - df["close"].shift())
+    df['tr2'] = abs(df["low"] - df["close"].shift())
+    df['tr'] = df[['tr0', 'tr1', 'tr2']].max(axis=1)
+
+    # calculate KC
+    m_avg = df['close'].rolling(window=length_KC).mean()
+    range_ma = df['tr'].rolling(window=length_KC).mean()
+    df['upper_KC'] = m_avg + range_ma * mult_KC
+    df['lower_KC'] = m_avg - range_ma * mult_KC
+
+    return df
+
+def squeeze(df):
+    df['squeeze_on'] = (df['lower_band'] > df['lower_KC']) & (df['upper_band'] < df['upper_KC'])
+    df['squeeze_off'] = (df['lower_band'] < df['lower_KC']) & (df['upper_band'] > df['upper_KC'])
 
     return df
 
