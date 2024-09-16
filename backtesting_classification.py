@@ -2,14 +2,15 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from strats import short_enter
-from helpers import get_data, features
+from helpers import get_data, features, class_model, short_classifier
 from datetime import datetime, timedelta
-from helpers.load_stocks import load_symbols
+from helpers.load_stocks import load_symbol_information
 
 import os
 import pandas as pd
 import numpy as np
 import numbers
+import math
 
 load_dotenv()
 
@@ -21,29 +22,33 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-assets = load_symbols('option_symbols.txt')
-assets = ['spy', 'qqq']
+symbol_info = load_symbol_information('option_symbols.txt')
 
 data = []
 accuracies = []
-time_window = int(os.getenv('TIME_WINDOW'))
-day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
 years = [2024]
-next_close_bars = int(60/time_window)
 
 for year in years:
-    for s in assets:
+    for info in symbol_info:
         start = datetime(year, 1, 1, 12, 30)
 
         total_actions = 0
         correct_actions = 0
 
-        for w in range(12):
-            st = start - timedelta(days=day_span-1)
+        time_window = info['time_window']
+        symbol = info['symbol']
+        day_diff = info['day_diff']
+        look_back = info['look_back']
+        look_forward = info['look_forward']
+
+        correct_bar_amt = math.floor(look_forward / 2)
+
+        for w in range(2):
+            st = start - timedelta(days=day_diff-1)
             end = start - timedelta(days=1)
             print(f'Model start {st} model end {end}')
-            bars = short_enter.get_model_bars(s, market_client, st, end, time_window)
-            model, model_bars = short_enter.generate_model(s, bars)
+            bars = class_model.get_model_bars(symbol, market_client, st, end, time_window, short_classifier.classification, look_back, look_forward)
+            model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
 
             if start > datetime.now():
                 break
@@ -51,8 +56,8 @@ for year in years:
             start_dt = start
             end_dt = start + timedelta(days=31)
             print(f'Predict start {start_dt} model end {end_dt}')
-            bars = get_data.get_bars(s, start_dt, end_dt, market_client, time_window)
-            bars = features.feature_engineer_df(bars)
+            bars = get_data.get_bars(symbol, start_dt, end_dt, market_client, time_window)
+            bars = features.feature_engineer_df(bars, look_back)
 
             if bars.empty:
                 break
@@ -67,8 +72,8 @@ for year in years:
 
             for index, row in bars_altered.iterrows():
                 h = bars.loc[[index]]
-                h_pred = features.drop_prices(h.copy())
-                pred = short_enter.predict(model, h_pred)
+                h_pred = features.drop_prices(h.copy(), look_back)
+                pred = class_model.predict(model, h_pred)
 
                 if pred != 'Hold':
                     total_actions = total_actions + 1
@@ -80,43 +85,43 @@ for year in years:
                     next_date = ''
 
                     if isinstance(loc, numbers.Number):
-                        next_close_bars = bars[loc+1:loc+7]
+                        next_close_bars = bars[loc+1:loc+look_forward].copy()
 
                         if next_close_bars.empty:
                             continue
 
-                        next_closes = next_close_bars['close']
+                        next_close_bars['diff'] = next_close_bars['close'] - price
 
-                        max_nc = max(next_closes)
-                        min_nc = min(next_closes)
-
-                        slope = features.slope(next_closes)
-                        correct = False
-                        dist = -1
-                        rev_bar = pd.DataFrame()
+                        amt = 0
+                        max_diff = 0
 
                         if pred == 'Sell':
-                            correct = slope < 0
-                            rev_bar = next_close_bars[next_close_bars['close'] > price]
+                            diffdf = next_close_bars[next_close_bars['diff'] < 0]['close']
+                            amt = len(diffdf)
+                            d = float(diffdf.min())
+                            max_diff = features.get_percentage_diff(d, price, False)
+                            correct = amt >= correct_bar_amt and max_diff < 3
                         else:
-                            correct = slope > 0
-                            rev_bar = next_close_bars[next_close_bars['close'] < price]
+                            diffdf = next_close_bars[next_close_bars['diff'] < 0]['close']
+                            amt = len(diffdf)
+                            d = float(diffdf.min())
+                            max_diff = features.get_percentage_diff(d, price, False)
+                            correct = amt >= correct_bar_amt and max_diff > -3
 
-                        if not rev_bar.empty:
-                            idx = rev_bar.index[0]
-                            idx_loc = indexes.get_loc(idx)
-                            dist = idx_loc - loc
-
+                        type = 'Incorrect'
                         if correct:
                             correct_actions = correct_actions + 1
+                            type = 'Correct'
+
+                        print(f'{type} {pred} on {index} amount bars in right direction {amt} with max var of {max_diff} current accuracy {correct_actions/total_actions}')
 
                         data.append({
-                            'symbol': s,
+                            'symbol': symbol,
                             'class': pred,
                             'trade_time': index[1],
                             'trade_price': price, 
-                            'dist_to_reversal': dist,
-                            'next_close_slope': slope,
+                            'amount_correct': amt,
+                            'max_var': max_diff,
                             'correct': correct
                             })
                     else:
@@ -126,7 +131,7 @@ for year in years:
         
         acc = correct_actions / total_actions
         accuracies.append({
-            'symbol': s,
+            'symbol': symbol,
             'accuracy': acc,
             'year': year
         })

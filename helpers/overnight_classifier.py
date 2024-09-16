@@ -1,4 +1,6 @@
-def classification(bars):
+import pandas as pd
+
+def classification(bars, look_forward):
     def day_label(row):
         open_diff = row['daydiff_open']
         if open_diff < down_diff:
@@ -35,7 +37,11 @@ def classification(bars):
     bars['daydiff_open'] = bars['next_open'] - bars['close']
 
     for i in range(10):
-        bars[f'prev_ah_{i}'] = bars['daydiff_open'].shift(i)
+        j = i + 1
+        df2 = bars[['daydiff_open']]
+        df2 = df2.add_suffix(f'_{i}')
+        df2 = df2.shift(j)
+        bars = pd.concat([bars, df2], axis=1)
 
     bars = bars[bars['time'] == '20:0']
     bars.pop('time')
@@ -52,5 +58,8 @@ def classification(bars):
     holds = len(bars[bars['label'] == 'hold'])
 
     print(f'overnight buy count: {buys} sell count: {sells} hold count: {holds}')
+
+    bars.pop('next_open')
+    bars.pop('next_close')
 
     return bars

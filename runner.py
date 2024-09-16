@@ -11,7 +11,9 @@ import schedule
 import time
 import os
 
-assets = load_stocks.load_symbols('option_symbols.txt')
+short_symbol_info = load_stocks.load_symbol_information('short_option_symbols.txt')
+overnight_symbol_info = load_stocks.load_symbol_information('overnight_option_symbols.txt')
+
 load_dotenv()
 
 api_key = os.getenv("API_KEY")
@@ -36,7 +38,8 @@ def is_within_open_market(offset=False):
 # Tasks
 def check_overnight_enter():
     print("Checking for entry to overnight positions")
-    overnight_enter.enter_overnight(['SPY', 'QQQ'], market_client, trading_client, option_client)
+    info = [i for i in short_symbol_info if i['symbol'] == 'SPY' or 'QQQ']
+    overnight_enter.enter_overnight(info, market_client, trading_client, option_client)
 
 def dont_hold_overnight():
     print("Close all currently open positions, so we dont hold overnight")
@@ -46,7 +49,10 @@ def dont_hold_overnight():
 
 def check_short_enter():
     print("Checking for entry to short positions")
-    short_enter.enter_short(assets, market_client, trading_client, option_client)
+    try:
+        short_enter.enter_short(short_symbol_info, market_client, trading_client, option_client)
+    except Exception as e:
+        print(e)
 
 def check_exit():
     print("Checking for exits")
@@ -59,7 +65,7 @@ def run_threaded(job_func, *args):
 schedule.every().day.at("15:00").do(dont_hold_overnight)
 schedule.every().day.at("15:30").do(check_overnight_enter)
 
-schedule.every(5).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market(True) else None)
+schedule.every(3).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market(True) else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
 # Immediately run these
@@ -67,8 +73,6 @@ if is_within_open_market():
     check_exit()
 if is_within_open_market(True):
     check_short_enter()
-
-check_overnight_enter()
 
 # Schedule after
 while True:

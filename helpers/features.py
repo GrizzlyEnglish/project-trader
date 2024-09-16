@@ -39,7 +39,7 @@ def slope(arr):
     slope = coeffs[-2]
     return float(slope)
 
-def feature_engineer_df(df):
+def feature_engineer_df(df, look_back):
     bars_i = df.reset_index()
     quotes = [ 
         Quote(date, open, high, low, close, volume) 
@@ -85,7 +85,7 @@ def feature_engineer_df(df):
 
     df = smi(df, quotes)
 
-    df = trends(df)
+    df = trends(df, look_back)
 
     df = mfi(df, quotes)
 
@@ -95,9 +95,7 @@ def feature_engineer_df(df):
 
     return df
 
-def drop_prices(df):
-    look_back = int(os.getenv('LOOK_BACK'))
-
+def drop_prices(df, look_back):
     for i in range(look_back):
         df.pop(f'close_{i}')
         df.pop(f'pvi_{i}')
@@ -110,9 +108,7 @@ def drop_prices(df):
 
     return df
 
-def trends(df):
-    look_back = int(os.getenv('LOOK_BACK'))
-
+def trends(df, look_back):
     for i in range(look_back):
         j = i + 1
         df2 = df[['close', 'pvi', 'nvi', 'smi', 'roc', 'macd', 'histogram', 'percent_b', 'height']]

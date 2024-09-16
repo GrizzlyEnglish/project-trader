@@ -25,18 +25,25 @@ def generate_model(symbol, bars):
 
     model, accuracy = create_model(symbol, bars)
 
-    return model, bars, accuracy
+    return model, bars, accuracy, buys, sells
 
-def classify_symbols(symbols, classification, market_client, end, time_unit, time_window, day_span):
+def classify_symbols(symbol_info, classification, market_client, end, time_unit):
+    pred_bar_amt = int(os.getenv('PRED_BARS'))
     classified = []
-    for symbol in symbols:
-        bars = get_model_bars(symbol, market_client, end - timedelta(days=day_span), end + timedelta(days=1), time_window, classification, time_unit)
-        model_bars = bars.head(len(bars) - 1)
-        pred_bars = bars.tail(1)
+    for info in symbol_info:
+        symbol = info['symbol']
+        day_diff = info['day_diff']
+        time_window = info['time_window']
+        look_back = info['look_back']
+        look_forward = info['look_forward']
+
+        bars = get_model_bars(symbol, market_client, end - timedelta(days=day_diff), end + timedelta(days=1), time_window, classification, look_back, look_forward, time_unit)
+        model_bars = bars.head(len(bars) - pred_bar_amt)
+        pred_bars = bars.tail(pred_bar_amt)
 
         pred_bars.pop("label")
 
-        model, model_bars = generate_model(symbol, model_bars)
+        model, model_bars, accuracy, buys, sells = generate_model(symbol, model_bars)
 
         class_type = predict(model, pred_bars)
 
@@ -59,16 +66,17 @@ def int_to_label(row):
     elif row == 1: return 'Sell'
     elif row == 2: return 'Hold'
 
-def get_model_bars(symbol, market_client, start, end, time_window, classification, time_unit):
+def get_model_bars(symbol, market_client, start, end, time_window, classification, look_back, look_forward, time_unit):
     bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)
-    bars = features.feature_engineer_df(bars)
-    bars = classification(bars)
-    bars = features.drop_prices(bars)
+    bars = features.feature_engineer_df(bars, look_back)
+    bars = classification(bars, look_forward)
+    bars = features.drop_prices(bars, look_back)
     return bars
 
 def predict(model, bars):
     pred = model.predict(bars)
     pred = [int_to_label(p) for p in pred]
+    print(pred)
     pred = [s for s in pred if s != 'Hold']
     class_type = "Hold"
     if len(pred) > 0 and all(x == pred[0] for x in pred):
@@ -82,7 +90,7 @@ def create_model(symbol, window_data):
 
     if df.empty:
         print("%s has no data or not enough data to generate a model" % symbol)
-        return None
+        return None, 0
     
     df = df.dropna()
  

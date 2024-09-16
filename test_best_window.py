@@ -4,7 +4,7 @@ from alpaca.data.timeframe import TimeFrameUnit
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from strats import short_enter
-from helpers import features, load_stocks, class_model, short_classifier
+from helpers import features, load_stocks, class_model, get_data, short_classifier
 
 import os
 import pandas as pd
@@ -19,34 +19,54 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-assets = load_stocks.load_symbols('option_symbols.txt')
-assets = ['SPY']
 save = False
 
-day_span = int(os.getenv('SHORT_CLASS_DAY_SPAN'))
-time_window = int(os.getenv('TIME_WINDOW'))
+assets = ['SPY', 'QQQ']
+times = [1]
+days = [7, 14, 30]
+look_back_range = range(10, 15)
+look_forward_range = range(55, 60)
 
-windows = [1, 5, 15, 30]
-daydiffs = [7, 14, 30, 60, 90, 120]
+for symbol in assets:
+    results = []
 
-results = []
+    for window in times:
 
-for window in windows:
-    for daydiff in daydiffs:
-        if window == 1 and daydiff > 30:
-            continue
-        success = 0
-        failures = 0
-        for symbol in assets:
+        for daydiff in days:
             start = datetime(2024, 8, 29, 12, 30)
             s = start - timedelta(days=daydiff)
             e = start + timedelta(days=1)
+            full_bars = get_data.get_bars(symbol, s, e, market_client, window, TimeFrameUnit.Minute)
 
-            bars = class_model.get_model_bars(symbol, market_client, s, e, window, short_classifier.classification, TimeFrameUnit.Minute)
-            model, model_bars, accuracy = class_model.generate_model(symbol, bars)
+            for back in look_back_range:
+                for forward in look_forward_range:
 
-            results.append([window, daydiff, accuracy])
+                    look_back = back
+                    look_forward = forward
 
-df = pd.DataFrame(columns=['time_window', 'day diff', 'accuracy'], data=results)
+                    print(f'{window},{daydiff},{look_back},{look_forward}')
 
-print(df)
+                    if window == 1 and daydiff > 30:
+                        continue
+
+                    acc = 0
+                    buy_count = 0
+                    sell_count = 0
+
+                    bars = features.feature_engineer_df(full_bars.copy(), look_back)
+                    bars = short_classifier.classification(bars, look_forward)
+                    bars = features.drop_prices(bars, look_back)
+
+                    try:
+                        model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
+                        acc = accuracy
+                        buy_count = buys
+                        sell_count = sells
+                    except:
+                        print()
+
+                    results.append([symbol, window, daydiff, back+1, forward+1, buy_count, sell_count, acc])
+
+        df = pd.DataFrame(columns=['symbol', 'time_window', 'day diff', 'look back', 'look forward', 'buys', 'sells', 'accuracy'], data=results)
+        df.to_csv(f'best_window_{symbol}_{window}.csv', index=True)
+        print(df)

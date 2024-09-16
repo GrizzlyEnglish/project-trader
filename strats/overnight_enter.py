@@ -3,9 +3,9 @@ from datetime import datetime
 from strats import enter
 from alpaca.data import TimeFrameUnit
 
-def enter_overnight(assets, market_client, trading_client, option_client):
+def enter_overnight(symbol_info, market_client, trading_client, option_client):
     positions = get_data.get_positions(trading_client)
-    classifications = class_model.classify_symbols(assets, overnight_classifier.classification, market_client, datetime.now(), TimeFrameUnit.Hour, 1, 400)
+    classifications = class_model.classify_symbols(symbol_info, overnight_classifier.classification, market_client, datetime.now(), TimeFrameUnit.Hour)
 
     for c in classifications:
         enter.enter_position(c, positions, trading_client, market_client, option_client)
