@@ -1,6 +1,6 @@
 from datetime import datetime
-from helpers import get_data, class_model, get_data, short_classifier
-from strats import enter
+from src.helpers import get_data, class_model, get_data, short_classifier
+from src.strats import enter
 from alpaca.data.timeframe import TimeFrameUnit
 
 def enter_short(symbol_info, market_client, trading_client, option_client):

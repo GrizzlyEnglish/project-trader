@@ -1,7 +1,7 @@
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from strats import overnight_enter, short_enter, exit
-from helpers import load_stocks, get_data
+from src.strats import overnight_enter, short_enter, exit
+from src.helpers import load_stocks, get_data
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
@@ -38,7 +38,7 @@ def is_within_open_market(offset=False):
 # Tasks
 def check_overnight_enter():
     print("Checking for entry to overnight positions")
-    info = [i for i in short_symbol_info if i['symbol'] == 'SPY' or 'QQQ']
+    info = [i for i in overnight_symbol_info if i['symbol'] == 'SPY' or 'QQQ']
     overnight_enter.enter_overnight(info, market_client, trading_client, option_client)
 
 def dont_hold_overnight():

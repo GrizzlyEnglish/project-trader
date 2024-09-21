@@ -12,32 +12,30 @@ large_window = 200
 length_KC = 20
 mult_KC = 1.5
 
-def trending(row, label, amt, prepend = False, postpend = False, reverse = True):
+def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
     arr = []
 
     if prepend:
-        arr.append(row[label])
+        arr.append(df[label])
 
     for i in range(amt):
-        arr.append(row[f'{label}_{i}'])
+        arr.append(df[f'{label}_{i}'])
 
     if postpend:
-        arr.append(row[label])
+        arr.append(df[label])
 
     if reverse:
         arr.reverse()
-
-    if any(x == None or math.isnan(x) for x in arr):
-        return 0
 
     return slope(arr)
 
 def slope(arr):
     if len(arr) <= 1:
         return 0
-    coeffs = np.polyfit(range(len(arr)), arr, 1)
-    slope = coeffs[-2]
-    return float(slope)
+    arr = np.vstack(arr)
+    poly_coeffs = np.polyfit(np.arange(len(arr)), np.vstack(arr), 1)
+    poly_coeffs[np.isnan(poly_coeffs)] = 0  # possible speed-up: insert zeros where needed
+    return poly_coeffs[0, :]  # slope only
 
 def feature_engineer_df(df, look_back):
     bars_i = df.reset_index()
@@ -109,49 +107,16 @@ def drop_prices(df, look_back):
     return df
 
 def trends(df, look_back):
+    col_names = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height']
     for i in range(look_back):
         j = i + 1
-        df2 = df[['close', 'pvi', 'nvi', 'smi', 'roc', 'macd', 'histogram', 'percent_b', 'height']]
+        df2 = df[col_names]
         df2 = df2.add_suffix(f'_{i}')
         df2 = df2.shift(j)
         df = pd.concat([df, df2], axis=1)
 
-    def close_trend(row):
-        return trending(row, 'close', look_back, True, False)
-
-    def pvi_trend(row):
-        return trending(row, 'pvi', look_back, True, False)
-
-    def nvi_trend(row):
-        return trending(row, 'nvi', look_back, True, False)
-
-    def smi_trend(row):
-        return trending(row, 'smi', look_back, True, False)
-
-    def macd_trend(row):
-        return trending(row, 'macd', look_back, True, False)
-
-    def roc_trend(row):
-        return trending(row, 'roc', look_back, True, False)
-
-    def histogram_trend(row):
-        return trending(row, 'histogram', look_back, True, False)
-
-    def percent_b_trend(row):
-        return trending(row, 'percent_b', look_back, True, False)
-
-    def height_trend(row):
-        return trending(row, 'height', look_back, True, False)
-    
-    df['close_trend'] = df.apply(close_trend, axis=1)
-    df['pvi_trend'] = df.apply(pvi_trend, axis=1)
-    df['nvi_trend'] = df.apply(nvi_trend, axis=1)
-    df['smi_trend'] = df.apply(smi_trend, axis=1)
-    df['macd_trend'] = df.apply(macd_trend, axis=1)
-    df['roc_trend'] = df.apply(roc_trend, axis=1)
-    df['histogram_trend'] = df.apply(histogram_trend, axis=1)
-    df['percent_b_trend'] = df.apply(percent_b_trend, axis=1)
-    df['height_trend'] = df.apply(height_trend, axis=1)
+    for col_name in col_names:
+        df[f'{col_name}_trend'] = trending(df, col_name, look_back, True, False)
 
     return df
 

@@ -2,7 +2,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from discord.ext import commands
-from charts import option_sentiment
+from src.charts import option_sentiment
 
 import os
 import discord

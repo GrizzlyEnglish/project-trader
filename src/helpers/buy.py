@@ -2,7 +2,7 @@ from alpaca.data.requests import StockLatestQuoteRequest
 from alpaca.trading.requests import LimitOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
 from alpaca.common.exceptions import APIError
-from messaging.discord import send_alpaca_message
+from src.messaging.discord import send_alpaca_message
 
 import math
 

@@ -1,5 +1,5 @@
 from alpaca.data import TimeFrame, TimeFrameUnit
-from alpaca.data.requests import StockBarsRequest
+from alpaca.data.requests import StockBarsRequest, StockSnapshotRequest
 from datetime import datetime, timedelta
 from alpaca.trading.enums import OrderSide, AssetClass
 from alpaca.data.enums import Adjustment,DataFeed
@@ -41,3 +41,7 @@ def check_option_gaurd(trading_client):
 def get_positions(trading_client):
     current_positions = trading_client.get_all_positions()
     return [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
+
+def get_stock_price(symbol, market_client):
+    snapshot = market_client.get_stock_snapshot(StockSnapshotRequest(symbol))
+    return snapshot['close']

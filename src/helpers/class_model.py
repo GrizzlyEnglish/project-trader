@@ -1,5 +1,5 @@
 from sklearn.model_selection import train_test_split
-from helpers import features, get_data
+from src.helpers import features, get_data
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -76,7 +76,6 @@ def get_model_bars(symbol, market_client, start, end, time_window, classificatio
 def predict(model, bars):
     pred = model.predict(bars)
     pred = [int_to_label(p) for p in pred]
-    print(pred)
     pred = [s for s in pred if s != 'Hold']
     class_type = "Hold"
     if len(pred) > 0 and all(x == pred[0] for x in pred):

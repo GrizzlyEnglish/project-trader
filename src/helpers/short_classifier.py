@@ -1,17 +1,18 @@
-from helpers import features
+from src.helpers import features
 
 import math
 import numpy as np
+import pandas as pd
 
 def classification(df, look_forward):
     for i in range(look_forward):
         j = i + 1
-        df[f'next_close_{i}'] = df['close'].shift(-j)
+        df2 = df[['close']]
+        df2 = df2.add_suffix(f'_next_{i}')
+        df2 = df2.shift(-j)
+        df = pd.concat([df, df2], axis=1)
 
-    def next_close_trend(row):
-        return features.trending(row, 'next_close', look_forward, False, False, False)
-
-    df[f'next_close'] = df.apply(next_close_trend, axis=1)
+    df[f'next_close'] = features.trending(df, 'close_next', look_forward, False, False, False)
 
     g = df[df['next_close'] > 0]['next_close']
     s = df[df['next_close'] < 0]['next_close']
@@ -22,8 +23,8 @@ def classification(df, look_forward):
     print(f'Growth {g_trend} Shrink {s_trend}')
 
     def next_close_perc_diff(row):
-        if not math.isnan(row[f'next_close_{i}']):
-            return features.get_percentage_diff(row['close'], row[f'next_close_{i}'], False)
+        if not math.isnan(row[f'close_next_{look_forward-1}']):
+            return features.get_percentage_diff(row['close'], row[f'close_next_{look_forward-1}'], False)
         else:
             return 0
 
@@ -38,7 +39,7 @@ def classification(df, look_forward):
 
     def label(row):
         # growth indicators
-        growth = row['next_close'] > g_trend
+        growth = row['next_close'] > 0
         diff = row['next_close_perc_diff'] > gpd_trend
         #p_trend = row['close_trend'] > 0
         #roc = row['roc_trend'] > 0
@@ -50,7 +51,7 @@ def classification(df, look_forward):
             return 'buy' 
 
         # shrink indicators
-        shrink = row['next_close'] < s_trend
+        shrink = row['next_close'] < 0
         diff = row['next_close_perc_diff'] < spd_trend
         #p_trend = row['close_trend'] < 0
         #roc = row['roc_trend'] < 0
@@ -73,7 +74,7 @@ def classification(df, look_forward):
 
     for i in range(look_forward):
         j = i + 1
-        df.pop(f'next_close_{i}')
+        df.pop(f'close_next_{i}')
 
     df.pop('next_close')
     df.pop('next_close_perc_diff')

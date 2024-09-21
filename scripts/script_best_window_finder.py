@@ -1,12 +1,14 @@
+import os,sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.timeframe import TimeFrameUnit
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from strats import short_enter
-from helpers import features, load_stocks, class_model, get_data, short_classifier
+from src.strats import short_enter
+from src.helpers import features, load_stocks, class_model, get_data, short_classifier
 
-import os
 import pandas as pd
 
 load_dotenv()
@@ -21,7 +23,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 
 save = False
 
-assets = ['SPY', 'QQQ']
+assets = ['GOOGL']
 times = [1]
 days = [7, 14, 30]
 look_back_range = range(10, 15)

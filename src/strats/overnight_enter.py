@@ -1,6 +1,6 @@
-from helpers import get_data, class_model, overnight_classifier
+from src.helpers import get_data, class_model, overnight_classifier
 from datetime import datetime
-from strats import enter
+from src.strats import enter
 from alpaca.data import TimeFrameUnit
 
 def enter_overnight(symbol_info, market_client, trading_client, option_client):
