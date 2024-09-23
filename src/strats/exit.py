@@ -61,7 +61,7 @@ def check_risk_tolerance(market_value, stop_loss):
     return market_value < stop_loss, stop_loss_reason 
 
 def check_reward_tolerance(hst, market_value, secure_gains):
-    if market_value >= secure_gains:
+    if market_value >= secure_gains and len(hst) > 1:
         last_market_value = hst.iloc[-1]['market_value']
         if len(hst) > 4:
             last_slope = round(features.slope(hst.iloc[-2:]['market_value'])[0], 3)
