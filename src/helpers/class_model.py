@@ -37,7 +37,7 @@ def classify_symbols(symbol_info, classification, market_client, end, time_unit)
         look_back = info['look_back']
         look_forward = info['look_forward']
 
-        bars = get_model_bars(symbol, market_client, end - timedelta(days=day_diff), end + timedelta(days=1), time_window, classification, look_back, look_forward, time_unit)
+        bars, call_var, put_var = get_model_bars(symbol, market_client, end - timedelta(days=day_diff), end + timedelta(days=1), time_window, classification, look_back, look_forward, time_unit)
         model_bars = bars.head(len(bars) - pred_bar_amt)
         pred_bars = bars.tail(pred_bar_amt)
 
@@ -52,6 +52,8 @@ def classify_symbols(symbol_info, classification, market_client, end, time_unit)
         classified.append({
             'symbol': symbol,
             'class': class_type,
+            'call_variance': call_var,
+            'put_var': put_var
         })
 
     return classified
@@ -69,9 +71,9 @@ def int_to_label(row):
 def get_model_bars(symbol, market_client, start, end, time_window, classification, look_back, look_forward, time_unit):
     bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)
     bars = features.feature_engineer_df(bars, look_back)
-    bars = classification(bars, look_forward)
+    bars, call_var, put_var = classification(bars, look_forward)
     bars = features.drop_prices(bars, look_back)
-    return bars
+    return bars, call_var, put_var
 
 def predict(model, bars):
     pred = model.predict(bars)

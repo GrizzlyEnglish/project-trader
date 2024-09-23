@@ -48,10 +48,11 @@ def check_contract_entry(contract, contract_type, strike_price, ask_price, bid_p
     stop_loss, secure_gains = options.determine_risk_reward(ask_price*100)
 
     contract_price = options.get_option_price(contract_type, underlying_price, strike_price, dte, 0.05, iv)
-    expected_contract_price = options.get_option_price(contract_type, underlying_price * (1+expected_diff), strike_price, dte, 0.05, iv) 
+    expected_underlying = underlying_price + (underlying_price * (expected_diff/100))
+    expected_contract_price = options.get_option_price(contract_type, expected_underlying, strike_price, dte, 0.05, iv) 
     expected_contract_cost = expected_contract_price * 100
 
-    print(f'{contract} with {dte} dte and spread {ask_price}/{bid_price} cost {contract_price} expected contract cost {expected_contract_cost} vs {secure_gains}')
+    print(f'{contract} with {dte} dte and spread {ask_price}/{bid_price} cost {contract_price} expected contract cost {expected_contract_cost} vs needed gains {secure_gains} and loss {stop_loss}')
 
     return expected_contract_cost >= secure_gains, expected_contract_price
 

@@ -43,7 +43,7 @@ class TestModel(unittest.TestCase):
             e = self.start + timedelta(days=1)
 
             timer_start = datetime.now()
-            bars = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, short_classifier.classification, look_back, look_forward, TimeFrameUnit.Minute)
+            bars, call_var, put_var = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, short_classifier.classification, look_back, look_forward, TimeFrameUnit.Minute)
             model, model_bars, arccuracy, buys, sells = class_model.generate_model(symbol, bars)
 
             save_bars(model_bars, 'short', symbol)
