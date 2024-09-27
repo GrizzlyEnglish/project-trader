@@ -14,11 +14,8 @@ from scipy.stats import norm
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 
 load_dotenv()
-
-hold_for = 1
 
 api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
@@ -45,8 +42,16 @@ m_end = start - timedelta(days=1)
 
 # Generate model
 print(f'Model start {m_st} model end {m_end}')
-bars, call_var, put_var = class_model.get_model_bars(symbol, market_client, m_st, m_end, time_window, dip_classifier.classification, look_back, look_forward, TimeFrameUnit.Minute)
-model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
+
+bars = get_data.get_bars(symbol, m_st, m_end, market_client, time_window)
+bars = features.feature_engineer_df(bars, look_back)
+bars = features.drop_prices(bars, look_back)
+
+short_bars, call_var, put_var = short_classifier.classification(bars.copy(), look_forward)
+dip_bars, dpc, dpp = dip_classifier.classification(bars.copy(), look_forward)
+
+short_model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, short_bars)
+dip_model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, dip_bars)
 
 # From the cut off date loop every day
 start_dt = start
@@ -62,9 +67,6 @@ loc = 0
 call_signal = []
 put_signal = []
 
-call_holder = []
-put_holder = []
-
 for index, row in pred_bars.iterrows():
     close_prices.append([loc, row['close']])
 
@@ -73,18 +75,13 @@ for index, row in pred_bars.iterrows():
     if h.index != index:
         break
 
-    pred = class_model.predict(model, h)
+    dip_pred = class_model.predict(dip_model, h)
+    short_pred = class_model.predict(short_model, h)
 
-    if pred == 'Buy':
-        call_holder.append(loc)
-        if len(call_holder) == hold_for:
-            call_signal.append([loc])
-            call_holder = []
-    elif pred == 'Sell':
-        put_holder.append(loc)
-        if len(put_holder) == hold_for:
-            put_signal.append([loc])
-            put_holder = []
+    if dip_pred == 'Buy' and short_pred == 'Buy':
+        call_signal.append([loc])
+    elif dip_pred == 'Sell' and short_pred == 'Sell':
+        put_signal.append([loc])
 
     loc = loc + 1
 

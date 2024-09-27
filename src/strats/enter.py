@@ -12,7 +12,6 @@ Steps to enter
 def enter_position(classification, current_positions, trading_client, market_client, option_client):
     symbol = classification['symbol']
     classif = classification['class']
-    expected_move = classification['expected_move']
 
     if classif == "Hold" or next((cp for cp in current_positions if symbol in cp.symbol), None) != None:
         return
@@ -20,11 +19,14 @@ def enter_position(classification, current_positions, trading_client, market_cli
     is_put = classif == 'Sell'
 
     contracts = []
+    expected_move = None
 
     if not is_put:
         contracts = options.get_option_calls(symbol, market_client, trading_client)
+        expected_move = classification['call_variance']
     else:
         contracts = options.get_option_puts(symbol, market_client, trading_client)
+        expected_move = classification['put_variance']
     
     for contract in contracts:
         dte = (contract.expiration_date - datetime.now().date()).days
@@ -44,12 +46,12 @@ def enter_position(classification, current_positions, trading_client, market_cli
                 buy.submit_order(contract.symbol, qty, ask_price, trading_client)
                 break
 
-def check_contract_entry(contract, contract_type, strike_price, ask_price, bid_price, iv, dte, underlying_price, expected_diff):
+def check_contract_entry(contract, contract_type, strike_price, ask_price, bid_price, iv, r, dte, underlying_price, expected_diff):
     stop_loss, secure_gains = options.determine_risk_reward(ask_price*100)
 
-    contract_price = options.get_option_price(contract_type, underlying_price, strike_price, dte, 0.05, iv)
+    contract_price = options.get_option_price(contract_type, underlying_price, strike_price, dte, r, iv)
     expected_underlying = underlying_price + (underlying_price * (expected_diff/100))
-    expected_contract_price = options.get_option_price(contract_type, expected_underlying, strike_price, dte, 0.05, iv) 
+    expected_contract_price = options.get_option_price(contract_type, expected_underlying, strike_price, dte, r, iv) 
     expected_contract_cost = expected_contract_price * 100
 
     print(f'{contract} with {dte} dte and spread {ask_price}/{bid_price} cost {contract_price} expected contract cost {expected_contract_cost} vs needed gains {secure_gains} and loss {stop_loss}')

@@ -91,7 +91,7 @@ def get_option_buying_power(option_contract, buying_power, is_put):
     return min(math.floor(buying_power / option_price), 2)
 
 def determine_risk_reward(cost):
-    risk = min(cost * .15, 50)
+    risk = min(cost * .15, 100)
     stop_loss = cost - risk
     secure_gains = cost + (risk * 3)
 
@@ -140,4 +140,4 @@ def get_option_price(option_type, underlying_price, strike_price, dte, risk_free
     steps = 200
     binomial_engine = ql.BinomialVanillaEngine(bsm_process, "crr", steps)
     american_option.setPricingEngine(binomial_engine)
-    return round(american_option.NPV(), 2)
+    return american_option.NPV()

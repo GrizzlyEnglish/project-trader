@@ -53,7 +53,7 @@ def classify_symbols(symbol_info, classification, market_client, end, time_unit)
             'symbol': symbol,
             'class': class_type,
             'call_variance': call_var,
-            'put_var': put_var
+            'put_variance': put_var
         })
 
     return classified

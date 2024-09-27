@@ -53,7 +53,8 @@ def check_for_exit(hst, market_value, stop_loss, secure_gains):
     exit, reason = check_risk_tolerance(market_value, stop_loss)
 
     # Check if we are above our secure gains, and we dipped, exit
-    exit, reason = check_reward_tolerance(hst, market_value, secure_gains)
+    if not exit:
+        exit, reason = check_reward_tolerance(hst, market_value, secure_gains)
 
     return exit, reason
 

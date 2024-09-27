@@ -63,6 +63,11 @@ def feature_engineer_df(df, look_back):
 
     df['minutes'] = df.apply(get_minutes, axis=1)
 
+    def in_time(row):
+        return row['hour'] >= 12 and row['hour'] < 19
+
+    df['in_time'] = df.apply(in_time, axis=1)
+
     # candle sticks
     df['candle_bar'] = df['open'] - df['close']
     df['candle_lines'] = df['high'] - df['low']

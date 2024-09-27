@@ -62,4 +62,4 @@ def classification(bars, look_forward):
     bars.pop('next_open')
     bars.pop('next_close')
 
-    return bars
+    return bars, up_diff, down_diff

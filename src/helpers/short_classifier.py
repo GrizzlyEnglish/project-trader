@@ -29,9 +29,6 @@ def classification(df, look_forward):
         
         return 'hold'
     
-    def in_time(row):
-        return row.name[1].hour >= 12 and row.name[1].hour < 19
-
     # Setup next close on rows
     for i in range(look_forward):
         j = i + 1
@@ -42,7 +39,6 @@ def classification(df, look_forward):
 
     # Setup extra columns for determing label
     df[f'next_close'] = features.trending(df, 'close_next', look_forward, False, False, False)
-    df[f'in_time'] = df.apply(in_time, axis=1)
     df[f'next_close_perc_diff'] = df.apply(next_close_perc_diff, axis=1)
 
     # For getting the trends use only in time
@@ -67,7 +63,6 @@ def classification(df, look_forward):
 
     df.pop('next_close')
     df.pop('next_close_perc_diff')
-    df.pop('in_time')
 
     buys = len(df[df['label'] == 'buy'])
     sells = len(df[df['label'] == 'sell'])
