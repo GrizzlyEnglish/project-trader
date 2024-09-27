@@ -23,11 +23,12 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 
 save = False
 
-assets = ['GOOGL']
-times = [1]
-days = [7, 14, 30]
-look_back_range = range(10, 15)
-look_forward_range = range(55, 60)
+assets = ['SPY']
+times = [5]
+days = [60]
+look_back_range = range(7, 10)
+look_forward_range = range(8, 20)
+start = datetime(2024, 9, 1, 12, 30)
 
 for symbol in assets:
     results = []
@@ -35,7 +36,6 @@ for symbol in assets:
     for window in times:
 
         for daydiff in days:
-            start = datetime(2024, 8, 29, 12, 30)
             s = start - timedelta(days=daydiff)
             e = start + timedelta(days=1)
             full_bars = get_data.get_bars(symbol, s, e, market_client, window, TimeFrameUnit.Minute)
@@ -56,7 +56,7 @@ for symbol in assets:
                     sell_count = 0
 
                     bars = features.feature_engineer_df(full_bars.copy(), look_back)
-                    bars = short_classifier.classification(bars, look_forward)
+                    bars, call_var, put_var = short_classifier.classification(bars, look_forward)
                     bars = features.drop_prices(bars, look_back)
 
                     try:
