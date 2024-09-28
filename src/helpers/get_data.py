@@ -5,13 +5,18 @@ from alpaca.trading.enums import OrderSide, AssetClass
 from alpaca.data.enums import Adjustment,DataFeed
 from alpaca.trading.requests import GetOrdersRequest
 
-def get_bars(symbol, start, end, market_client, timeframe=5, unit=TimeFrameUnit.Minute):
+def get_bars(symbol, start, end, market_client, timeframe=5, unit='Min'):
+    alp_unit = TimeFrameUnit.Minute
+
+    if unit == 'Hour':
+        alp_unit = TimeFrameUnit.Hour
+
     full_data = market_client.get_stock_bars(StockBarsRequest(symbol_or_symbols=symbol,
                             start=start,
                             end=end,
                             adjustment=Adjustment.ALL,
                             feed=DataFeed.IEX,
-                            timeframe=TimeFrame(amount=timeframe, unit=unit)))
+                            timeframe=TimeFrame(amount=timeframe, unit=alp_unit)))
     return full_data.df
 
 def get_buying_power(trading_client):

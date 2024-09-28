@@ -1,4 +1,6 @@
-from src.helpers import load_stocks, class_model, short_classifier, overnight_classifier
+from helpers.classifiers import overnight, runnup
+from helpers import load_parameters
+from src.helpers import class_model
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
@@ -25,8 +27,8 @@ def save_bars(model_bars, name, symbol):
 class TestModel(unittest.TestCase):
 
     def setUp(self):
-        self.short_info = load_stocks.load_symbol_information('short_option_symbols.txt')
-        self.overnight_info = load_stocks.load_symbol_information('overnight_option_symbols.txt')
+        self.short_info = load_parameters.load_symbol_information('short_option_symbols.txt')
+        self.overnight_info = load_parameters.load_symbol_information('overnight_option_symbols.txt')
         self.trading_client = TradingClient(api_key, api_secret, paper=paper)
         self.market_client = StockHistoricalDataClient(api_key, api_secret)
         self.start = datetime(2024, 9, 15, 12, 30)
@@ -43,7 +45,7 @@ class TestModel(unittest.TestCase):
             e = self.start + timedelta(days=1)
 
             timer_start = datetime.now()
-            bars, call_var, put_var = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, short_classifier.classification, look_back, look_forward, TimeFrameUnit.Minute)
+            bars, call_var, put_var = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, runnup.classification, look_back, look_forward, TimeFrameUnit.Minute)
             model, model_bars, arccuracy, buys, sells = class_model.generate_model(symbol, bars)
 
             save_bars(model_bars, 'short', symbol)
@@ -69,7 +71,7 @@ class TestModel(unittest.TestCase):
             e = self.start + timedelta(days=1)
 
             timer_start = datetime.now()
-            bars = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, overnight_classifier.classification, look_back, look_forward, TimeFrameUnit.Hour)
+            bars = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, overnight.classification, look_back, look_forward, TimeFrameUnit.Hour)
             model, model_bars, arccuracy, buys, sells = class_model.generate_model(symbol, bars)
 
             save_bars(model_bars, 'overnight', symbol)

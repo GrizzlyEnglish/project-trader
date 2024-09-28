@@ -12,7 +12,7 @@ def classification(df, look_forward):
             return 0
 
     def label(row):
-        it = row['in_time']
+        it = True#row['in_time']
         # growth indicators
         growth = row['next_close'] > g_trend
         diff = row['next_close_perc_diff'] > gpd_trend

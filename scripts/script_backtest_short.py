@@ -1,4 +1,6 @@
 import os,sys
+
+from helpers.classifiers import runnup
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from alpaca.trading.client import TradingClient
@@ -6,8 +8,8 @@ from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from alpaca.data.timeframe import TimeFrameUnit
-from src.helpers.load_stocks import load_symbol_information
-from src.helpers import get_data, features, class_model, short_classifier, tracker, options
+from helpers.load_parameters import load_symbol_information
+from src.helpers import get_data, features, class_model, tracker, options
 from src.strats import enter, exit
 from scipy.stats import norm
 
@@ -115,7 +117,7 @@ while (True):
 
         # Generate model
         print(f'Model start {st} model end {end}')
-        bars, call_var, put_var = class_model.get_model_bars(symbol, market_client, st, end, time_window, short_classifier.classification, look_back, look_forward, TimeFrameUnit.Minute)
+        bars, call_var, put_var = class_model.get_model_bars(symbol, market_client, st, end, time_window, runnup.classification, look_back, look_forward, TimeFrameUnit.Minute)
         model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
 
         # From the cut off date loop every day

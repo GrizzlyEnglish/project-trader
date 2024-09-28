@@ -6,9 +6,19 @@ from sklearn.ensemble import RandomForestClassifier
 from datetime import datetime, timedelta
 
 import pandas as pd
-import os
 
-def generate_model(symbol, bars):
+def generate_model(symbol, info, market_client, classification, end):
+    day_diff = info['day_diff']
+    time_window = int(info['time_window'])
+    look_back = info['look_back']
+    look_forward = info['look_forward']
+    time_unit = info['time_unit']
+
+    m_st = end - timedelta(days=day_diff- 1)
+    m_end = end
+    print(f'Model start {m_st} model end {m_end}')
+    bars, call_var, put_var = get_model_bars(symbol, market_client, m_st, m_end, time_window, classification, look_back, look_forward, time_unit)
+
     buys = len(bars[bars.label == 'buy'])
     sells = len(bars[bars.label == 'sell'])
     holds = min((buys + sells) * 2, len(bars[bars['label'] == 'hold']))
@@ -25,38 +35,15 @@ def generate_model(symbol, bars):
 
     model, accuracy = create_model(symbol, bars)
 
-    return model, bars, accuracy, buys, sells
-
-def classify_symbols(symbol_info, classification, market_client, end, time_unit):
-    pred_bar_amt = int(os.getenv('PRED_BARS'))
-    classified = []
-    for info in symbol_info:
-        symbol = info['symbol']
-        day_diff = info['day_diff']
-        time_window = info['time_window']
-        look_back = info['look_back']
-        look_forward = info['look_forward']
-
-        bars, call_var, put_var = get_model_bars(symbol, market_client, end - timedelta(days=day_diff), end + timedelta(days=1), time_window, classification, look_back, look_forward, time_unit)
-        model_bars = bars.head(len(bars) - pred_bar_amt)
-        pred_bars = bars.tail(pred_bar_amt)
-
-        pred_bars.pop("label")
-
-        model, model_bars, accuracy, buys, sells = generate_model(symbol, model_bars)
-
-        class_type = predict(model, pred_bars)
-
-        print(f'{symbol} classification={class_type} on bar {pred_bars.index[0][1]}')
-
-        classified.append({
-            'symbol': symbol,
-            'class': class_type,
-            'call_variance': call_var,
-            'put_variance': put_var
-        })
-
-    return classified
+    return {
+        'model': model,
+        'bars': bars,
+        'accuracy': accuracy,
+        'buys': buys,
+        'sells': sells,
+        'call_variance': call_var,
+        'put_variance': put_var
+    }
 
 def label_to_int(row):
     if row == 'buy': return 0
@@ -78,13 +65,7 @@ def get_model_bars(symbol, market_client, start, end, time_window, classificatio
 def predict(model, bars):
     pred = model.predict(bars)
     pred = [int_to_label(p) for p in pred]
-    pred = [s for s in pred if s != 'Hold']
-    class_type = "Hold"
-    if len(pred) > 0 and all(x == pred[0] for x in pred):
-        class_type = "Buy"
-        if pred[0] == 'Sell':
-            class_type = "Sell"
-    return class_type
+    return pred
 
 def create_model(symbol, window_data):
     df = window_data.copy().dropna()

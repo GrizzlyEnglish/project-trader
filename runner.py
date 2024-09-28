@@ -1,7 +1,8 @@
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+from helpers import load_parameters
 from src.strats import overnight_enter, short_enter, exit
-from src.helpers import load_stocks, get_data
+from src.helpers import get_data
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
@@ -11,8 +12,8 @@ import schedule
 import time
 import os
 
-short_symbol_info = load_stocks.load_symbol_information('short_option_symbols.txt')
-overnight_symbol_info = load_stocks.load_symbol_information('overnight_option_symbols.txt')
+short_symbol_info = load_parameters.load_symbol_information('short_option_symbols.txt')
+overnight_symbol_info = load_parameters.load_symbol_information('overnight_option_symbols.txt')
 
 load_dotenv()
 
