@@ -1,17 +1,14 @@
 import os,sys
-
-from helpers.classifiers import runnup
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
-from alpaca.data.timeframe import TimeFrameUnit
-from helpers.load_parameters import load_symbol_information
-from src.helpers import get_data, features, class_model, tracker, options
+from src.helpers import tracker, options
 from src.strats import enter, exit
-from scipy.stats import norm
+from datetime import datetime
+
+from src.backtesting import short, chart
 
 import pandas as pd
 import numpy as np
@@ -28,33 +25,29 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-symbol_info = load_symbol_information('../short_option_symbols.txt')
-#symbol_info = [c for c in symbol_info if c['symbol'] == 'SPY']
+start = datetime(2024, 1, 1, 12, 30)
+end = datetime(2024, 9, 26, 12, 30)
 
-start = datetime(2024, 9, 15, 12, 30)
-end_run = datetime(2024, 9, 26, 12, 30)
-
-wallet = 30000
-wallet_series = [[start, wallet]]
+close_series = []
 purchased_series = []
 sell_series = []
+pl_series = []
 telemetry = []
+option_telemetry = []
 vol = 0.5
 r = 0.05
 dte = 2
 
-def check_for_entry(row, model, close_price, call_var, put_var, index):
+def check_for_entry(signal, close_price, call_var, put_var, index, strike_price):
     global vol, r, dte
 
-    pred = class_model.predict(model, row)
-
-    if pred == 'Hold':
+    if signal['signal'] == 'Hold':
         return
 
     contract_type = 'put'
     expected_var = put_var
 
-    if pred == 'Buy':
+    if signal['signal'] == 'Buy':
         contract_type = 'call'
         expected_var = call_var
 
@@ -95,145 +88,86 @@ def check_for_exit(symbol, close_price, index, open_contract):
     tracker.track(symbol, 0, mv)
     return False, mv, ''
 
-while (True):
+open_contract = {}
 
-    if start > end_run:
-        break
+def backtest_func(symbol, idx, row, signal, model_info):
+    index = idx[1]
 
-    backtest_holder = {}
-    open_contract = {}
-    done_count = 0
-    done = {}
-
-    for info in symbol_info:
-        time_window = info['time_window']
-        symbol = info['symbol']
-        day_diff = info['day_diff']
-        look_back = info['look_back']
-        look_forward = info['look_forward']
-
-        st = start - timedelta(days=day_diff-1)
-        end = start - timedelta(days=1)
-
-        # Generate model
-        print(f'Model start {st} model end {end}')
-        bars, call_var, put_var = class_model.get_model_bars(symbol, market_client, st, end, time_window, runnup.classification, look_back, look_forward, TimeFrameUnit.Minute)
-        model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
-
-        # From the cut off date loop every day
-        start_dt = start
-        end_dt = start + timedelta(days=31)
-        print(f'Predict start {start_dt} model end {end_dt}')
-
-        pred_bars = get_data.get_bars(symbol, start_dt, end_dt, market_client, time_window)
-        pred_bars = features.feature_engineer_df(pred_bars, look_back)
-        pred_bars = features.drop_prices(pred_bars, look_back)
-
-        # Setup labels to see if the signal matched
-        #actual_labels, cv, pv = short_classifier.classification(pred_bars.copy(), look_forward)
-        #actual_indexes = pd.Index(actual_labels.index)
-
-        backtest_holder[symbol] = {
-            'model': model,
-            'pred_bars': pred_bars,
-            'call_var': call_var,
-            'put_var': put_var,
-            'loc': 0
-        }
+    if not (symbol in open_contract):
         open_contract[symbol] = None
-        done[symbol] = False
 
-    while (done_count < len(symbol_info)):
-        wallet_at_time = wallet
-        for info in symbol_info:
-            symbol = info['symbol']
+    call_var = model_info['runnup']['call_variance']
+    put_var = model_info['runnup']['put_variance']
 
-            if done[symbol]:
-                continue
+    close = row['close']
+    close_series.append([index, close])
 
-            holder = backtest_holder[symbol]
-            loc = holder['loc']
-            pred_bars = holder['pred_bars']
-            model = holder['model']
+    strike_price = math.floor(close)
 
-            if loc == len(pred_bars):
-                done[symbol] = True
-                done_count = done_count + 1
-                continue
+    if open_contract[symbol] == None:
+        con = check_for_entry(signal, close, call_var, put_var, index, strike_price)
+        open_contract[symbol] = con
+    else:
+        open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
+        if open_contract[symbol]['dte'] <= 0:
+            do_exit = True
+            mv = open_contract[symbol]['prev_mv']
+        else:
+            do_exit, mv, reason = check_for_exit(symbol, close, index, open_contract[symbol])
+            open_contract[symbol]['prev_mv'] = mv
+        if do_exit:
+            tel = {
+                'symbol': symbol,
+                'strike_price': strike_price,
+                'sold_close': close,
+                'bought_close': open_contract[symbol]['close'],
+                'type': open_contract[symbol]['type'],
+                'bought_price': open_contract[symbol]['market_value'],
+                'sold_price': mv,
+                'stop_loss': open_contract[symbol]['stop_loss'],
+                'secure_gains': open_contract[symbol]['secure_gains'],
+                'bought_at': open_contract[symbol]['bought_at'],
+                'sold_at': index,
+                'held_for': index - open_contract[symbol]['bought_at'],
+                'sold_for': reason
+            }
+            telemetry.append(tel)
+            open_contract[symbol] = None
+            pl_series.append([tel['type'], (tel['sold_price'] - tel['bought_price'])])
+        else:
+            tel = {
+                'symbol': symbol,
+                'strike_price': open_contract[symbol]['strike_price'],
+                'sold_close': close,
+                'bought_at': open_contract[symbol]['bought_at'],
+                'at': index,
+                'market_value': mv
+            }
+            option_telemetry.append(tel)
 
-            row = pred_bars.iloc[loc:loc+1]
 
-            if row.index[0][1].date() > end_run.date():
-                done[symbol] = True
-                done_count = done_count + 1
-                continue
-
-            close = row.iloc[0]['close']
-
-            strike_price = math.floor(close)
-            index = row.index[0][1]
-
-            if open_contract[symbol] == None:
-                con = check_for_entry(row, model, close, holder['call_var'], holder['put_var'], index)
-                open_contract[symbol] = con
-            else:
-                open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
-                if open_contract[symbol]['dte'] <= 0:
-                    do_exit = True
-                    mv = open_contract[symbol]['prev_mv']
-                else:
-                    do_exit, mv, reason = check_for_exit(symbol, close, index, open_contract[symbol])
-                    open_contract[symbol]['prev_mv'] = mv
-                if do_exit:
-                    tel = {
-                        'symbol': symbol,
-                        'strike_price': strike_price,
-                        'sold_close': close,
-                        'bought_close': open_contract[symbol]['close'],
-                        'type': open_contract[symbol]['type'],
-                        'bought_price': open_contract[symbol]['market_value'],
-                        'sold_price': mv,
-                        'stop_loss': open_contract[symbol]['stop_loss'],
-                        'secure_gains': open_contract[symbol]['secure_gains'],
-                        'bought_at': open_contract[symbol]['bought_at'],
-                        'sold_at': index,
-                        'held_for': index - open_contract[symbol]['bought_at'],
-                        'sold_for': reason
-                    }
-                    telemetry.append(tel)
-                    wallet = wallet + (mv - open_contract[symbol]['market_value'])
-                    wallet_series.append([index, wallet])
-                    open_contract[symbol] = None
-                wallet_at_time = wallet_at_time + mv
-
-            holder['loc'] = holder['loc'] + 1
-
-        wallet_series.append([index, wallet_at_time])
-
-    start = start + timedelta(days=31)
-
-    print(wallet)
+short.backtest(start, end, backtest_func, market_client)
 
 pd.DataFrame(data=telemetry).to_csv(f'../results/backtest.csv', index=True)
+pd.DataFrame(data=option_telemetry).to_csv(f'../results/backtest_tel.csv', index=True)
 
 # Separate the data into x and y
-wallet_series = np.array(wallet_series)
-x = wallet_series[:, 0]
-y = wallet_series[:, 1]
+close_series = np.array(close_series)
 
-# Create a plot
-plt.plot(x, y)
+chart.chart_with_signals(close_series, purchased_series, sell_series, f'Backtest {start}-{end}', 'Time', 'Cash', 1)
 
-for xc in purchased_series:
-    plt.axvline(x=xc, color='r', linestyle='--')
+fig = plt.figure(2)
 
-for xc in sell_series:
-    plt.axvline(x=xc, color='g', linestyle='--')
+pl_series = np.array(pl_series)
+x = [float(p) for p in pl_series[:, 1]]
+y = pl_series[:, 0]
+categories = [f'{y[i]} {i+1}' for i in range(len(y))]
 
-# Add labels and title
-plt.xlabel('Time')
-plt.ylabel('Cash')
-plt.title('Backtest options')
+plt.bar(categories, x, color=['orange' if 'call' in value else 'purple' for value in y])
+
+plt.xlabel('P/L')
+plt.ylabel('Times')
+plt.title('Simple Bar Graph')
 
 # Show the plot
 plt.show()

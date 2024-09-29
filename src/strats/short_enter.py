@@ -28,7 +28,7 @@ def classify_short_signal(dip_bars, runnup_bars, model_info):
     dip_signal = class_model.predict(model_info['dip']['model'], dip_bars)[0]
     run_signals = class_model.predict(model_info['runnup']['model'], runnup_bars)
 
-    signal = 'hold'
+    signal = 'Hold'
     # all runnups need to match, and dip just needs any of them
     if all(x == run_signals[0] for x in run_signals) and dip_signal == run_signals[0]:
         signal = run_signals[0]
