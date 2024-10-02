@@ -1,4 +1,4 @@
-from helpers.classifiers import overnight
+from src.classifiers import overnight
 from src.helpers import get_data, class_model
 from datetime import datetime
 from src.strats import enter

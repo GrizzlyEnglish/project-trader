@@ -6,6 +6,7 @@ from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
 from src.helpers import features
 
+import os
 import math
 import numpy as np
 import scipy.optimize as opt
@@ -91,9 +92,13 @@ def get_option_buying_power(option_contract, buying_power, is_put):
     return min(math.floor(buying_power / option_price), 2)
 
 def determine_risk_reward(cost):
-    risk = min(cost * .15, 100)
+    _risk_amt = float(os.getenv("RISK_AMT"))
+    _reward_factor = int(os.getenv("REWARD_FACTOR"))
+
+    risk = min(cost * _risk_amt, 100)
+    #risk = cost * _risk_amt
     stop_loss = cost - risk
-    secure_gains = cost + (risk * 3)
+    secure_gains = cost + (risk * _reward_factor)
 
     return stop_loss, secure_gains
 

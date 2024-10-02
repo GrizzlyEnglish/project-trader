@@ -32,7 +32,7 @@ def backtest(start, end, backtest_func, market_client):
         m_end = p_end - timedelta(days=1)
 
         print(f'Generating model up to {m_end}')
-        model_info = short_enter.generate_short_models(market_client, m_end)
+        model_info = short_enter.generate_short_models(market_client, m_end, '../params.json')
 
         for m in model_info:
             symbol = m['symbol']
@@ -58,7 +58,7 @@ def backtest(start, end, backtest_func, market_client):
 
                 backtest_func(symbol, index, row, signals, m)
 
-            p_st = p_end 
+        p_st = p_end 
 
-            if p_st > end_dt:
-                break
+        if p_st > end_dt:
+            break

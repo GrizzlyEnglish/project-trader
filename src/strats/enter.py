@@ -46,12 +46,13 @@ def enter_position(classification, current_positions, trading_client, market_cli
                 buy.submit_order(contract.symbol, qty, ask_price, trading_client)
                 break
 
-def check_contract_entry(contract, contract_type, strike_price, ask_price, bid_price, iv, r, dte, underlying_price, expected_diff):
+def check_contract_entry(contract, contract_type, strike_price, ask_price, bid_price, iv, r, dte, underlying_price, expected_diff, look_forward):
     stop_loss, secure_gains = options.determine_risk_reward(ask_price*100)
 
     contract_price = options.get_option_price(contract_type, underlying_price, strike_price, dte, r, iv)
     expected_underlying = underlying_price + (underlying_price * (expected_diff/100))
-    expected_contract_price = options.get_option_price(contract_type, expected_underlying, strike_price, dte, r, iv) 
+    # we need to price it during the expeted time traversal
+    expected_contract_price = options.get_option_price(contract_type, expected_underlying, strike_price, dte - (look_forward/60/60), r, iv) 
     expected_contract_cost = expected_contract_price * 100
 
     print(f'{contract} with {dte} dte and spread {ask_price}/{bid_price} cost {contract_price} expected contract cost {expected_contract_cost} vs needed gains {secure_gains} and loss {stop_loss}')

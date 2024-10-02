@@ -5,8 +5,8 @@ from src.strats import enter
 from src.helpers.load_parameters import load_symbol_parameters
 from src.classifiers import runnup, dip
 
-def generate_short_models(market_client, end):
-    params = load_symbol_parameters('../params.json')
+def generate_short_models(market_client, end, params_path = 'params.json'):
+    params = load_symbol_parameters(params_path)
 
     models = []
 
@@ -40,9 +40,23 @@ def classify_short_signal(dip_bars, runnup_bars, model_info):
     }
 
 
-def enter_short(symbol_info, market_client, trading_client, option_client):
+def enter_short(model_infos, market_client, trading_client, option_client):
     positions = get_data.get_positions(trading_client)
-    classifications = class_model.classify_symbols(symbol_info, runnup.classification, market_client, datetime.now(), TimeFrameUnit.Minute)
+    classifications = []
+
+    for m in model_infos:
+        run_bars = class_model.get_prediction_bars(m['symbol'], m['params']['runnup'], market_client).iloc[-2:]
+        dip_bars = class_model.get_prediction_bars(m['symbol'], m['params']['dip'], market_client)[:1]
+
+        classif = classify_short_signal(dip_bars, run_bars, m)
+        print(f'Dip: {classif["dip"]} Runnup: {classif["runnup"]} Signal: {classif["signal"]}')
+
+        classifications.append({
+            'symbol': m['symbol'],
+            'class': classif['signal'],
+            'call_variance': m['runnup']['call_variance'],
+            'put_variance': m['runnup']['put_variance']
+        })
 
     for c in classifications:
         enter.enter_position(c, positions, trading_client, market_client, option_client)

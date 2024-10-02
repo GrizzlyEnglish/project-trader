@@ -7,6 +7,21 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
+def sample_bars(bars):
+    buys = len(bars[bars.label == 'buy'])
+    sells = len(bars[bars.label == 'sell'])
+    holds = min((buys + sells) * 2, len(bars[bars['label'] == 'hold']))
+
+    bars = pd.concat([
+        bars[bars.label == 'buy'],
+        bars[bars.label == 'sell'],
+        bars[bars.label == 'hold'].sample(n=holds)
+    ])
+
+    print(f'Model bars buy count: {buys} sell count: {sells} hold count: {holds}')
+
+    return bars, buys, sells
+
 def generate_model(symbol, info, market_client, classification, end):
     day_diff = info['day_diff']
     time_window = int(info['time_window'])
@@ -19,17 +34,7 @@ def generate_model(symbol, info, market_client, classification, end):
     print(f'Model start {m_st} model end {m_end}')
     bars, call_var, put_var = get_model_bars(symbol, market_client, m_st, m_end, time_window, classification, look_back, look_forward, time_unit)
 
-    buys = len(bars[bars.label == 'buy'])
-    sells = len(bars[bars.label == 'sell'])
-    holds = min((buys + sells) * 2, len(bars[bars['label'] == 'hold']))
-
-    bars = pd.concat([
-        bars[bars.label == 'buy'],
-        bars[bars.label == 'sell'],
-        bars[bars.label == 'hold'].sample(n=holds)
-    ])
-
-    print(f'Model bars buy count: {buys} sell count: {sells} hold count: {holds}')
+    bars, buys, sells = sample_bars(bars)
 
     bars['label'] = bars['label'].apply(label_to_int)
 
@@ -61,6 +66,21 @@ def get_model_bars(symbol, market_client, start, end, time_window, classificatio
     bars, call_var, put_var = classification(bars, look_forward)
     bars = features.drop_prices(bars, look_back)
     return bars, call_var, put_var
+
+def get_prediction_bars(symbol, model_info, market_client):
+    time_window = int(model_info['time_window'])
+    look_back = model_info['look_back']
+    time_unit = model_info['time_unit']
+    day_diff = model_info['day_diff']
+
+    end = datetime.now()
+    start = end - timedelta(days=day_diff)
+
+    bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)
+    bars = features.feature_engineer_df(bars, look_back)
+    bars = features.drop_prices(bars, look_back)
+
+    return bars
 
 def predict(model, bars):
     pred = model.predict(bars)

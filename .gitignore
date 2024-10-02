@@ -10,3 +10,5 @@ virtualenv/
 .pydevproject
 *.txt
 *.csv
+*.json
+results/

@@ -5,6 +5,7 @@ from alpaca.common.exceptions import APIError
 stop_loss_reason = 'stop loss'
 slope_loss_reason = 'over gains and trending down'
 perc_diff_loss_reason = 'over gains and big drop' 
+reversal_reason = 'a reveral was signaled'
 
 def exit(trading_client, option_client):
     positions = get_data.get_positions(trading_client)
@@ -45,7 +46,7 @@ Reasons for exiting
 1. Dropped below our risk tolerance
 2. Above our secure gains, and enough of a drop to just leave
 '''
-def check_for_exit(hst, market_value, stop_loss, secure_gains):
+def check_for_exit(hst, contract_type, signal, market_value, stop_loss, secure_gains):
     reason = ''
     exit = False
 
@@ -55,6 +56,15 @@ def check_for_exit(hst, market_value, stop_loss, secure_gains):
     # Check if we are above our secure gains, and we dipped, exit
     if not exit:
         exit, reason = check_reward_tolerance(hst, market_value, secure_gains)
+
+    if exit:
+        if (contract_type == 'call' and signal['dip'] == 'Sell') or (contract_type == 'put' and signal['dip'] == 'Buy'):
+            exit = True
+            reason = 'reversal'
+
+        if (contract_type == 'call' and signal['signal'] == 'Buy') or (contract_type == 'put' and signal['signal'] == 'Sell'):
+            exit = False
+            # Keep holding
 
     return exit, reason
 

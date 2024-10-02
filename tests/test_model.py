@@ -1,5 +1,5 @@
-from helpers.classifiers import overnight, runnup
-from helpers import load_parameters
+from src.classifiers import overnight, runnup, dip
+from src.helpers import load_parameters
 from src.helpers import class_model
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -27,62 +27,67 @@ def save_bars(model_bars, name, symbol):
 class TestModel(unittest.TestCase):
 
     def setUp(self):
-        self.short_info = load_parameters.load_symbol_information('short_option_symbols.txt')
-        self.overnight_info = load_parameters.load_symbol_information('overnight_option_symbols.txt')
+        self.params = load_parameters.load_symbol_parameters()
         self.trading_client = TradingClient(api_key, api_secret, paper=paper)
         self.market_client = StockHistoricalDataClient(api_key, api_secret)
         self.start = datetime(2024, 9, 15, 12, 30)
 
-    def test_short_classification_model_generation(self):
-        for info in self.short_info:
-            symbol = info['symbol']
-            day_diff = info['day_diff']
-            time_window = info['time_window']
-            look_back = info['look_back']
-            look_forward = info['look_forward']
-
-            s = self.start - timedelta(days=day_diff)
-            e = self.start + timedelta(days=1)
+    def test_runnup_classification_model_generation(self):
+        for p in self.params:
+            info = p['runnup']
+            symbol = p['symbol']
 
             timer_start = datetime.now()
-            bars, call_var, put_var = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, runnup.classification, look_back, look_forward, TimeFrameUnit.Minute)
-            model, model_bars, arccuracy, buys, sells = class_model.generate_model(symbol, bars)
+            model_info = class_model.generate_model(symbol, info, self.market_client, runnup.classification, self.start)
 
-            save_bars(model_bars, 'short', symbol)
+            save_bars(model_info['bars'], 'runnup', symbol)
 
             timer_end = datetime.now()
 
             print(f'Took {symbol} {timer_end - timer_start}')
 
-            assert model != None
-            assert arccuracy > .7
-            assert buys >= 100
-            assert sells >= 100
+            assert model_info['model'] != None
+            assert model_info['accuracy'] > .7
+            assert model_info['buys'] >= 100
+            assert model_info['sells'] >= 100
     
     def test_overnight_classification_model_generation(self):
-        for info in self.overnight_info:
-            symbol = info['symbol']
-            day_diff = info['day_diff']
-            time_window = info['time_window']
-            look_back = info['look_back']
-            look_forward = info['look_forward']
-
-            s = self.start - timedelta(days=day_diff)
-            e = self.start + timedelta(days=1)
+        for p in self.params:
+            symbol = p['symbol']
+            info = p['overnight']
 
             timer_start = datetime.now()
-            bars = class_model.get_model_bars(symbol, self.market_client, s, e, time_window, overnight.classification, look_back, look_forward, TimeFrameUnit.Hour)
-            model, model_bars, arccuracy, buys, sells = class_model.generate_model(symbol, bars)
+            model_info = class_model.generate_model(symbol, info, self.market_client, overnight.classification, self.start)
 
-            save_bars(model_bars, 'overnight', symbol)
+            save_bars(model_info['bars'], 'overnight', symbol)
 
             timer_end = datetime.now()
 
             print(f'Took {symbol} {timer_end - timer_start}')
 
-            assert model != None
-            # TODO: This needs to be higher
-            assert arccuracy > .5
+            assert model_info['model'] != None
+            assert model_info['accuracy'] > .5
+            assert model_info['buys'] >= 10
+            assert model_info['sells'] >= 10
+
+    def test_dip_classification_model_generation(self):
+        for p in self.params:
+            symbol = p['symbol']
+            info = p['dip']
+
+            timer_start = datetime.now()
+            model_info = class_model.generate_model(symbol, info, self.market_client, dip.classification, self.start)
+
+            save_bars(model_info['bars'], 'dip', symbol)
+
+            timer_end = datetime.now()
+
+            print(f'Took {symbol} {timer_end - timer_start}')
+
+            assert model_info['model'] != None
+            assert model_info['accuracy'] > .6
+            assert model_info['buys'] >= 100
+            assert model_info['sells'] >= 100
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,5 @@
 import os,sys
 
-from helpers import load_parameters
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from alpaca.trading.client import TradingClient
@@ -8,7 +7,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.timeframe import TimeFrameUnit
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import features, class_model, get_data
+from src.helpers import features, class_model, get_data, load_parameters
 from src.classifiers import runnup, dip
 
 import pandas as pd
@@ -27,9 +26,9 @@ classification = dip.classification
 
 save = False
 
-assets = ['SPY']
+assets = ['QQQ']
 times = [1]
-days = [30,60]
+days = [30]
 look_back_range = range(10, 20)
 look_forward_range = range(10, 20)
 start = datetime(2024, 9, 1, 12, 30)
@@ -56,18 +55,18 @@ for symbol in assets:
                         continue
 
                     acc = 0
-                    buy_count = 0
-                    sell_count = 0
 
                     bars = features.feature_engineer_df(full_bars.copy(), look_back)
                     bars, call_var, put_var = classification(bars, look_forward)
                     bars = features.drop_prices(bars, look_back)
 
+                    bars = class_model.sample_bars(bars)
+
+                    buy_count = len(bars[bars.label == 'buy'])
+                    sell_count = len(bars[bars.label == 'sell'])
+
                     try:
-                        model, model_bars, accuracy, buys, sells = class_model.generate_model(symbol, bars)
-                        acc = accuracy
-                        buy_count = buys
-                        sell_count = sells
+                        model,acc = class_model.create_model(symbol, bars)
                     except:
                         print()
 
