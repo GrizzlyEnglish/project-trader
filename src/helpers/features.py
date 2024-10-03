@@ -12,6 +12,34 @@ large_window = 200
 length_KC = 20
 mult_KC = 1.5
 
+def get_hour(row):
+    idx = row.name[1]
+    return idx.hour
+
+
+def get_minutes(row):
+    idx = row.name[1]
+    return idx.minute
+
+def in_time(row):
+    return row['hour'] >= 12 and row['hour'] < 19
+
+def get_day_of_week(row):
+    idx = row.name[1]
+    return idx.dayofweek
+
+def get_day_of_year(row):
+    idx = row.name[1]
+    return idx.dayofyear
+
+def get_month(row):
+    idx = row.name[1]
+    return idx.month
+
+def get_date(row):
+    idx = row.name[1]
+    return idx.year * (idx.month + idx.day)
+
 def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
     arr = []
 
@@ -51,26 +79,17 @@ def feature_engineer_df(df, look_back):
 
     df.loc[:, 'change'] = df['close'].diff()
 
-    def get_hour(row):
-        idx = row.name[1]
-        return idx.hour
-
-    df['hour'] = df.apply(get_hour, axis=1)
-
-    def get_minutes(row):
-        idx = row.name[1]
-        return idx.minute
-
-    df['minutes'] = df.apply(get_minutes, axis=1)
-
-    def in_time(row):
-        return row['hour'] >= 12 and row['hour'] < 19
-
-    df['in_time'] = df.apply(in_time, axis=1)
-
     # candle sticks
     df['candle_bar'] = df['open'] - df['close']
     df['candle_lines'] = df['high'] - df['low']
+
+    df['hour'] = df.apply(get_hour, axis=1)
+    df['minutes'] = df.apply(get_minutes, axis=1)
+    df['in_time'] = df.apply(in_time, axis=1)
+    df['date'] = df.apply(get_date, axis=1)
+    df['dayofweek'] = df.apply(get_day_of_week, axis=1)
+    df['dayofyear'] = df.apply(get_day_of_year, axis=1)
+    df['month'] = df.apply(get_month, axis=1)
 
     df = moving_average(df, quotes)
 

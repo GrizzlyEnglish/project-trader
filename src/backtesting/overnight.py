@@ -38,27 +38,20 @@ def backtest(start, end, backtest_func, market_client):
             symbol = m['symbol']
             p = m['params']
 
-            look_back = p['runnup']['look_back']
-            if p['runnup']['look_back'] != p['dip']['look_back']:
-                print("Look back not matching might get weird results")
-
+            look_back = p['overnight']['look_back']
             print(f'Predicting start {p_end - timedelta(days=look_back)}-{p_st}-{p_end}')
-            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=look_back), p_end, market_client, p['runnup']['time_window'], p['runnup']['time_unit'])
+            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=look_back), p_end, market_client, p['overnight']['time_window'], p['overnight']['time_unit'])
 
-            dip_pred_bars = features.feature_engineer_df(pred_bars.copy(), p['dip']['look_back'])
-            dip_pred_bars = features.drop_prices(dip_pred_bars, p['dip']['look_back'])
-
-            runnup_pred_bars = features.feature_engineer_df(pred_bars.copy(), p['runnup']['look_back'])
-            runnup_pred_bars = features.drop_prices(runnup_pred_bars, p['runnup']['look_back'])
+            pred_bars = features.feature_engineer_df(pred_bars.copy(), p['overnight']['look_back'])
+            pred_bars = features.drop_prices(pred_bars, p['overnight']['look_back'])
 
             for index, row in pred_bars.iterrows():
                 if index[1].date() < p_st.date():
                     continue
 
-                dp_h = dip_pred_bars.loc[index:][:1]
-                run_h = runnup_pred_bars.loc[:index][-2:]
+                bars_h = pred_bars.loc[index:][:1]
 
-                signals = short_enter.classify_short_signal(dp_h, run_h, m)
+                signals = short_enter.classify_overnight_signal(bars_h, m)
 
                 backtest_func(symbol, index, row, signals, m)
 

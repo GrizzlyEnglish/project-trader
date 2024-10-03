@@ -6,7 +6,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, time, timezone
 
-from src.backtesting import short, chart, strats
+from src.backtesting import overnight, chart, strats
 
 import pandas as pd
 import numpy as np
@@ -36,6 +36,7 @@ symbols = []
 vol = 0.5
 r = 0.05
 dte = 1
+
 open_contract = {}
 actions = 0
 correct_actions = 0
@@ -52,10 +53,7 @@ def backtest_func(symbol, idx, row, signal, model_info):
         sell_series[symbol] = []
         symbols.append(symbol)
 
-    market_open = datetime.combine(index, time(13, 0), timezone.utc)
-    market_close = datetime.combine(index, time(19, 1), timezone.utc)
-
-    if index <= market_open or index >= market_close:
+    if not (index[1].hour == 15 and index[1].minute == 30):
         return
 
     call_var = model_info['runnup']['call_variance']
@@ -120,7 +118,7 @@ def backtest_func(symbol, idx, row, signal, model_info):
             option_telemetry.append(tel)
 
 
-short.backtest(start, end, backtest_func, market_client)
+overnight.backtest(start, end, backtest_func, market_client)
 
 print(f'Accuracy {correct_actions/actions}')
 
