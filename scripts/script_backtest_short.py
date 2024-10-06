@@ -4,9 +4,10 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timezone, timedelta
 
 from src.backtesting import short, chart, strats
+from src.helpers import get_data, class_model, features
 
 import pandas as pd
 import numpy as np
@@ -23,8 +24,8 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-start = datetime(2024, 9, 1, 12, 30)
-end = datetime(2024, 10, 2, 12, 30)
+start = datetime(2024, 10, 1, 12, 30)
+end = datetime(2024, 10, 7, 12, 30)
 
 close_series = {}
 purchased_series = {}
@@ -39,9 +40,10 @@ dte = 1
 open_contract = {}
 actions = 0
 correct_actions = 0
+held_overnight = 0
 
 def backtest_func(symbol, idx, row, signal, model_info):
-    global actions, correct_actions, open_contract
+    global actions, correct_actions, open_contract, held_overnight
 
     index = idx[1]
 
@@ -67,23 +69,33 @@ def backtest_func(symbol, idx, row, signal, model_info):
     strike_price = math.floor(close)
 
     if open_contract[symbol] == None:
-        con = strats.check_for_entry(signal, close, call_var, put_var, index, strike_price, symbol, model_info['params']['runnup']['look_forward'])
+        con = strats.check_for_entry(signal, close, call_var, put_var, index, strike_price, symbol, model_info['params']['runnup']['look_forward'], dte, r, vol, purchased_series)
         open_contract[symbol] = con
     else:
-        open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
+        #open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
         if open_contract[symbol]['dte'] <= 0.6:
             do_exit = True
             mv = open_contract[symbol]['prev_mv']
             reason = 'expired'
         else:
-            do_exit, mv, reason = strats.check_for_exit(symbol, close, index, open_contract[symbol], signal)
+            do_exit, mv, reason = strats.check_for_exit(symbol, close, index, open_contract[symbol], signal, r, vol, sell_series)
             if mv > 0:
                 open_contract[symbol]['prev_mv'] = mv
             else:
                 print("why")
         if index.hour == 19:
-            do_exit = True
-            reason = 'market close'
+            end = datetime(index.year, index.month, index.day, 20, 0)
+            pred_bars = get_data.get_bars(symbol, index.date() - timedelta(days=int(model_info['params']['overnight']['day_diff'])), end, market_client, model_info['params']['overnight']['time_window'], model_info['params']['overnight']['time_unit'])
+            pred_bars = features.feature_engineer_df(pred_bars, model_info['params']['overnight']['look_back'])
+            pred_bars = features.drop_prices(pred_bars, model_info['params']['overnight']['look_back'])
+            overnight_signal = class_model.predict(model_info['overnight']['model'], pred_bars.iloc[-1:])[0]
+
+            if overnight_signal == 'Hold' or (overnight_signal == 'Buy' and open_contract[symbol]['type'] == 'put') or (overnight_signal == 'Sell' and open_contract[symbol]['type'] == 'call'):
+                do_exit = True
+                reason = 'market close'
+            else:
+                held_overnight = held_overnight + 1
+                print("holding overnight")
         if do_exit:
             pl = mv - open_contract[symbol]['market_value']
             tel = {
@@ -112,8 +124,8 @@ def backtest_func(symbol, idx, row, signal, model_info):
             tel = {
                 'symbol': symbol,
                 'strike_price': open_contract[symbol]['strike_price'],
-                'sold_close': close,
                 'bought_at': open_contract[symbol]['bought_at'],
+                'bar_close': close,
                 'at': index,
                 'market_value': mv
             }
@@ -123,18 +135,21 @@ def backtest_func(symbol, idx, row, signal, model_info):
 short.backtest(start, end, backtest_func, market_client)
 
 print(f'Accuracy {correct_actions/actions}')
+print(f'Held {held_overnight} contracts overnight')
 
-pd.DataFrame(data=telemetry).to_csv(f'../results/backtest.csv', index=True)
-pd.DataFrame(data=option_telemetry).to_csv(f'../results/backtest_tel.csv', index=True)
+pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
+pd.DataFrame(data=option_telemetry).to_csv(f'../results/short_backtest_tel.csv', index=True)
 
 # Separate the data into x and y
+fig = 1
 for cs in symbols:
     c_series = np.array(close_series[cs])
     ps = purchased_series[cs]
     ss = sell_series[cs]
-    chart.chart_with_signals(c_series, ps, ss, f'Backtest {start}-{end}', 'Time', 'Close', 1)
+    chart.chart_with_signals(c_series, ps, ss, f'Backtest {start}-{end}', 'Time', 'Close', fig)
+    fig = fig + 1
 
-fig = plt.figure(2)
+fig = plt.figure(fig)
 
 pl_series = np.array(pl_series)
 x = [float(p) for p in pl_series[:, 1]]

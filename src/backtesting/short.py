@@ -38,12 +38,12 @@ def backtest(start, end, backtest_func, market_client):
             symbol = m['symbol']
             p = m['params']
 
-            look_back = p['runnup']['look_back']
-            if p['runnup']['look_back'] != p['dip']['look_back']:
-                print("Look back not matching might get weird results")
+            day_diff = p['runnup']['day_diff']
+            if p['runnup']['day_diff'] != p['dip']['day_diff'] or p['runnup']['look_back'] != p['dip']['look_back']:
+                print("Params dont match might get slightly weird results")
 
-            print(f'Predicting start {p_end - timedelta(days=look_back)}-{p_st}-{p_end}')
-            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=look_back), p_end, market_client, p['runnup']['time_window'], p['runnup']['time_unit'])
+            print(f'Predicting start {p_end - timedelta(days=day_diff)}-{p_st}-{p_end}')
+            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=day_diff), p_end, market_client, p['runnup']['time_window'], p['runnup']['time_unit'])
 
             dip_pred_bars = features.feature_engineer_df(pred_bars.copy(), p['dip']['look_back'])
             dip_pred_bars = features.drop_prices(dip_pred_bars, p['dip']['look_back'])

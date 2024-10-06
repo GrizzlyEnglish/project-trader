@@ -1,13 +1,16 @@
 import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from src.helpers import load_parameters, class_model
+from src.helpers import load_parameters, class_model, get_data
 from src.classifiers import overnight
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.timeframe import TimeFrameUnit
 from dotenv import load_dotenv
 from datetime import datetime
 
 import os
+import numpy as np
+from scipy.optimize import newton
 
 load_dotenv()
 
@@ -18,11 +21,11 @@ sleep_time = os.getenv("SLEEP_TIME")
 
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-params = load_parameters.load_symbol_parameters('../params.json')
+bars = get_data.get_bars('SPY', datetime(2023, 10, 6), datetime(2024, 10, 6), market_client, 1, TimeFrameUnit.Day)
 
-models = []
+bars['returns'] = bars['close'].pct_change()
 
-for p in params:
-    symbol = p['symbol']
-    print('OVERNIGHT Gen')
-    overnight_model_info = class_model.generate_model(symbol, p['overnight'], market_client, overnight.classification, datetime.now())
+daily_volatility = bars['returns'].std()
+annual_volatility = daily_volatility * np.sqrt(252)
+
+print(annual_volatility)

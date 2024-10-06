@@ -1,9 +1,7 @@
 from src.helpers import options, tracker
-from src.strats import enter
+from src.strats import enter, exit
 
-def check_for_entry(signal, close_price, call_var, put_var, index, strike_price, symbol, look_forward):
-    global vol, r, dte, purchased_series
-
+def check_for_entry(signal, close_price, call_var, put_var, index, strike_price, symbol, look_forward, dte, r, vol, purchased_series):
     if signal['signal'] == 'Hold':
         return
 
@@ -34,9 +32,7 @@ def check_for_entry(signal, close_price, call_var, put_var, index, strike_price,
 
     return None
 
-def check_for_exit(symbol, close_price, index, open_contract, signal):
-    global vol, r, sell_series
-
+def check_for_exit(symbol, close_price, index, open_contract, signal, r, vol, sell_series):
     hst = tracker.get(symbol)
     contract_price = options.get_option_price(open_contract['type'], close_price, open_contract['strike_price'], open_contract['dte'], r, vol)
     mv = contract_price*100

@@ -38,9 +38,9 @@ def backtest(start, end, backtest_func, market_client):
             symbol = m['symbol']
             p = m['params']
 
-            look_back = p['overnight']['look_back']
-            print(f'Predicting start {p_end - timedelta(days=look_back)}-{p_st}-{p_end}')
-            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=look_back), p_end, market_client, p['overnight']['time_window'], p['overnight']['time_unit'])
+            day_diff = p['overnight']['day_diff']
+            print(f'Predicting start {p_end - timedelta(days=day_diff)}-{p_st}-{p_end}')
+            pred_bars = get_data.get_bars(symbol, p_end - timedelta(days=day_diff), p_end, market_client, p['overnight']['time_window'], p['overnight']['time_unit'])
 
             pred_bars = features.feature_engineer_df(pred_bars.copy(), p['overnight']['look_back'])
             pred_bars = features.drop_prices(pred_bars, p['overnight']['look_back'])

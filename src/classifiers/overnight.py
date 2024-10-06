@@ -3,9 +3,9 @@ import pandas as pd
 def classification(bars, look_forward):
     def day_label(row):
         open_diff = row['daydiff_open']
-        if open_diff < down_diff:
+        if open_diff < down_diff:# and row['close_trend'] < 0 and row['nvi_trend'] > 0:
             return 'sell'
-        elif open_diff > up_diff:
+        elif open_diff > up_diff:# and row['close_trend'] > 0 and row['pvi_trend'] > 0:
             return 'buy'
         else:
             return 'hold'
@@ -23,8 +23,8 @@ def classification(bars, look_forward):
 
     up_b = bars[bars['daydiff_open'] > 0]['daydiff_open']
     down_b = bars[bars['daydiff_open'] < 0]['daydiff_open']
-    up_diff = up_b.mean()# - up_b.std()
-    down_diff = down_b.mean()# + down_b.std()
+    up_diff = up_b.mean() #+ up_b.std()
+    down_diff = down_b.mean() #- down_b.std()
 
     print(f'up diff {up_diff} down diff {down_diff}')
         
