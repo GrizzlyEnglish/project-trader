@@ -1,6 +1,6 @@
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from src.strats import overnight_enter, short_enter, exit
+from src.strats import short_enter, exit
 from src.helpers import get_data, load_parameters
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
@@ -34,10 +34,6 @@ def is_within_open_market(offset=False):
     end_time = now.replace(hour=15, minute=0, second=0, microsecond=0)
     return start_time <= now <= end_time
 
-# Tasks
-def check_overnight_enter():
-    print("TODO: Return to this")
-
 def dont_hold_overnight():
     print("Close all currently open positions, so we dont hold overnight")
     positions = get_data.get_positions(trading_client)
@@ -70,18 +66,14 @@ def run_threaded(job_func, *args):
 schedule.every().day.at("09:00").do(generate_short_models)
 
 schedule.every().day.at("15:00").do(dont_hold_overnight)
-schedule.every().day.at("15:30").do(check_overnight_enter)
 
-schedule.every(3).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market(True) else None)
+schedule.every(2).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
 # Immediately run these
-if datetime.now().hour > 9:
-    generate_short_models()
-
 if is_within_open_market():
+    generate_short_models()
     check_exit()
-if is_within_open_market(True):
     check_short_enter()
 
 # Schedule after

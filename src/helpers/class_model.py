@@ -29,6 +29,8 @@ def generate_model(symbol, info, market_client, classification, end):
     look_forward = info['look_forward']
     time_unit = info['time_unit']
 
+    print(f'{time_window},{day_diff},{look_back},{look_forward}')
+
     m_st = end - timedelta(days=day_diff- 1)
     m_end = end
     print(f'Model start {m_st} model end {m_end}')
@@ -73,7 +75,7 @@ def get_prediction_bars(symbol, model_info, market_client):
     time_unit = model_info['time_unit']
     day_diff = model_info['day_diff']
 
-    end = datetime.now()
+    end = datetime.now() + timedelta(days=1)
     start = end - timedelta(days=day_diff)
 
     bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)

@@ -39,7 +39,7 @@ def backtest(start, end, backtest_func, market_client):
             p = m['params']
 
             day_diff = p['runnup']['day_diff']
-            if p['runnup']['day_diff'] != p['dip']['day_diff'] or p['runnup']['look_back'] != p['dip']['look_back']:
+            if p['runnup']['day_diff'] != p['dip']['day_diff']:
                 print("Params dont match might get slightly weird results")
 
             print(f'Predicting start {p_end - timedelta(days=day_diff)}-{p_st}-{p_end}')

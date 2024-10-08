@@ -2,7 +2,7 @@ import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from src.helpers import load_parameters, class_model, get_data
-from src.classifiers import overnight
+from src.classifiers import close 
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.timeframe import TimeFrameUnit
 from dotenv import load_dotenv
@@ -21,11 +21,12 @@ sleep_time = os.getenv("SLEEP_TIME")
 
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-bars = get_data.get_bars('SPY', datetime(2023, 10, 6), datetime(2024, 10, 6), market_client, 1, TimeFrameUnit.Day)
+p = {
+    'day_diff': 365,
+    'time_window': 1,
+    'look_back': 5,
+    'look_forward': 1,
+    'time_unit': 'Hour'
+}
 
-bars['returns'] = bars['close'].pct_change()
-
-daily_volatility = bars['returns'].std()
-annual_volatility = daily_volatility * np.sqrt(252)
-
-print(annual_volatility)
+close_model_info = class_model.generate_model('SPY', p, market_client, close.classification, datetime.now())

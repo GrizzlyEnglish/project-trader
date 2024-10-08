@@ -26,12 +26,13 @@ classification = dip.classification
 
 save = False
 
-assets = ['QQQ']
+assets = ['INTC']
 times = [1]
 days = [30]
-look_back_range = range(10, 20)
-look_forward_range = range(10, 20)
-start = datetime(2024, 9, 1, 12, 30)
+time_unit = TimeFrameUnit.Minute
+look_back_range = range(40, 50)
+look_forward_range = range(45, 50)
+start = datetime.now()
 
 for symbol in assets:
     results = []
@@ -41,7 +42,7 @@ for symbol in assets:
         for daydiff in days:
             s = start - timedelta(days=daydiff)
             e = start + timedelta(days=1)
-            full_bars = get_data.get_bars(symbol, s, e, market_client, window, TimeFrameUnit.Minute)
+            full_bars = get_data.get_bars(symbol, s, e, market_client, window, time_unit)
 
             for back in look_back_range:
                 for forward in look_forward_range:
@@ -51,19 +52,13 @@ for symbol in assets:
 
                     print(f'{window},{daydiff},{look_back},{look_forward}')
 
-                    if window == 1 and daydiff > 30:
-                        continue
-
                     acc = 0
 
                     bars = features.feature_engineer_df(full_bars.copy(), look_back)
                     bars, call_var, put_var = classification(bars, look_forward)
                     bars = features.drop_prices(bars, look_back)
 
-                    bars = class_model.sample_bars(bars)
-
-                    buy_count = len(bars[bars.label == 'buy'])
-                    sell_count = len(bars[bars.label == 'sell'])
+                    bars, buy_count, sell_count = class_model.sample_bars(bars)
 
                     try:
                         model,acc = class_model.create_model(symbol, bars)

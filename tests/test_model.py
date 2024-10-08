@@ -1,4 +1,4 @@
-from src.classifiers import overnight, runnup, dip
+from src.classifiers import runnup, dip
 from src.helpers import load_parameters
 from src.helpers import class_model
 from datetime import datetime, timedelta
@@ -51,25 +51,6 @@ class TestModel(unittest.TestCase):
             assert model_info['buys'] >= 100
             assert model_info['sells'] >= 100
     
-    def test_overnight_classification_model_generation(self):
-        for p in self.params:
-            symbol = p['symbol']
-            info = p['overnight']
-
-            timer_start = datetime.now()
-            model_info = class_model.generate_model(symbol, info, self.market_client, overnight.classification, self.start)
-
-            save_bars(model_info['bars'], 'overnight', symbol)
-
-            timer_end = datetime.now()
-
-            print(f'Took {symbol} {timer_end - timer_start}')
-
-            assert model_info['model'] != None
-            assert model_info['accuracy'] > .5
-            assert model_info['buys'] >= 10
-            assert model_info['sells'] >= 10
-
     def test_dip_classification_model_generation(self):
         for p in self.params:
             symbol = p['symbol']

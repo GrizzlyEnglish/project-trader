@@ -24,8 +24,8 @@ sleep_time = os.getenv("SLEEP_TIME")
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 
-start = datetime(2024, 10, 1, 12, 30)
-end = datetime(2024, 10, 7, 12, 30)
+start = datetime(2024, 9, 1, 12, 30)
+end = datetime(2024, 10, 9, 12, 30)
 
 close_series = {}
 purchased_series = {}
@@ -40,10 +40,9 @@ dte = 1
 open_contract = {}
 actions = 0
 correct_actions = 0
-held_overnight = 0
 
 def backtest_func(symbol, idx, row, signal, model_info):
-    global actions, correct_actions, open_contract, held_overnight
+    global actions, correct_actions, open_contract
 
     index = idx[1]
 
@@ -69,33 +68,21 @@ def backtest_func(symbol, idx, row, signal, model_info):
     strike_price = math.floor(close)
 
     if open_contract[symbol] == None:
-        con = strats.check_for_entry(signal, close, call_var, put_var, index, strike_price, symbol, model_info['params']['runnup']['look_forward'], dte, r, vol, purchased_series)
+        con = strats.check_for_entry(signal, close, call_var, put_var, index, strike_price, symbol, model_info['params']['runnup']['look_forward'], dte, r, vol)
         open_contract[symbol] = con
+        if con != None:
+            purchased_series[symbol].append(index)
     else:
-        #open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
         if open_contract[symbol]['dte'] <= 0.6:
             do_exit = True
             mv = open_contract[symbol]['prev_mv']
             reason = 'expired'
         else:
-            do_exit, mv, reason = strats.check_for_exit(symbol, close, index, open_contract[symbol], signal, r, vol, sell_series)
+            do_exit, mv, reason = strats.check_for_exit(symbol, close, index, open_contract[symbol], signal, r, vol)
             if mv > 0:
                 open_contract[symbol]['prev_mv'] = mv
             else:
                 print("why")
-        if index.hour == 19:
-            end = datetime(index.year, index.month, index.day, 20, 0)
-            pred_bars = get_data.get_bars(symbol, index.date() - timedelta(days=int(model_info['params']['overnight']['day_diff'])), end, market_client, model_info['params']['overnight']['time_window'], model_info['params']['overnight']['time_unit'])
-            pred_bars = features.feature_engineer_df(pred_bars, model_info['params']['overnight']['look_back'])
-            pred_bars = features.drop_prices(pred_bars, model_info['params']['overnight']['look_back'])
-            overnight_signal = class_model.predict(model_info['overnight']['model'], pred_bars.iloc[-1:])[0]
-
-            if overnight_signal == 'Hold' or (overnight_signal == 'Buy' and open_contract[symbol]['type'] == 'put') or (overnight_signal == 'Sell' and open_contract[symbol]['type'] == 'call'):
-                do_exit = True
-                reason = 'market close'
-            else:
-                held_overnight = held_overnight + 1
-                print("holding overnight")
         if do_exit:
             pl = mv - open_contract[symbol]['market_value']
             tel = {
@@ -114,6 +101,7 @@ def backtest_func(symbol, idx, row, signal, model_info):
                 'sold_for': reason,
                 'pl': pl
             }
+            sell_series[symbol].append(index)
             telemetry.append(tel)
             pl_series.append([tel['type'], (tel['sold_price'] - tel['bought_price'])])
             actions = actions + 1
@@ -135,10 +123,11 @@ def backtest_func(symbol, idx, row, signal, model_info):
 short.backtest(start, end, backtest_func, market_client)
 
 print(f'Accuracy {correct_actions/actions}')
-print(f'Held {held_overnight} contracts overnight')
 
 pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
 pd.DataFrame(data=option_telemetry).to_csv(f'../results/short_backtest_tel.csv', index=True)
+pd.DataFrame(data=purchased_series).to_csv(f'../results/short_backtest_purchases.csv', index=True)
+pd.DataFrame(data=sell_series).to_csv(f'../results/short_backtest_sells.csv', index=True)
 
 # Separate the data into x and y
 fig = 1

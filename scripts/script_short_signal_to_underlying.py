@@ -5,7 +5,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime
-from src.backtesting import short, chart, overnight
+from src.backtesting import short, chart
 
 import math
 import pandas as pd
@@ -67,8 +67,8 @@ def backtest_func(symbol, index, row, signals, model_info):
         elif r == 'Sell':
             r_put_signal[symbol].append([index[1]])
 
-start = datetime(2024, 8, 1, 12, 30)
-end = datetime(2024, 9, 17, 12, 30)
+start = datetime(2024, 10, 1, 12, 30)
+end = datetime(2024, 10, 9, 12, 30)
 
 short.backtest(start, end, backtest_func, market_client)
 

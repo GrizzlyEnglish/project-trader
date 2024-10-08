@@ -1,7 +1,7 @@
 from src.helpers import options, tracker
 from src.strats import enter, exit
 
-def check_for_entry(signal, close_price, call_var, put_var, index, strike_price, symbol, look_forward, dte, r, vol, purchased_series):
+def check_for_entry(signal, close_price, call_var, put_var, index, strike_price, symbol, look_forward, dte, r, vol):
     if signal['signal'] == 'Hold':
         return
 
@@ -16,7 +16,6 @@ def check_for_entry(signal, close_price, call_var, put_var, index, strike_price,
     if enter.check_contract_entry(index, contract_type, strike_price, contract_price, contract_price, vol, r, dte, close_price, expected_var, look_forward):
         print(f'Purchased {contract_type} at {contract_price} with underlying at {close_price} with r {r} and vol {vol}')
         mv = contract_price*100
-        purchased_series[symbol].append(index)
         stop_loss, secure_gains = options.determine_risk_reward(mv)
         return {
             'strike_price': strike_price,
@@ -32,7 +31,7 @@ def check_for_entry(signal, close_price, call_var, put_var, index, strike_price,
 
     return None
 
-def check_for_exit(symbol, close_price, index, open_contract, signal, r, vol, sell_series):
+def check_for_exit(symbol, close_price, index, open_contract, signal, r, vol):
     hst = tracker.get(symbol)
     contract_price = options.get_option_price(open_contract['type'], close_price, open_contract['strike_price'], open_contract['dte'], r, vol)
     mv = contract_price*100
@@ -41,7 +40,6 @@ def check_for_exit(symbol, close_price, index, open_contract, signal, r, vol, se
     if exit_contract:
         print(f'Sold {symbol} {open_contract["type"]} for profit of {contract_price - open_contract["price"]} underlying {close_price - open_contract["close"]} held for {len(hst)}')
         tracker.clear(symbol)
-        sell_series[symbol].append(index)
         return True, mv, reason
 
     tracker.track(symbol, 0, mv)
