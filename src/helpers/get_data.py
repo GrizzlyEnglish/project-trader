@@ -4,8 +4,16 @@ from datetime import datetime, timedelta
 from alpaca.trading.enums import OrderSide, AssetClass
 from alpaca.data.enums import Adjustment,DataFeed
 from alpaca.trading.requests import GetOrdersRequest
+from src.helpers import features
 
-def get_bars(symbol, start, end, market_client, timeframe=5, unit='Min'):
+def get_model_bars(symbol, market_client, start, end, time_window, classification, unit='Min'):
+    bars = get_bars(symbol, start, end, market_client, time_window, unit)
+    bars = features.feature_engineer_df(bars)
+    if classification != None:
+        bars = classification(bars)
+    return bars
+
+def get_bars(symbol, start, end, market_client, timeframe=1, unit='Min'):
     alp_unit = TimeFrameUnit.Minute
 
     if unit == 'Hour':
@@ -48,5 +56,5 @@ def get_positions(trading_client):
     return [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]
 
 def get_stock_price(symbol, market_client):
-    snapshot = market_client.get_stock_snapshot(StockSnapshotRequest(symbol))
-    return snapshot['close']
+    snapshot = market_client.get_stock_snapshot(StockSnapshotRequest(symbol_or_symbols=symbol))
+    return snapshot[symbol].latest_quote.bid_price

@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def chart_with_signals(data, call_signal, put_signal, title, x_label, y_label, fig_number):
-    x = data[:, 0]
     y = data[:, 1]
+    x = data[:, 0]
 
     f1 = plt.figure(fig_number)
     # Create a plot

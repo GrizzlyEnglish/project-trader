@@ -2,7 +2,7 @@ from alpaca.trading.enums import AssetStatus
 from alpaca.trading.requests import GetOptionContractsRequest
 from alpaca.data.requests import StockLatestTradeRequest, OptionSnapshotRequest
 from alpaca.data.historical.option import OptionBarsRequest
-from alpaca.data.timeframe import TimeFrame
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from datetime import datetime, timedelta
 from src.helpers import features
 
@@ -25,8 +25,8 @@ def get_contract_slope(contract, bar_amt, option_client):
     
     return 0
 
-def get_bars(contract, option_client):
-    bars = option_client.get_option_bars(OptionBarsRequest(symbol_or_symbols=contract, timeframe=TimeFrame.Minute))
+def get_bars(contract, start, end, option_client):
+    bars = option_client.get_option_bars(OptionBarsRequest(symbol_or_symbols=contract, start=start, end=end, timeframe=TimeFrame(1, TimeFrameUnit.Minute)))
     return bars.df
 
 def get_option_snap_shot(contract, option_client):
@@ -88,8 +88,8 @@ def get_option_buying_power(option_contract, buying_power, is_put):
         close_price = float(o.close_price)
 
     option_price = close_price * size
-
-    return min(math.floor(buying_power / option_price), 2)
+    #TODO: If this starts working, will need to update this to be more deterministic
+    return max(math.floor(buying_power / option_price), 5)
 
 def determine_risk_reward(cost):
     _risk_amt = float(os.getenv("RISK_AMT"))

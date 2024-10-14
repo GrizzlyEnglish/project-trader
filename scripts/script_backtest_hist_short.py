@@ -3,6 +3,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, time, timezone, timedelta
 
@@ -23,9 +24,10 @@ sleep_time = os.getenv("SLEEP_TIME")
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
+option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-start = datetime(2024, 1, 1, 12, 30)
-end = datetime(2024, 10, 1, 12, 30)
+end = datetime(2024, 10, 12, 12, 30)
+start = end - timedelta(days=7)
 
 close_series = {}
 purchased_series = {}
@@ -39,6 +41,15 @@ dte = 3
 open_contract = {}
 actions = 0
 correct_actions = 0
+
+o_tel = []
+
+def create_option_symbol(underlying, dte, call_put, strike):
+    strike_formatted = f"{strike:08.3f}".replace('.', '').rjust(8, '0')
+    date = dte.strftime("%y%m%d")
+    option_symbol = f"{underlying}{date}{call_put}{strike_formatted}"
+    
+    return option_symbol
 
 def backtest_func(symbol, idx, row, signal, enter, model):
     global actions, correct_actions, open_contract
@@ -64,31 +75,43 @@ def backtest_func(symbol, idx, row, signal, enter, model):
     strike_price = math.floor(close)
 
     if open_contract[symbol] == None and enter:
-        contract_price = 0
-        contract_type = ''
+        type = 'P'
+        contract_type = 'put'
         if signal == 'Buy':
+            type = 'C'
             contract_type = 'call'
-            contract_price = options.get_option_price(contract_type, close, close + 1, dte, r, vol)
-        elif signal == 'Sell':
-            contract_type = 'put'
-            contract_price = options.get_option_price(contract_type, close, close - 1, dte, r, vol)
+
+        contract_symbol = create_option_symbol(symbol, index, type, strike_price)
+
+        bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
+
+        if bars.empty:
+            return
+
+        contract_price = bars['close'].iloc[-1]
 
         if contract_price > 0:
             open_contract[symbol] = {
+                'contract_symbol': contract_symbol,
+                'contract_type': contract_type,
                 'strike_price': strike_price,
                 'close': close,
-                'type': contract_type,
-                'contract_type': contract_type,
                 'price': contract_price,
                 'market_value': contract_price * 100,
                 'dte': dte,
-                'bought_at': index
+                'bought_at': index,
+                'date_of': index.date()
             }
             purchased_series[symbol].append(index)
-    else:
+    elif open_contract[symbol] != None:
         open_contract[symbol]['dte'] = open_contract[symbol]['dte'] - 0.003
         held_for = index - open_contract[symbol]['bought_at']
-        mv = options.get_option_price(open_contract[symbol]['contract_type'], close, open_contract[symbol]['strike_price'], open_contract[symbol]['dte'], r, vol) * 100
+
+        bars = options.get_bars(open_contract[symbol]['contract_symbol'], index - timedelta(hours=1), index, option_client)
+        mv = 0
+        if not bars.empty:
+            mv = bars['close'].iloc[-1] * 100
+
         pl = mv - open_contract[symbol]['market_value']
         pld = features.get_percentage_diff(open_contract[symbol]['market_value'], mv)
 
@@ -100,14 +123,23 @@ def backtest_func(symbol, idx, row, signal, enter, model):
         if index.hour == 19:
             reason = 'market close'
 
-        if held_for >= timedelta(minutes=15) and pld < 0:
-            reason = 'too long' 
+        #if held_for >= timedelta(minutes=15) and pld < 0:
+            #reason = 'too long' 
+
+        if held_for >= timedelta(minutes=15) and not bars.empty:
+            o_tel.append({
+                'symbol': open_contract[symbol]['contract_symbol'],
+                'bar_close': bars['close'].iloc[-1]
+            })
 
         if pld >= 30:
             reason = 'secure gains'
 
         if pld <= -25:
             reason = 'stop loss'
+        
+        if index.date() > open_contract[symbol]['date_of']:
+            reason = 'expired'
 
         if reason != '':
             tel = {
@@ -115,12 +147,12 @@ def backtest_func(symbol, idx, row, signal, enter, model):
                 'strike_price': open_contract[symbol]['strike_price'],
                 'sold_close': close,
                 'bought_close': open_contract[symbol]['close'],
-                'type': open_contract[symbol]['type'],
+                'type': open_contract[symbol]['contract_type'],
                 'bought_price': open_contract[symbol]['market_value'],
                 'sold_price': mv,
                 'bought_at': open_contract[symbol]['bought_at'],
                 'sold_at': index,
-                'held_for': reason,
+                'held_for': open_contract[symbol]['bought_at'] - index,
                 'sold_for': reason,
                 'pl': pl
             }
@@ -138,8 +170,11 @@ short.backtest(start, end, backtest_func, market_client)
 print(f'Accuracy {correct_actions/actions}')
 
 pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
-pd.DataFrame(data=purchased_series).to_csv(f'../results/short_backtest_purchases.csv', index=True)
-pd.DataFrame(data=sell_series).to_csv(f'../results/short_backtest_sells.csv', index=True)
+pd.DataFrame(data=o_tel).to_csv(f'../results/option_telemetry.csv', index=True)
+
+for cs in symbols:
+    pd.DataFrame(data=purchased_series[cs]).to_csv(f'../results/{cs}_short_backtest_purchases.csv', index=True)
+    pd.DataFrame(data=sell_series[cs]).to_csv(f'../results/{cs}_short_backtest_sells.csv', index=True)
 
 # Separate the data into x and y
 fig = 1

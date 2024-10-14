@@ -1,21 +1,19 @@
-from sklearn.cluster import KMeans
-from stock_indicators import indicators, Quote, CandlePart
-from sklearn.preprocessing import MinMaxScaler
+from stock_indicators import indicators, Quote
+from scipy.signal import argrelextrema
 
 import numpy as np
-import math
-import os
 import pandas as pd
 
 small_window = 50
 large_window = 200
 length_KC = 20
 mult_KC = 1.5
+short_trend = 5
+long_trend = 30
 
 def get_hour(row):
     idx = row.name[1]
     return idx.hour
-
 
 def get_minutes(row):
     idx = row.name[1]
@@ -40,14 +38,14 @@ def get_date(row):
     idx = row.name[1]
     return idx.year * (idx.month + idx.day)
 
-def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
+def trending_arr(df, label, amt, name, prepend=False, postpend=False, reverse=True):
     arr = []
 
     if prepend:
         arr.append(df[label])
 
     for i in range(amt):
-        arr.append(df[f'{label}_{i}'])
+        arr.append(df[f'{label}_{i}_{name}'])
 
     if postpend:
         arr.append(df[label])
@@ -55,7 +53,19 @@ def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
     if reverse:
         arr.reverse()
 
-    return slope(arr)
+    return arr
+
+def trending(df, label, amt, name, prepend=False, postpend=False, reverse=True):
+    return slope(trending_arr(df, label, amt, name, prepend, postpend, reverse))
+
+def runnup(df, label, amt, name, prepend=False, postpend=False, reverse=True):
+    arr = trending_arr(df, label, amt, name, prepend, postpend, reverse)
+    arr = np.array(arr)
+    if np.all(arr[0] <= arr[1:]):
+        return 1
+    elif np.all(arr[0] >= arr[1:]):
+        return -1
+    return 0
 
 def slope(arr):
     if len(arr) <= 1:
@@ -65,7 +75,7 @@ def slope(arr):
     poly_coeffs[np.isnan(poly_coeffs)] = 0  # possible speed-up: insert zeros where needed
     return poly_coeffs[0, :]  # slope only
 
-def feature_engineer_df(df, look_back):
+def feature_engineer_df(df):
     bars_i = df.reset_index()
     quotes = [ 
         Quote(date, open, high, low, close, volume) 
@@ -107,7 +117,9 @@ def feature_engineer_df(df, look_back):
 
     df = smi(df, quotes)
 
-    df = trends(df, look_back)
+    df = trends(df, short_trend, 'short')
+
+    df = trends(df, long_trend, 'long')
 
     df = mfi(df, quotes)
 
@@ -115,32 +127,43 @@ def feature_engineer_df(df, look_back):
 
     df = squeeze(df)
 
-    return df
+    df = crossed(df, 'pvi', 1)
+    df = crossed(df, 'nvi', 1)
+    df = crossed(df, 'roc', 0)
+    df = crossed(df, 'macd', 0)
 
-def drop_prices(df, look_back):
-    for i in range(look_back):
-        df.pop(f'close_{i}')
-        df.pop(f'pvi_{i}')
-        df.pop(f'nvi_{i}')
-        df.pop(f'smi_{i}')
-        df.pop(f'roc_{i}')
-        df.pop(f'macd_{i}')
-        df.pop(f'histogram_{i}')
-        df.pop(f'percent_b_{i}')
+    df = dip(df, short_trend, 'short')
+    df = dip(df, long_trend, 'long')
 
     return df
 
-def trends(df, look_back):
-    col_names = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height']
+def dip(df, n, name):
+    df[f'min_{name}'] = df.iloc[argrelextrema(df.close.values, np.less_equal,
+                    order=n)[0]]['close']
+    df[f'max_{name}'] = df.iloc[argrelextrema(df.close.values, np.greater_equal,
+                    order=n)[0]]['close']
+    
+    df[f'min_{name}'] = df[f'min_{name}'].notna()
+    df[f'max_{name}'] = df[f'max_{name}'].notna()
+
+    return df
+
+def crossed(df, col, crossed_value):
+    df[f'{col}_cross_over'] = (df[col] >= crossed_value) & (df[col].shift() < crossed_value)
+    df[f'{col}_cross_below'] = (df[col] <= crossed_value) & (df[col].shift() > crossed_value)
+    return df
+
+def trends(df, look_back, name):
+    col_names = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height', 'upper_band', 'lower_band']
     for i in range(look_back):
         j = i + 1
         df2 = df[col_names]
-        df2 = df2.add_suffix(f'_{i}')
+        df2 = df2.add_suffix(f'_{i}_{name}')
         df2 = df2.shift(j)
         df = pd.concat([df, df2], axis=1)
 
     for col_name in col_names:
-        df[f'{col_name}_trend'] = trending(df, col_name, look_back, True, False)
+        df[f'{col_name}_{name}_trend'] = trending(df, col_name, look_back, name, True, False)
 
     return df
 

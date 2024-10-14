@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from src.strats import short_enter, exit
+from src.strats import short
 from src.helpers import get_data, load_parameters
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
@@ -44,16 +44,13 @@ def check_short_enter():
     global short_models
 
     print("Checking for entry to short positions")
-    try:
-        short_enter.enter_short(short_models, market_client, trading_client, option_client)
-    except Exception as e:
-        print(e)
+    short.enter(short_models, market_client, trading_client, option_client)
 
 def generate_short_models():
     global short_models
 
     print("Generating short models")
-    short_models = short_enter.generate_short_models(market_client, datetime.now())
+    short_models = short.generate_short_models(market_client, datetime.now() - timedelta(days=1))
 
 def check_exit():
     print("Checking for exits")
@@ -70,9 +67,10 @@ schedule.every().day.at("15:00").do(dont_hold_overnight)
 schedule.every(2).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
+generate_short_models()
+
 # Immediately run these
 if is_within_open_market():
-    generate_short_models()
     check_exit()
     check_short_enter()
 

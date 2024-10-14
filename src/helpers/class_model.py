@@ -22,19 +22,12 @@ def sample_bars(bars):
 
     return bars, buys, sells
 
-def generate_model(symbol, info, market_client, classification, end):
-    day_diff = info['day_diff']
-    time_window = int(info['time_window'])
-    look_back = info['look_back']
-    look_forward = info['look_forward']
-    time_unit = info['time_unit']
-
-    print(f'{time_window},{day_diff},{look_back},{look_forward}')
-
-    m_st = end - timedelta(days=day_diff- 1)
+def generate_model(symbol, amount_days, market_client, classification, end, time_window=1, time_unit='Min'):
+    m_st = end - timedelta(days=amount_days-1)
     m_end = end
-    print(f'Model start {m_st} model end {m_end}')
-    bars, call_var, put_var = get_model_bars(symbol, market_client, m_st, m_end, time_window, classification, look_back, look_forward, time_unit)
+
+    bars = get_data.get_model_bars(symbol, market_client, m_st, m_end, time_window, classification, time_unit)
+    print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
 
     bars, buys, sells = sample_bars(bars)
 
@@ -48,8 +41,6 @@ def generate_model(symbol, info, market_client, classification, end):
         'accuracy': accuracy,
         'buys': buys,
         'sells': sells,
-        'call_variance': call_var,
-        'put_variance': put_var
     }
 
 def label_to_int(row):
@@ -62,29 +53,7 @@ def int_to_label(row):
     elif row == 1: return 'Sell'
     elif row == 2: return 'Hold'
 
-def get_model_bars(symbol, market_client, start, end, time_window, classification, look_back, look_forward, time_unit):
-    bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)
-    bars = features.feature_engineer_df(bars, look_back)
-    bars, call_var, put_var = classification(bars, look_forward)
-    bars = features.drop_prices(bars, look_back)
-    return bars, call_var, put_var
-
-def get_prediction_bars(symbol, model_info, market_client):
-    time_window = int(model_info['time_window'])
-    look_back = model_info['look_back']
-    time_unit = model_info['time_unit']
-    day_diff = model_info['day_diff']
-
-    end = datetime.now() + timedelta(days=1)
-    start = end - timedelta(days=day_diff)
-
-    bars = get_data.get_bars(symbol, start, end, market_client, time_window, time_unit)
-    bars = features.feature_engineer_df(bars, look_back)
-    bars = features.drop_prices(bars, look_back)
-
-    return bars
-
-def predict(model, bars):
+def classify(model, bars):
     pred = model.predict(bars)
     pred = [int_to_label(p) for p in pred]
     return pred

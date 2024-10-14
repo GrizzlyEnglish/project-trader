@@ -1,12 +1,14 @@
 import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from src.helpers import load_parameters, class_model, get_data
-from src.classifiers import close 
+from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.data.timeframe import TimeFrameUnit
+from alpaca.data.historical.option import OptionHistoricalDataClient, OptionTradesRequest, OptionBarsRequest
+from alpaca.data.timeframe import TimeFrameUnit, TimeFrame
 from dotenv import load_dotenv
-from datetime import datetime
+from src.helpers import class_model
+from src.classifiers import short
+from datetime import datetime, timedelta
 
 import os
 import numpy as np
@@ -19,14 +21,11 @@ api_secret = os.getenv("API_SECRET")
 paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
 
+trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
+option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-p = {
-    'day_diff': 365,
-    'time_window': 1,
-    'look_back': 5,
-    'look_forward': 1,
-    'time_unit': 'Hour'
-}
+#class_model.generate_model('QQQ', 60, market_client, short.classification, datetime(2024, 7, 15, 12, 30))
 
-close_model_info = class_model.generate_model('SPY', p, market_client, close.classification, datetime.now())
+odf = option_client.get_option_bars(OptionBarsRequest(symbol_or_symbols='QQQ241014C00498000', start=datetime.now() - timedelta(days=40), end=datetime.now(),timeframe=TimeFrame(1, TimeFrameUnit.Minute))).df
+print(odf)
