@@ -12,6 +12,9 @@ import numpy as np
 import scipy.optimize as opt
 import QuantLib as ql 
 
+def get_underlying_symbol(option_symbol):
+    return ''.join([char for char in option_symbol if not char.isdigit()]).rstrip('CP')
+
 def get_contract_slope(contract, bar_amt, option_client):
     bars = get_bars(contract, option_client)
     close_slope = 0
@@ -89,7 +92,7 @@ def get_option_buying_power(option_contract, buying_power, is_put):
 
     option_price = close_price * size
     #TODO: If this starts working, will need to update this to be more deterministic
-    return max(math.floor(buying_power / option_price), 5)
+    return min(math.floor(buying_power / option_price), 5)
 
 def determine_risk_reward(cost):
     _risk_amt = float(os.getenv("RISK_AMT"))

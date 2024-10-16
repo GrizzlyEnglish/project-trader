@@ -23,6 +23,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 short_models = []
+signals = []
 
 # Helpers
 def is_within_open_market(offset=False):
@@ -41,10 +42,10 @@ def dont_hold_overnight():
         trading_client.close_position(p.symbol)
 
 def check_short_enter():
-    global short_models
+    global short_models, signals
 
     print("Checking for entry to short positions")
-    short.enter(short_models, market_client, trading_client, option_client)
+    signals = short.enter(short_models, market_client, trading_client, option_client)
 
 def generate_short_models():
     global short_models
@@ -54,7 +55,7 @@ def generate_short_models():
 
 def check_exit():
     print("Checking for exits")
-    exit.exit(trading_client, option_client)
+    short.exit(signals, market_client, trading_client, option_client)
 
 def run_threaded(job_func, *args):
     with ThreadPoolExecutor(max_workers=5) as executor:
@@ -64,7 +65,7 @@ schedule.every().day.at("09:00").do(generate_short_models)
 
 schedule.every().day.at("15:00").do(dont_hold_overnight)
 
-schedule.every(2).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
+schedule.every(4).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
 generate_short_models()
