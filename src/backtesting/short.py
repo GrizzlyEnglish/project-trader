@@ -31,6 +31,8 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
         print(f'Generating model up to {m_end}')
         model_info = short.generate_short_models(market_client, m_end)
 
+        option_bars = {}
+
         for m in model_info:
             print(f'Classifying start {p_st} to {p_end}')
             pred_bars = get_data.get_bars(m['symbol'], p_st, p_end, market_client)
@@ -47,18 +49,32 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                 backtest_enter(m['symbol'], index, row, signal, enter, m)
             
                 for p in positions:
-                    bars = options.get_bars(p.symbol, index[1] - timedelta(hours=1), index[1], option_client)
+                    if p.symbol in option_bars:
+                        bars = option_bars[p.symbol]
+                    else:
+                        bars = options.get_bars(p.symbol, p_st, p_end, option_client)
+                        option_bars[p.symbol] = bars
+
                     mv = 0
                     if not bars.empty:
-                        mv = bars['close'].iloc[-1] * 100
+                        b = bars[bars.index.get_level_values('timestamp') <= index[1]]
+                        if b.empty:
+                            mv = bars.iloc[0]['close'] * 100
+                        else:
+                            mv = b.iloc[-1]['close'] * 100
 
                     pl = mv - p.p_market_value
                     pld = features.get_percentage_diff(p.p_market_value, mv, False) / 100
 
                     p.unrealized_plpc = f'{pld}'
-                    p.market_value = f'{mv}'
-
-                    exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
+                    
+                    if mv == 0:
+                        mv = float(p.market_value)
+                        exit = True
+                        reason = 'expired'
+                    else:
+                        p.market_value = f'{mv}'
+                        exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
 
                     backtest_exit(p, exit, reason, row['close'], mv, index[1], pl, m['symbol'])
 

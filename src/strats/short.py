@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import ast
 import os
+import math
 
 load_dotenv()
 
@@ -38,36 +39,53 @@ def do_enter(model, bars, symbol, positions):
     return signal != 'Hold' and not has_open_option, signal
 
 def do_exit(position, signals):
-    secure_gains = int(os.getenv('SECURE_GAINS'))
-    stop_loss = int(os.getenv('STOP_LOSS')) * -1
+    risk = int(os.getenv('RISK'))
+    reward_scale = int(os.getenv('REWARD_SCALE'))
+    runnup = int(os.getenv('RUNNUP'))
 
     pl = float(position.unrealized_plpc) * 100
+    cost = float(position.cost_basis)
+    qty = float(position.qty)
     market_value = float(position.market_value)
     symbol = options.get_underlying_symbol(position.symbol)
     signal = next((s for s in signals if s['symbol'] == symbol), None)
     hst = tracker.get(position.symbol)
 
-    print(f'{position.symbol} P/L % {pl} stop loss of {stop_loss} and secure gains of {secure_gains} current cost {market_value}')
+    # Determine the actual amount we are risking, and how much to gain
+    risk = min(cost, risk) * qty
+    reward = risk * reward_scale
+
+    secure_gains = cost + reward
+    secure_limit = cost + math.ceil(reward/2)
+    stop_loss = cost - risk
+
+    print(f'{position.symbol} P/L % {pl} stop loss of {risk}/{stop_loss} and secure gains of {reward}/{secure_gains} current: {cost}/{market_value}')
 
     if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
         # Hold it we are signaling
         return False, ''
+    
+    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and market_value < 0:
+        return True, 'held too long'
 
-    if pl < secure_gains and not hst.empty and (hst['p/l'] > secure_gains).any():
+    if market_value > secure_gains:
         return True, 'secure gains' 
     
-    if pl <= stop_loss:
+    if market_value <= stop_loss:
         return True, 'stop loss'
     
     if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
         return True, 'reversal'
+
+    if market_value <= secure_limit and not hst.empty and (hst['market_value'] > secure_limit).any():
+        return True, 'secure limit' 
     
     #TODO: Determine how to sell when spook'd, and check for reversal
-    if pl >= secure_gains and len(hst) > 6:
+    if market_value >= secure_limit and len(hst) > 6:
         last_slope = features.slope(hst.iloc[-3:]['market_value'])[0]
         last_two_slope = features.slope(hst.iloc[-6:-3]['market_value'])[0]
         if last_slope < last_two_slope:
-            return True, 'secure gains'
+            return True, 'secure limit'
 
     tracker.track(position.symbol, pl, market_value)
 

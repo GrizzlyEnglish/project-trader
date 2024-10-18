@@ -25,4 +25,4 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-class_model.generate_model('QQQ', 60, market_client, short.classification, datetime(2024, 7, 15, 12, 30))
+class_model.generate_model('NDX', 60, market_client, short.classification, datetime(2024, 7, 15, 12, 30))

@@ -29,7 +29,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 10, 12, 12, 30)
+end = datetime(2024, 10, 18, 12, 30)
 start = end - timedelta(days=7)
 
 close_series = {}
@@ -40,7 +40,7 @@ telemetry = []
 positions = []
 actions = 0
 correct_actions = 0
-total = 0
+total = {}
 
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 
@@ -48,6 +48,13 @@ for s in symbols:
     close_series[s] = []
     purchased_series[s] = []
     sell_series[s] = []
+    total[s] = 0
+
+def next_friday(date):
+    days_until_friday = (4 - date.weekday() + 7) % 7
+    days_until_friday = 7 if days_until_friday == 0 else days_until_friday
+
+    return date + timedelta(days=days_until_friday)
 
 def create_option_symbol(underlying, dte, call_put, strike):
     strike_formatted = f"{strike:08.3f}".replace('.', '').rjust(8, '0')
@@ -79,7 +86,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
             type = 'C'
             contract_type = 'call'
 
-        contract_symbol = create_option_symbol(symbol, index, type, strike_price)
+        contract_symbol = create_option_symbol(symbol, next_friday(index), type, strike_price)
 
         bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
 
@@ -98,6 +105,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
                 'strike_price': strike_price,
                 'close': close,
                 'price': contract_price,
+                'cost_basis': contract_price * 100,
                 'p_market_value': contract_price * 100,
                 'bought_at': index,
                 'date_of': index.date()
@@ -132,14 +140,19 @@ def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
         actions = actions + 1
         if pl > 0 or mv == 0:
             correct_actions = correct_actions + 1
-        total = total + (mv - p.p_market_value)
+        total[symbol] = total[symbol] + (mv - p.p_market_value)
         positions.remove(p)
         tracker.clear(p.symbol)
 
 
 backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions)
 
-print(f'Accuracy {correct_actions/actions} total {total}')
+full_total = 0
+for cs in symbols:
+    full_total = full_total + total[cs]
+    print(f'{cs} total {total[cs]}')
+
+print(f'Accuracy {correct_actions/actions} total {full_total}')
 
 pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
 
