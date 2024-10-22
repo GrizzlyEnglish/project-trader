@@ -77,15 +77,15 @@ def do_exit(position, signals):
     if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
         return True, 'reversal'
 
-    if market_value <= secure_limit and not hst.empty and (hst['market_value'] > secure_limit).any():
-        return True, 'secure limit' 
+    #if market_value <= secure_limit and not hst.empty and (hst['market_value'] > secure_limit).any():
+        #return True, 'secure limit' 
     
     #TODO: Determine how to sell when spook'd, and check for reversal
-    if market_value >= secure_limit and len(hst) > 12:
-        last_slope = features.slope(hst.iloc[-6:]['market_value'])[0]
-        last_two_slope = features.slope(hst.iloc[-12:-6]['market_value'])[0]
-        if last_slope < 0 or last_slope < last_two_slope:
-            return True, 'secure limit'
+    if market_value >= secure_limit and len(hst) > 20:
+        last_slope = features.slope(hst.iloc[-10:]['market_value'])[0]
+        last_two_slope = features.slope(hst.iloc[-20:-10]['market_value'])[0]
+        if last_slope < 0 or last_slope < (last_two_slope/2):
+            return True, f'secure limit slope {last_slope}/{last_two_slope}'
 
     tracker.track(position.symbol, pl, market_value)
 

@@ -13,9 +13,9 @@ def classification(df):
 
         close_runnup = features.runnup(row, 'close', size, 'next', True, False, False)
 
-        if close_runnup == 1 and row['min_short'] or row['min_long'] and row['diff'] >= up_diff:
+        if close_runnup == 1 and row['min_short'] and row['diff'] >= up_diff:
             return 'buy'
-        elif close_runnup == -1 and row['max_short'] or row['max_long'] and row['diff'] <= down_diff:
+        elif close_runnup == -1 and row['max_short'] and row['diff'] <= down_diff:
             return 'sell'
         
         return 'hold'
@@ -26,8 +26,8 @@ def classification(df):
 
     df['diff'] = df[f'close_{size-1}_next'] - df['close']
 
-    up_diff = df[df['diff'] > 0]['diff'].mean() + df[df['diff'] > 0]['diff'].std()
-    down_diff = df[df['diff'] < 0]['diff'].mean() - df[df['diff'] > 0]['diff'].std()
+    up_diff = df[df['diff'] > 0]['diff'].mean()# + df[df['diff'] > 0]['diff'].std()
+    down_diff = df[df['diff'] < 0]['diff'].mean()# - df[df['diff'] > 0]['diff'].std()
 
     df['label'] = df.apply(label, axis=1)
 

@@ -8,8 +8,8 @@ small_window = 50
 large_window = 200
 length_KC = 20
 mult_KC = 1.5
-short_trend = 5
-long_trend = 30
+short_trend = 30
+long_trend = 60
 
 def get_hour(row):
     idx = row.name[1]
