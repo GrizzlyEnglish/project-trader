@@ -4,6 +4,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from datetime import timedelta
 from src.strats import short
 from src.helpers import get_data, class_model, features, options
+from datetime import datetime
 
 import math
 
@@ -52,27 +53,38 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                     if p.symbol in option_bars:
                         bars = option_bars[p.symbol]
                     else:
-                        bars = options.get_bars(p.symbol, p_st, p_end, option_client)
+                        oend = p_end
+                        if oend >= datetime.now():
+                            oend = datetime.now()
+                        bars = options.get_bars(p.symbol, p_st, oend, option_client)
                         option_bars[p.symbol] = bars
 
-                    mv = 0
-                    if not bars.empty:
+                    if bars.empty:
+                        print('No option data')
+                        continue
+
+                    dte = options.get_option_expiration_date(p.symbol)
+
+                    # Option expired, sell it
+                    if index[1].date() == dte.date() and index[1].hour > 18:
+                        mv = float(p.market_value)
+                        exit = True
+                        reason = 'expired'
+                    else:
                         b = bars[bars.index.get_level_values('timestamp') <= index[1]]
                         if b.empty:
                             mv = bars.iloc[0]['close'] * 100
                         else:
                             mv = b.iloc[-1]['close'] * 100
 
-                    pl = mv - p.p_market_value
-                    pld = features.get_percentage_diff(p.p_market_value, mv, False) / 100
+                        qty = float(p.qty)
+                        mv = mv * qty
+                        pl = mv - p.cost_basis
+                        pld = features.get_percentage_diff(p.cost_basis, mv, False) / 100
+                        print(f'{p.symbol} pld {pld} at {index[1]}')
 
-                    p.unrealized_plpc = f'{pld}'
+                        p.unrealized_plpc = f'{pld}'
                     
-                    if mv == 0:
-                        mv = float(p.market_value)
-                        exit = True
-                        reason = 'expired'
-                    else:
                         p.market_value = f'{mv}'
                         exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
 

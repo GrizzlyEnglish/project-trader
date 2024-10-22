@@ -29,8 +29,8 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 10, 18, 12, 30)
-start = end - timedelta(days=7)
+end = datetime(2024, 10, 22, 12, 30)
+start = end - timedelta(days=1)
 
 close_series = {}
 purchased_series = {}
@@ -41,6 +41,7 @@ positions = []
 actions = 0
 correct_actions = 0
 total = {}
+buy_qty = 5
 
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 
@@ -93,7 +94,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
         if bars.empty:
             return
 
-        contract_price = bars['close'].iloc[-1]
+        contract_price = bars['close'].iloc[-1] * buy_qty
 
         if contract_price > 0:
             class DotAccessibleDict:
@@ -106,8 +107,8 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
                 'close': close,
                 'price': contract_price,
                 'cost_basis': contract_price * 100,
-                'p_market_value': contract_price * 100,
                 'bought_at': index,
+                'qty': buy_qty,
                 'date_of': index.date()
             }))
             purchased_series[symbol].append(index)
@@ -126,11 +127,11 @@ def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
             'sold_close': close,
             'bought_close': p.close,
             'type': p.contract_type,
-            'bought_price': p.p_market_value,
+            'bought_price': p.cost_basis,
             'sold_price': mv,
             'bought_at': p.bought_at,
             'sold_at': index,
-            'held_for': p.bought_at - index,
+            'held_for': index - p.bought_at,
             'sold_for': reason,
             'pl': pl
         }
@@ -140,7 +141,7 @@ def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
         actions = actions + 1
         if pl > 0 or mv == 0:
             correct_actions = correct_actions + 1
-        total[symbol] = total[symbol] + (mv - p.p_market_value)
+        total[symbol] = total[symbol] + (mv - p.cost_basis)
         positions.remove(p)
         tracker.clear(p.symbol)
 

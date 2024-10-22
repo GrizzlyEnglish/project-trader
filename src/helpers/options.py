@@ -15,6 +15,13 @@ import QuantLib as ql
 def get_underlying_symbol(option_symbol):
     return ''.join([char for char in option_symbol if not char.isdigit()]).rstrip('CP')
 
+def get_option_expiration_date(option_symbol):
+    year = int('20' + option_symbol[len(option_symbol)-15:len(option_symbol)-13])
+    month = int(option_symbol[len(option_symbol)-13:len(option_symbol)-11])
+    day = int(option_symbol[len(option_symbol)-11:len(option_symbol)-9])
+    
+    return datetime(year, month, day)
+
 def get_contract_slope(contract, bar_amt, option_client):
     bars = get_bars(contract, option_client)
     close_slope = 0
