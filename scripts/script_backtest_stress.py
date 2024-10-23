@@ -30,26 +30,27 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 end = datetime(2024, 10, 22, 12, 30)
-start = end - timedelta(days=3)
+start = end - timedelta(days=1)
 
-close_series = {}
-purchased_series = {}
-sell_series = {}
-pl_series = []
-telemetry = []
 positions = []
-actions = 0
-correct_actions = 0
-total = {}
+full_actions = 0
+full_correct_actions = 0
 buy_qty = 5
 
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 
-for s in symbols:
-    close_series[s] = []
-    purchased_series[s] = []
-    sell_series[s] = []
-    total[s] = 0
+def next_friday(date):
+    days_until_friday = (4 - date.weekday() + 7) % 7
+    days_until_friday = 7 if days_until_friday == 0 else days_until_friday
+
+    return date + timedelta(days=days_until_friday)
+
+def create_option_symbol(underlying, dte, call_put, strike):
+    strike_formatted = f"{strike:08.3f}".replace('.', '').rjust(8, '0')
+    date = dte.strftime("%y%m%d")
+    option_symbol = f"{underlying}{date}{call_put}{strike_formatted}"
+    
+    return option_symbol
 
 def backtest_enter(symbol, idx, row, signal, enter, model):
     global actions, correct_actions
@@ -63,7 +64,6 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
         return
 
     close = row['close']
-    close_series[symbol].append([index, close])
 
     strike_price = math.floor(close)
 
@@ -74,14 +74,14 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
             type = 'C'
             contract_type = 'call'
 
-        contract_symbol = options.create_option_symbol(symbol, options.next_friday(index), type, strike_price)
+        contract_symbol = create_option_symbol(symbol, next_friday(index), type, strike_price)
 
         bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
 
         if bars.empty:
             return
 
-        contract_price = bars['close'].iloc[-1] * buy_qty
+        contract_price = bars['close'].iloc[-1]
 
         if contract_price > 0:
             class DotAccessibleDict:
@@ -93,17 +93,16 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
                 'strike_price': strike_price,
                 'close': close,
                 'price': contract_price,
-                'cost_basis': contract_price * 100,
+                'cost_basis': contract_price * buy_qty * 100,
                 'bought_at': index,
                 'qty': buy_qty,
                 'date_of': index.date()
             }))
-            purchased_series[symbol].append(index)
 
     # check for exits
 
 def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
-    global actions, telemetry, pl_series, sell_series, correct_actions, total
+    global actions, correct_actions, total
 
     if exit:
         print(f'Sold {symbol} for {reason}')
@@ -122,50 +121,33 @@ def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
             'sold_for': reason,
             'pl': pl
         }
-        sell_series[symbol].append(index)
-        telemetry.append(tel)
-        pl_series.append([tel['type'], (tel['sold_price'] - tel['bought_price'])])
         actions = actions + 1
         if pl > 0 or mv == 0:
             correct_actions = correct_actions + 1
-        total[symbol] = total[symbol] + (mv - p.cost_basis)
+        total = total + (mv - p.cost_basis)
         positions.remove(p)
         tracker.clear(p.symbol)
 
-
-backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions)
-
+accuracies = []
 full_total = 0
-for cs in symbols:
-    full_total = full_total + total[cs]
-    print(f'{cs} total {total[cs]}')
+for i in range(10):
+    actions = 0
+    correct_actions = 0
+    total = 0
 
-if actions > 0:
-    print(f'Accuracy {correct_actions/actions} total {full_total}')
+    backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions)
 
-pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
+    print(f'Accuracy for {i}: {correct_actions/actions}')
+    accuracies.append({
+        'index': i,
+        'correct': correct_actions,
+        'actions': actions,
+        'acccuracy': correct_actions/actions,
+        'pl': total
+    })
 
-# Separate the data into x and y
-fig = 1
-for cs in symbols:
-    c_series = np.array(close_series[cs])
-    ps = purchased_series[cs]
-    ss = sell_series[cs]
-    chart.chart_with_signals(c_series, ps, ss, f'Backtest {start}-{end}', 'Time', 'Close', fig)
-    fig = fig + 1
+    full_actions = full_actions + actions
+    full_correct_actions = full_correct_actions + correct_actions
+    full_total = full_total + total
 
-fig = plt.figure(fig)
-
-pl_series = np.array(pl_series)
-x = [float(p) for p in pl_series[:, 1]]
-y = pl_series[:, 0]
-categories = [f'{y[i]} {i+1}' for i in range(len(y))]
-
-plt.bar(categories, x, color=['orange' if 'call' in value else 'purple' for value in y])
-
-plt.xlabel('Option type')
-plt.ylabel('P/L')
-plt.title('Option backtest p/l')
-
-# Show the plot
-plt.show()
+pd.DataFrame(data=accuracies).to_csv(f'../results/backtest_stress.csv', index=True)

@@ -1,14 +1,12 @@
 import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime
 from src.backtesting import short, chart
 
-import math
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,6 +18,7 @@ paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
 
 market_client = StockHistoricalDataClient(api_key, api_secret)
+option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 close_prices = {}
 
@@ -27,25 +26,31 @@ call_signal = {}
 put_signal = {}
 
 symbols = []
+positions = []
 
-def backtest_func(symbol, index, row, signal, model):
+def backtest_enter(symbol, idx, row, signal, enter, model):
+    index = idx[1]
+
     if not (symbol in symbols):
         symbols.append(symbol)
         close_prices[symbol] = []
         call_signal[symbol] = []
         put_signal[symbol] = []
 
-    close_prices[symbol].append([index[1], row['close']])
+    close_prices[symbol].append([index, row['close']])
 
     if signal == 'Buy':
-        call_signal[symbol].append([index[1]])
+        call_signal[symbol].append([index])
     elif signal == 'Sell':
-        put_signal[symbol].append([index[1]])
+        put_signal[symbol].append([index])
 
 start = datetime(2024, 10, 8, 12, 30)
 end = datetime(2024, 10, 9, 12, 30)
 
-short.backtest(start, end, backtest_func, market_client)
+def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
+    return
+
+short.backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions)
 
 fig = 1
 for cs in symbols:

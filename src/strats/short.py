@@ -52,7 +52,7 @@ def do_exit(position, signals):
     hst = tracker.get(position.symbol)
 
     # Determine the actual amount we are risking, and how much to gain
-    risk = min(cost, risk) * qty
+    risk = min(cost, risk*qty)
     reward = risk * reward_scale
 
     secure_gains = cost + reward
@@ -65,7 +65,7 @@ def do_exit(position, signals):
         # Hold it we are signaling
         return False, ''
     
-    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and market_value < 0:
+    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and pl < 0:
         return True, 'held too long'
 
     if market_value > secure_gains:
@@ -108,14 +108,13 @@ def enter(models, market_client, trading_client, option_client):
         print(f'{m["symbol"]}: {b.index[0][1]} {signal}')
 
         if enter:
-            signals.append({
+            c = {
                 'symbol': m['symbol'],
                 'signal': signal,
-            })
+            }
+            signals.append(c)
+            enter_option.enter(c, b.iloc[0]['close'], trading_client, option_client)
 
-    for c in signals:
-        enter_option.enter(c, trading_client, market_client, option_client)
-    
     return signals
 
 def exit(signals, market_client, trading_client, option_client):

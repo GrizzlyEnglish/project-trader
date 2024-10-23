@@ -9,8 +9,19 @@ from src.helpers import features
 import os
 import math
 import numpy as np
-import scipy.optimize as opt
-import QuantLib as ql 
+
+def create_option_symbol(underlying, dte, call_put, strike):
+    strike_formatted = f"{math.floor(strike):08.3f}".replace('.', '').rjust(8, '0')
+    date = dte.strftime("%y%m%d")
+    option_symbol = f"{underlying}{date}{call_put}{strike_formatted}"
+    
+    return option_symbol
+
+def next_friday(date):
+    days_until_friday = (4 - date.weekday() + 7) % 7
+    days_until_friday = 7 if days_until_friday == 0 else days_until_friday
+
+    return date + timedelta(days=days_until_friday)
 
 def get_underlying_symbol(option_symbol):
     return ''.join([char for char in option_symbol if not char.isdigit()]).rstrip('CP')
@@ -88,71 +99,8 @@ def get_option_puts(symbol, market_client, trading_client):
 
     return contracts
 
-def get_option_buying_power(option_contract, buying_power, is_put):
-    o = option_contract
+def get_option_buying_power(ask_price, buying_power):
+    amt = int(os.getenv('BUY_AMOUNT'))
 
-    size = float(o.size)
-    if o.close_price == None:
-        return None
-    else:
-        close_price = float(o.close_price)
-
-    option_price = close_price * size
-    #TODO: If this starts working, will need to update this to be more deterministic
-    return min(math.floor(buying_power / option_price), 5)
-
-def determine_risk_reward(cost):
-    _risk_amt = float(os.getenv("RISK_AMT"))
-    _reward_factor = int(os.getenv("REWARD_FACTOR"))
-
-    risk = min(cost * _risk_amt, 100)
-    #risk = cost * _risk_amt
-    stop_loss = cost - risk
-    secure_gains = cost + (risk * _reward_factor)
-
-    return stop_loss, secure_gains
-
-def get_option_price(option_type, underlying_price, strike_price, dte, risk_free_rate, volatility):
-    m = datetime.now() + timedelta(days=dte)
-    maturity_date = ql.Date(m.strftime('%d-%m-%Y'), '%d-%m-%Y')
-    calculation_date = ql.Date.todaysDate()
-    spot_price = underlying_price 
-    dividend_rate =  0
-
-    if option_type == 'call':
-        option_type = ql.Option.Call
-    else:
-        option_type = ql.Option.Put
-
-    day_count = ql.Actual365Fixed()
-    calendar = ql.UnitedStates(ql.UnitedStates.NYSE)
-
-    ql.Settings.instance().evaluationDate = calculation_date
-
-    payoff = ql.PlainVanillaPayoff(option_type, strike_price)
-    settlement = calculation_date
-
-    am_exercise = ql.AmericanExercise(settlement, maturity_date)
-    american_option = ql.VanillaOption(payoff, am_exercise)
-
-    spot_handle = ql.QuoteHandle(
-        ql.SimpleQuote(spot_price)
-    )
-    flat_ts = ql.YieldTermStructureHandle(
-        ql.FlatForward(calculation_date, risk_free_rate, day_count)
-    )
-    dividend_yield = ql.YieldTermStructureHandle(
-        ql.FlatForward(calculation_date, dividend_rate, day_count)
-    )
-    flat_vol_ts = ql.BlackVolTermStructureHandle(
-        ql.BlackConstantVol(calculation_date, calendar, volatility, day_count)
-    )
-    bsm_process = ql.BlackScholesMertonProcess(spot_handle, 
-                                            dividend_yield, 
-                                            flat_ts, 
-                                            flat_vol_ts)
-
-    steps = 200
-    binomial_engine = ql.BinomialVanillaEngine(bsm_process, "crr", steps)
-    american_option.setPricingEngine(binomial_engine)
-    return american_option.NPV()
+    option_price = ask_price * 100
+    return min(math.floor(buying_power / option_price), amt)
