@@ -30,7 +30,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 end = datetime(2024, 10, 22, 12, 30)
-start = end - timedelta(days=3)
+start = end - timedelta(days=10)
 
 close_series = {}
 purchased_series = {}

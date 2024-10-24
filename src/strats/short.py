@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, tracker, options, features
 from src.strats import enter_option, exit_option
-from src.classifiers import short
+from src.classifiers import runnup, dip
 from datetime import datetime, timedelta
 
 import ast
@@ -18,19 +18,24 @@ def generate_short_models(market_client, end):
 
     for symbol in symbols:
         print(f'--- {symbol} ---')
-        model = class_model.generate_model(symbol, day_diff, market_client, short.classification, end)
+        rmodel = class_model.generate_model(symbol, day_diff, market_client, runnup.classification, end)
+        dmodel = class_model.generate_model(symbol, day_diff, market_client, dip.classification, end)
 
         models.append({
             'symbol': symbol,
-            'model': model['model']
+            'model': {
+                'runnup': rmodel['model'],
+                'dip': dmodel['model']
+            } 
         })
 
     return models
 
 def classify(model, bars):
-    c = class_model.classify(model, bars)
-    if all(x == c[0] for x in c):
-        return c[0]
+    runnup = class_model.classify(model['runnup'], bars)
+    dip = class_model.classify(model['dip'], bars)
+    if runnup[0] == dip[0]:
+        return runnup[0]
     return 'Hold'
 
 def do_enter(model, bars, symbol, positions):
