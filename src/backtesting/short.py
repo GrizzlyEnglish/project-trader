@@ -9,6 +9,8 @@ from datetime import datetime
 import math
 
 def backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions):
+    group = int(os.getenv('BAR_GROUP'))
+    day_diff = int(os.getenv('DAYDIFF'))
     # From the cut off date loop every day
     start_dt = start
     end_dt = end
@@ -36,14 +38,16 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
 
         for m in model_info:
             print(f'Classifying start {p_st} to {p_end}')
-            pred_bars = get_data.get_bars(m['symbol'], p_st, p_end, market_client)
+            pred_bars = get_data.get_bars(m['symbol'], p_st - timedelta(days=day_diff), p_end, market_client)
             pred_bars = features.feature_engineer_df(pred_bars)
 
             for index, row in pred_bars.iterrows():
-                if index[1].date() < p_st.date():
+                pb = pred_bars.loc[:index]
+
+                if index[1].date() < p_st.date() or len(pb) < 5:
                     continue
 
-                h = pred_bars.loc[:index][-1:]
+                h = pb[-group-1:]
 
                 enter, signal = short.do_enter(m['model'], h, m['symbol'], positions)
 
@@ -81,7 +85,6 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                         mv = mv * qty
                         pl = mv - p.cost_basis
                         pld = features.get_percentage_diff(p.cost_basis, mv, False) / 100
-                        print(f'{p.symbol} pld {pld} at {index[1]}')
 
                         p.unrealized_plpc = f'{pld}'
                     

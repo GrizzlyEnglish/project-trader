@@ -1,10 +1,11 @@
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from src.helpers import features, get_data
-from sklearn import metrics
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import RandomForestClassifier
-from datetime import datetime, timedelta
+from sklearn import metrics, preprocessing
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 
+import os
 import pandas as pd
 
 def sample_bars(bars):
@@ -22,12 +23,8 @@ def sample_bars(bars):
 
     return bars, buys, sells
 
-def generate_model(symbol, amount_days, market_client, classification, end, time_window=1, time_unit='Min'):
-    m_st = end - timedelta(days=amount_days-1)
-    m_end = end
-
-    bars = get_data.get_model_bars(symbol, market_client, m_st, m_end, time_window, classification, time_unit)
-    print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
+def generate_model(symbol, bars, classification):
+    bars = classification(bars)
 
     bars, buys, sells = sample_bars(bars)
 
@@ -54,19 +51,37 @@ def int_to_label(row):
     elif row == 2: return 'Hold'
 
 def classify(model, bars):
-    pred = model.predict(bars)
-    pred = [int_to_label(p) for p in pred]
-    return pred
+    predicitons = []
+    for key in model.keys():
+        pred = model[key].predict(bars)
+        pred = [int_to_label(p) for p in pred]
+        predicitons.append(pred[-1])
 
-def create_model(symbol, window_data):
-    df = window_data.copy().dropna()
+    return predicitons
+
+def group_bars(bars):
+    group = int(os.getenv('BAR_GROUP'))
+    new_bars = bars.copy()
+    for i in range(group):
+        j = i + 1
+        shifted_df = bars.shift(j)
+        shifted_df = shifted_df.add_suffix(f'___{i}')
+        new_bars = pd.concat([new_bars, shifted_df], axis=1, ignore_index=False)
+        del shifted_df
+    del bars
+    return new_bars.dropna()
+
+def preprocess_bars(bars):
+    min_max_scaler = preprocessing.MinMaxScaler()
+    return min_max_scaler.fit_transform(bars)
+
+def create_model(symbol, df):
+    df = df.dropna()
 
     if df.empty:
         print("%s has no data or not enough data to generate a model" % symbol)
         return None, 0
     
-    df = df.dropna()
- 
     target = df['label']
     feature = df.drop('label', axis=1)
 
@@ -75,8 +90,7 @@ def create_model(symbol, window_data):
                                                         shuffle = True, 
                                                         test_size=0.65, 
                                                         random_state=1)
-
-    model = RandomForestClassifier(max_depth=30, random_state=0)
+    model = RandomForestClassifier(max_depth=140, random_state=43)
     model.fit(x_train, y_train)
 
     y_pred = model.predict(x_test)

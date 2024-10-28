@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import ast
 import os
 import math
+import numpy as np
 
 load_dotenv()
 
@@ -16,10 +17,18 @@ def generate_short_models(market_client, end):
 
     models = []
 
+    m_st = end - timedelta(days=day_diff-1)
+    m_end = end
+
     for symbol in symbols:
         print(f'--- {symbol} ---')
-        rmodel = class_model.generate_model(symbol, day_diff, market_client, runnup.classification, end)
-        dmodel = class_model.generate_model(symbol, day_diff, market_client, dip.classification, end)
+
+        bars = get_data.get_bars(symbol, m_st, m_end, market_client, 1, 'Min')
+        bars = features.feature_engineer_df(bars)
+
+        print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
+        rmodel = class_model.generate_model(symbol, bars, runnup.classification)
+        dmodel = class_model.generate_model(symbol, bars, dip.classification)
 
         models.append({
             'symbol': symbol,
@@ -32,11 +41,12 @@ def generate_short_models(market_client, end):
     return models
 
 def classify(model, bars):
-    runnup = class_model.classify(model['runnup'], bars)
-    dip = class_model.classify(model['dip'], bars)
-    if runnup[0] == dip[0]:
-        return runnup[0]
-    return 'Hold'
+    predicitons = class_model.classify(model, bars)
+    predicitons = np.array(predicitons)
+    if np.all(predicitons == predicitons[0]):
+        return predicitons[0]
+    else:
+        return 'Hold'
 
 def do_enter(model, bars, symbol, positions):
     has_open_option = next((cp for cp in positions if symbol in cp.symbol), None) != None
@@ -53,7 +63,10 @@ def do_exit(position, signals):
     qty = float(position.qty)
     market_value = float(position.market_value)
     symbol = options.get_underlying_symbol(position.symbol)
-    signal = next((s for s in signals if s['symbol'] == symbol), None)
+    symbol_signal = next((s for s in signals if s['symbol'] == symbol), None)
+    signal = 'Hold'
+    if symbol_signal != None:
+        signal = symbol_signal['symbol']
     hst = tracker.get(position.symbol)
 
     # Determine the actual amount we are risking, and how much to gain
@@ -64,7 +77,7 @@ def do_exit(position, signals):
     secure_limit = cost + math.ceil(reward/2)
     stop_loss = cost - risk
 
-    print(f'{position.symbol} P/L % {pl} stop loss of {risk}/{stop_loss} and secure gains of {reward}/{secure_gains} current: {cost}/{market_value}')
+    print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} signal: {signal}')
 
     if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
         # Hold it we are signaling

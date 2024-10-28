@@ -24,6 +24,7 @@ close_prices = {}
 
 call_signal = {}
 put_signal = {}
+hold_signal = {}
 
 symbols = []
 positions = []
@@ -36,6 +37,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
         close_prices[symbol] = []
         call_signal[symbol] = []
         put_signal[symbol] = []
+        hold_signal[symbol] = []
 
     close_prices[symbol].append([index, row['close']])
 
@@ -43,9 +45,11 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
         call_signal[symbol].append([index])
     elif signal == 'Sell':
         put_signal[symbol].append([index])
+    else:
+        hold_signal[symbol].append([index])
 
-start = datetime(2024, 10, 8, 12, 30)
-end = datetime(2024, 10, 9, 12, 30)
+start = datetime(2024, 10, 1, 12, 30)
+end = datetime(2024, 10, 25, 12, 30)
 
 def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
     return
@@ -54,7 +58,7 @@ short.backtest(start, end, backtest_enter, backtest_exit, market_client, option_
 
 fig = 1
 for cs in symbols:
-    print(f'Call signal:{len(call_signal[cs])} Put signal:{len(put_signal[cs])}')
+    print(f'{cs}: Call signal:{len(call_signal[cs])} Put signal:{len(put_signal[cs])} Hold signal: {len(hold_signal[cs])}')
     close_series = np.array(close_prices[cs])
     chart.chart_with_signals(close_series, call_signal[cs], put_signal[cs], f'Backtest matched {cs} signals {start}-{end}', 'Time', 'Stock price', fig)
     fig = fig + 1

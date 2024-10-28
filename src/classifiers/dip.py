@@ -6,7 +6,7 @@ import pandas as pd
 import os
 
 def classification(df):
-    size = int(os.getenv('RUNNUP'))
+    size = int(os.getenv('DIP'))
 
     df['min'] = df.iloc[argrelextrema(df.close.values, np.less_equal,
                     order=size)[0]]['close']

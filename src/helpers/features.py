@@ -61,9 +61,9 @@ def trending(df, label, amt, name, prepend=False, postpend=False, reverse=True):
 def runnup(df, label, amt, name, prepend=False, postpend=False, reverse=True):
     arr = trending_arr(df, label, amt, name, prepend, postpend, reverse)
     arr = np.array(arr)
-    if np.all(arr[0] <= arr[1:]):
+    if np.all(arr[0] < arr[1:]):
         return 1
-    elif np.all(arr[0] >= arr[1:]):
+    elif np.all(arr[0] > arr[1:]):
         return -1
     return 0
 
@@ -127,10 +127,13 @@ def feature_engineer_df(df):
 
     df = squeeze(df)
 
-    df = crossed(df, 'pvi', 1)
-    df = crossed(df, 'nvi', 1)
-    df = crossed(df, 'roc', 0)
-    df = crossed(df, 'macd', 0)
+    #df = crossed(df, 'pvi', 1)
+    #df = crossed(df, 'nvi', 1)
+    #df = crossed(df, 'roc', 0)
+    #df = crossed(df, 'macd', 0)
+
+    for col in df.select_dtypes(include=['bool']).columns:
+        df[col] = df[col].astype(int)
 
     return df
 

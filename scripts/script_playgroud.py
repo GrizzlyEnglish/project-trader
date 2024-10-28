@@ -7,7 +7,7 @@ from alpaca.data.historical.option import OptionHistoricalDataClient, OptionTrad
 from alpaca.data.timeframe import TimeFrameUnit, TimeFrame
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, options
-from classifiers import runnup
+from src.classifiers import runnup, dip
 from datetime import datetime, timedelta
 
 import os
@@ -25,4 +25,5 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-class_model.generate_model('SPY', 60, market_client, runnup.classification, datetime.now())
+#class_model.generate_model('QQQ', 30, market_client, runnup.classification, datetime.now())
+class_model.generate_model('QQQ', 30, market_client, dip.classification, datetime.now())
