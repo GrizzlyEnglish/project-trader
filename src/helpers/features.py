@@ -248,16 +248,7 @@ def smi(df, quotes):
 
     return df
 
-
-def get_percentage_diff(previous, current, round_value=True):
-    try:
-        absolute_diff = current - previous
-        average_value = (current + previous) / 2
-        percentage = (absolute_diff / average_value) * 100.0
-
-        if round_value:
-            percentage = round(percentage)
-        
-        return percentage
-    except ZeroDivisionError:
-        return float('inf')  # Infinity
+def get_percentage_diff(initial_value, final_value): 
+    profit_loss = final_value - initial_value 
+    percent = (profit_loss / initial_value) * 100 
+    return percent

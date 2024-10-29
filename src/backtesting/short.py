@@ -84,7 +84,7 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                         qty = float(p.qty)
                         mv = mv * qty
                         pl = mv - p.cost_basis
-                        pld = features.get_percentage_diff(p.cost_basis, mv, False) / 100
+                        pld = features.get_percentage_diff(p.cost_basis, mv) / 100
 
                         p.unrealized_plpc = f'{pld}'
                     

@@ -19,5 +19,17 @@ class TestFeatures(unittest.TestCase):
         run = features.runnup(df, 'close', 4, 'next', True, False, False)
         assert run == -1
 
+    def test_percent_diff(self):
+        pld = features.get_percentage_diff(60, 0) / 100
+        assert pld == -1.0
+        pld = features.get_percentage_diff(60, 24) / 100
+        assert pld == -0.60
+        pld = features.get_percentage_diff(60, 30) / 100
+        assert pld == -0.50
+        pld = features.get_percentage_diff(60, 90) / 100
+        assert pld == 0.50
+        pld = features.get_percentage_diff(60, 84) / 100
+        assert pld == 0.40
+
 if __name__ == '__main__':
     unittest.main()
