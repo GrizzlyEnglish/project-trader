@@ -9,7 +9,6 @@ from datetime import datetime
 import math
 
 def backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions):
-    group = int(os.getenv('BAR_GROUP'))
     day_diff = int(os.getenv('DAYDIFF'))
     # From the cut off date loop every day
     start_dt = start
@@ -47,7 +46,7 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                 if index[1].date() < p_st.date() or len(pb) < 5:
                     continue
 
-                h = pb[-group-1:]
+                h = pb[-1:]
 
                 enter, signal = short.do_enter(m['model'], h, m['symbol'], positions)
 
@@ -74,6 +73,10 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                         mv = float(p.market_value)
                         exit = True
                         reason = 'expired'
+                    if index[1].hour == 19:
+                        mv = float(p.market_value)
+                        exit = True
+                        reason = 'exit before close'
                     else:
                         b = bars[bars.index.get_level_values('timestamp') <= index[1]]
                         if b.empty:

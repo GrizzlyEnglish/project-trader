@@ -6,7 +6,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from src.helpers import get_data
-from classifiers import runnup
+from src.classifiers import barrier
 from src.backtesting import chart
 
 import math
@@ -33,7 +33,7 @@ fig = 1
 m_end = datetime(2024, 10, 11, 12, 30)
 m_st = m_end - timedelta(days=90)
 
-bars = get_data.get_model_bars('QQQ', market_client, m_st, m_end, 1, runnup.classification, 'Min')
+bars = get_data.get_model_bars('QQQ', market_client, m_st, m_end, 1, barrier.classification, 'Min')
 
 bars = bars.tail(500)
 

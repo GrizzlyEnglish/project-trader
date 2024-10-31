@@ -29,7 +29,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 10, 28, 12, 30)
+end = datetime(2024, 10, 30, 12, 30)
 start = end - timedelta(days=15)
 
 close_series = {}
@@ -41,7 +41,7 @@ positions = []
 actions = 0
 correct_actions = 0
 total = {}
-buy_qty = 5
+buy_qty = int(os.getenv('BUY_AMOUNT'))
 
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 

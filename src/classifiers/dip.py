@@ -14,6 +14,9 @@ def classification(df):
                     order=size)[0]]['close']
 
     def label(row):
+        if row['hour'] >= 19:
+            return 'hold'
+
         if not math.isnan(row['max']):
             return 'sell'
         elif not math.isnan(row['min']):

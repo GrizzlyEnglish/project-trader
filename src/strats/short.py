@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, tracker, options, features
 from src.strats import enter_option, exit_option
-from src.classifiers import runnup, dip
+from src.classifiers import dip, barrier, trending
 from datetime import datetime, timedelta
 
 import ast
@@ -27,14 +27,19 @@ def generate_short_models(market_client, end):
         bars = features.feature_engineer_df(bars)
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
-        rmodel = class_model.generate_model(symbol, bars, runnup.classification)
+        print('Barrier')
+        rmodel = class_model.generate_model(symbol, bars, barrier.classification)
+        print('Dip')
         dmodel = class_model.generate_model(symbol, bars, dip.classification)
+        print('Trending')
+        tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
         models.append({
             'symbol': symbol,
             'model': {
                 'runnup': rmodel['model'],
-                'dip': dmodel['model']
+                'dip': dmodel['model'],
+                'trend': tmodel['model'],
             } 
         })
 
@@ -66,7 +71,7 @@ def do_exit(position, signals):
     symbol_signal = next((s for s in signals if s['symbol'] == symbol), None)
     signal = 'Hold'
     if symbol_signal != None:
-        signal = symbol_signal['symbol']
+        signal = symbol_signal['signal']
     hst = tracker.get(position.symbol)
 
     # Determine the actual amount we are risking, and how much to gain
@@ -77,14 +82,14 @@ def do_exit(position, signals):
     secure_limit = cost + math.ceil(reward/2)
     stop_loss = cost - risk
 
-    print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} signal: {signal}')
+    print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal}')
 
     if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
         # Hold it we are signaling
         return False, ''
     
-    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and pl < 0:
-        return True, 'held too long'
+    #if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and pl < 0:
+        #return True, 'held too long'
 
     if market_value > secure_gains:
         return True, 'secure gains' 
@@ -140,6 +145,7 @@ def exit(signals, market_client, trading_client, option_client):
     for p in positions:
         exit, reason = do_exit(p, signals)
         if exit:
+            print(f'Exiting {p.symbol} due to {reason}')
             exit_option.exit(p, reason, trading_client)
             tracker.clear(p.symbol)
     return

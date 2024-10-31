@@ -13,9 +13,9 @@ def classification(df):
 
         close_runnup = features.runnup(row, 'close', size, 'next', True, False, False)
 
-        if close_runnup == 1 and row['close_short_trend'] < 0:
+        if close_runnup == 1:
             return 'buy'
-        elif close_runnup == -1 and row['close_short_trend'] > 0:
+        elif close_runnup == -1:
             return 'sell'
         
         return 'hold'
