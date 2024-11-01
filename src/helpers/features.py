@@ -133,6 +133,9 @@ def feature_engineer_df(df):
     df = crossed(df, 'macd', 0)
     df = crossed(df, 'histogram', 0)
 
+    df = dip(df, short_trend, 'short')
+    df = dip(df, long_trend, 'long')
+
     shifted_df = df.shift(1)
     shifted_df = shifted_df.add_suffix(f'__last')
     df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
@@ -141,6 +144,16 @@ def feature_engineer_df(df):
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)
 
+    return df
+
+def dip(df, n, name):
+    df[f'min_{name}'] = df.iloc[argrelextrema(df.close.values, np.less_equal,
+                    order=n)[0]]['close']
+    df[f'max_{name}'] = df.iloc[argrelextrema(df.close.values, np.greater_equal,
+                    order=n)[0]]['close']
+    
+    df[f'min_{name}'] = df[f'min_{name}'].notna()
+    df[f'max_{name}'] = df[f'max_{name}'].notna()
     return df
 
 def crossed(df, col, crossed_value):

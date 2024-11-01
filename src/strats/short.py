@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, tracker, options, features
 from src.strats import enter_option, exit_option
-from src.classifiers import dip, barrier, trending
+from src.classifiers import indicator, barrier, trending
 from datetime import datetime, timedelta
 
 import ast
@@ -27,18 +27,18 @@ def generate_short_models(market_client, end):
         bars = features.feature_engineer_df(bars)
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
+        print('Indicator')
+        rmodel = class_model.generate_model(symbol, bars, indicator.classification)
         print('Barrier')
-        rmodel = class_model.generate_model(symbol, bars, barrier.classification)
-        print('Dip')
-        dmodel = class_model.generate_model(symbol, bars, dip.classification)
+        dmodel = class_model.generate_model(symbol, bars, barrier.classification)
         print('Trending')
         tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
         models.append({
             'symbol': symbol,
             'model': {
-                'runnup': rmodel['model'],
-                'dip': dmodel['model'],
+                'indicator': rmodel['model'],
+                'barrier': dmodel['model'],
                 'trend': tmodel['model'],
             } 
         })
@@ -78,9 +78,9 @@ def do_exit(position, signals):
     risk = min(cost, risk*qty)
     reward = risk * reward_scale
 
-    secure_gains = cost + reward
+    secure_gains = math.floor(cost + reward)
     secure_limit = cost + math.ceil(reward/2)
-    stop_loss = cost - risk
+    stop_loss = math.floor(cost - risk)
 
     print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal}')
 
@@ -91,7 +91,7 @@ def do_exit(position, signals):
     #if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and pl < 0:
         #return True, 'held too long'
 
-    if market_value > secure_gains:
+    if market_value >= secure_gains:
         return True, 'secure gains' 
     
     if market_value <= stop_loss:
@@ -107,6 +107,7 @@ def do_exit(position, signals):
     if market_value >= secure_limit and len(hst) > 20:
         last_slope = features.slope(hst.iloc[-10:]['market_value'])[0]
         last_two_slope = features.slope(hst.iloc[-20:-10]['market_value'])[0]
+        print(f'Slope: {last_slope}/{last_two_slope}')
         if last_slope < 0 or last_slope < (last_two_slope/2):
             return True, f'secure limit slope {last_slope}/{last_two_slope}'
 

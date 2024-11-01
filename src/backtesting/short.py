@@ -73,10 +73,10 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                         mv = float(p.market_value)
                         exit = True
                         reason = 'expired'
-                    #if index[1].hour == 19:
-                        #mv = float(p.market_value)
-                        #exit = True
-                        #reason = 'exit before close'
+                    if index[1].hour == 19:
+                        mv = float(p.market_value)
+                        exit = True
+                        reason = 'exit before close'
                     else:
                         b = bars[bars.index.get_level_values('timestamp') <= index[1]]
                         if b.empty:

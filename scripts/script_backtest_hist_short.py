@@ -74,7 +74,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
             type = 'C'
             contract_type = 'call'
 
-        contract_symbol = options.create_option_symbol(symbol, options.next_friday(index), type, strike_price)
+        contract_symbol = options.create_option_symbol(symbol, options.next_friday(index) , type, strike_price)
 
         bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
 

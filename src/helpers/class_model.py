@@ -90,7 +90,7 @@ def create_model(symbol, df):
                                                         shuffle = True, 
                                                         test_size=0.65, 
                                                         random_state=1)
-    model = RandomForestClassifier(max_depth=140, random_state=43)
+    model = RandomForestClassifier(max_depth=240, random_state=43)
     model.fit(x_train, y_train)
 
     y_pred = model.predict(x_test)
