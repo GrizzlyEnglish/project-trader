@@ -5,28 +5,27 @@ import numpy as np
 import os
 
 def classification(df):
-    size = int(os.getenv('RUNNUP'))
-
     def label(row):
-        if row['hour'] >= 19:
-            return 'hold'
+        pvi = row['pvi'] <= 1 and row['pvi'] - row['pvi__last'] >= 0
+        roc = row['roc'] <= 0 and row['roc'] - row['roc__last'] >= 0
+        macd = row['macd'] <= 0 and row['histogram'] > 0
+        bb = row['percent_b'] <= .5
+        close = row['close_short_trend'] < 0
 
-        close_runnup = features.runnup(row, 'close', size, 'next', True, False, False)
-
-        if close_runnup == 1:
+        if pvi and roc and macd and bb and close:
             return 'buy'
-        elif close_runnup == -1:
+
+        nvi = row['nvi'] <= 1 and row['nvi'] - row['nvi__last'] >= 0
+        roc = row['roc'] >= 0 and row['roc'] - row['roc__last'] <= 0
+        macd = row['macd'] >= 0 and row['histogram'] <= 0
+        bb = row['percent_b'] >= .5
+        close = row['close_short_trend'] > 0
+
+        if nvi and roc and macd and bb and close:
             return 'sell'
-        
+
         return 'hold'
-
-    for i in range(size):
-        j = i + 1
-        df[f'close_{i}_next'] = df['close'].shift(-j)
-
+    
     df['label'] = df.apply(label, axis=1)
-
-    for i in range(size):
-        df.pop(f'close_{i}_next')
 
     return df

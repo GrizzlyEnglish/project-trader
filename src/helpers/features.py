@@ -127,10 +127,16 @@ def feature_engineer_df(df):
 
     df = squeeze(df)
 
-    #df = crossed(df, 'pvi', 1)
-    #df = crossed(df, 'nvi', 1)
-    #df = crossed(df, 'roc', 0)
-    #df = crossed(df, 'macd', 0)
+    df = crossed(df, 'pvi', 1)
+    df = crossed(df, 'nvi', 1)
+    df = crossed(df, 'roc', 0)
+    df = crossed(df, 'macd', 0)
+    df = crossed(df, 'histogram', 0)
+
+    shifted_df = df.shift(1)
+    shifted_df = shifted_df.add_suffix(f'__last')
+    df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
+    del shifted_df
 
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)

@@ -1,56 +1,32 @@
-from scipy.signal import argrelextrema
+from src.helpers import features
 
-import math
-import numpy as np
 import pandas as pd
+import numpy as np
 import os
 
 def classification(df):
-    size = int(os.getenv('DIP'))
-
-    df['min'] = df.iloc[argrelextrema(df.close.values, np.less_equal,
-                    order=size)[0]]['close']
-    df['max'] = df.iloc[argrelextrema(df.close.values, np.greater_equal,
-                    order=size)[0]]['close']
+    size = int(os.getenv('RUNNUP'))
 
     def label(row):
         if row['hour'] >= 19:
             return 'hold'
 
-        if not math.isnan(row['max']):
-            return 'sell'
-        elif not math.isnan(row['min']):
+        close_runnup = features.runnup(row, 'close', size, 'next', True, False, False)
+
+        if close_runnup == 1:
             return 'buy'
-        
-        for i in range(5):
-            j = i + 1
-            if not math.isnan(row[f'min_{i}_next']):
-                return 'buy'
-            elif not math.isnan(row[f'min_{i}_past']):
-                return 'buy'
-            if not math.isnan(row[f'max_{i}_next']):
-                return 'sell'
-            elif not math.isnan(row[f'max_{i}_past']):
-                return 'sell'
+        elif close_runnup == -1:
+            return 'sell'
         
         return 'hold'
-    
-    for i in range(5):
+
+    for i in range(size):
         j = i + 1
-        df[f'min_{i}_next'] = df['min'].shift(-j)
-        df[f'min_{i}_past'] = df['min'].shift(j)
-        df[f'max_{i}_next'] = df['max'].shift(-j)
-        df[f'max_{i}_past'] = df['max'].shift(j)
-    
+        df[f'close_{i}_next'] = df['close'].shift(-j)
+
     df['label'] = df.apply(label, axis=1)
 
-    df.pop('min')
-    df.pop('max')
-
-    for i in range(5):
-        df.pop(f'min_{i}_next')
-        df.pop(f'min_{i}_past')
-        df.pop(f'max_{i}_next')
-        df.pop(f'max_{i}_past')
+    for i in range(size):
+        df.pop(f'close_{i}_next')
 
     return df

@@ -11,9 +11,9 @@ def classification(df):
         if row['hour'] >= 19:
             return 'hold'
 
-        if row['next_close_trend'] >= up_trend:
+        if row['next_close_trend'] >= up_trend and row['close_short_trend'] < 0:
             return 'buy'
-        elif row['next_close_trend'] <= down_trend:
+        elif row['next_close_trend'] <= down_trend and row['close_short_trend'] > 0:
             return 'sell'
         
         return 'hold'
@@ -28,8 +28,8 @@ def classification(df):
 
     u_arr = df[df['next_close_trend'] > 0]['next_close_trend']
     d_arr = df[df['next_close_trend'] < 0]['next_close_trend']
-    up_trend = u_arr.mean() + u_arr.std()
-    down_trend = d_arr.mean() - d_arr.std()
+    up_trend = u_arr.mean()# + u_arr.std()
+    down_trend = d_arr.mean()# - d_arr.std()
 
     df['label'] = df.apply(label, axis=1)
 
