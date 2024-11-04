@@ -66,6 +66,8 @@ def group_bars(bars):
         j = i + 1
         shifted_df = bars.shift(j)
         shifted_df = shifted_df.add_suffix(f'___{i}')
+        if f'label___{i}' in shifted_df.columns:
+            shifted_df.pop(f'label___{i}')
         new_bars = pd.concat([new_bars, shifted_df], axis=1, ignore_index=False)
         del shifted_df
     del bars
@@ -81,16 +83,20 @@ def create_model(symbol, df):
     if df.empty:
         print("%s has no data or not enough data to generate a model" % symbol)
         return None, 0
+
+    df = group_bars(df)
     
     target = df['label']
     feature = df.drop('label', axis=1)
+
+    feature = preprocess_bars(feature)
 
     x_train, x_test, y_train, y_test = train_test_split(feature, 
                                                         target, 
                                                         shuffle = True, 
                                                         test_size=0.65, 
                                                         random_state=1)
-    model = RandomForestClassifier(max_depth=240, random_state=43)
+    model = RandomForestClassifier(max_depth=2400, random_state=43)
     model.fit(x_train, y_train)
 
     y_pred = model.predict(x_test)

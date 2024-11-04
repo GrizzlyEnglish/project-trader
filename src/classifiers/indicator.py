@@ -17,7 +17,7 @@ def classification(df):
 
         count = pvi + roc + macd + bb + close
 
-        if count > 3:
+        if count == 5:
             return 'buy'
 
         nvi = row['nvi'] <= 1 and row['nvi'] - row['nvi__last'] >= 0
@@ -28,7 +28,7 @@ def classification(df):
 
         count = nvi + roc + macd + bb + close
 
-        if count > 3:
+        if count == 5:
             return 'sell'
 
         return 'hold'

@@ -28,8 +28,8 @@ def classification(df):
 
     u_arr = df[df['next_close_trend'] > 0]['next_close_trend']
     d_arr = df[df['next_close_trend'] < 0]['next_close_trend']
-    up_trend = u_arr.mean()# + u_arr.std()
-    down_trend = d_arr.mean()# - d_arr.std()
+    up_trend = u_arr.mean() + u_arr.std()
+    down_trend = d_arr.mean() - d_arr.std()
 
     df['label'] = df.apply(label, axis=1)
 

@@ -29,8 +29,8 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 10, 30, 12, 30)
-start = end - timedelta(days=15)
+end = datetime(2024, 11, 1, 12, 30)
+start = end - timedelta(days=30)
 
 close_series = {}
 purchased_series = {}
@@ -98,6 +98,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
                 'qty': buy_qty,
                 'date_of': index.date()
             }))
+            print(f'Purchased {contract_symbol} at {index}')
             purchased_series[symbol].append(index)
 
     # check for exits
