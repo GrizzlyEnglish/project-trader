@@ -11,9 +11,11 @@ def classification(df):
         if row['hour'] >= 19:
             return 'hold'
 
-        if row['next_close_trend'] >= up_trend and row['close_short_trend'] < 0:
+        close_runnup = features.runnup(row, 'close', trend, 'next', True, False, False)
+
+        if row['next_close_diff'] >= uclosediff and close_runnup == 1:
             return 'buy'
-        elif row['next_close_trend'] <= down_trend and row['close_short_trend'] > 0:
+        elif row['next_close_diff'] <= dclosediff and close_runnup == -1:
             return 'sell'
         
         return 'hold'
@@ -21,21 +23,24 @@ def classification(df):
     for i in range(trend):
         j = i + 1
         df2 = df[['close']]
-        df2 = df2.add_suffix(f'_{i}_next_close')
+        df2 = df2.add_suffix(f'_{i}_next')
         df2 = df2.shift(-j)
         df = pd.concat([df, df2], axis=1)
-    df['next_close_trend'] = features.trending(df, 'close', trend, 'next_close', False, True, False)
 
-    u_arr = df[df['next_close_trend'] > 0]['next_close_trend']
-    d_arr = df[df['next_close_trend'] < 0]['next_close_trend']
-    up_trend = u_arr.mean() + u_arr.std()
-    down_trend = d_arr.mean() - d_arr.std()
+    # close diff
+    df[f'close_last_next'] = df['close'].shift(-trend)
+    df['next_close_diff'] = df[f'close_last_next'] - df['close']
+    up = df[df['next_close_diff'] > 0]['next_close_diff']
+    down = df[df['next_close_diff'] < 0]['next_close_diff']
+    uclosediff = up.mean() + up.std()
+    dclosediff = down.mean() - down.std()
 
     df['label'] = df.apply(label, axis=1)
 
     for i in range(trend):
-        df.pop(f'close_{i}_next_close')
+        df.pop(f'close_{i}_next')
 
-    df.pop('next_close_trend')
+    df.pop('close_last_next')
+    df.pop('next_close_diff')
 
     return df

@@ -3,9 +3,9 @@ from datetime import datetime
 
 _TRACKING_PD = pd.DataFrame()
 
-def track(symbol, pl, market_value):
+def track(symbol, pl, market_value, slope):
     global _TRACKING_PD
-    df = pd.DataFrame([[symbol, pl, market_value, datetime.now()]],columns=['symbol', 'p/l', 'market_value', 'timestamp'])
+    df = pd.DataFrame([[symbol, pl, market_value, datetime.now(), slope]],columns=['symbol', 'p/l', 'market_value', 'timestamp', 'slope'])
     _TRACKING_PD = pd.concat([_TRACKING_PD, df], ignore_index=True)
 
 def get(symbol):

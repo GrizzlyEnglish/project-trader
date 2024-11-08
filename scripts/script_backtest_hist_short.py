@@ -29,8 +29,8 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 11, 1, 12, 30)
-start = end - timedelta(days=30)
+end = datetime(2024, 11, 7, 12, 30)
+start = end - timedelta(days=2)
 
 close_series = {}
 purchased_series = {}
@@ -74,7 +74,7 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
             type = 'C'
             contract_type = 'call'
 
-        contract_symbol = options.create_option_symbol(symbol, options.next_friday(index) , type, strike_price)
+        contract_symbol = options.create_option_symbol(symbol, datetime.now() if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index) , type, strike_price)
 
         bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
 
@@ -96,6 +96,8 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
                 'cost_basis': contract_price * 100,
                 'bought_at': index,
                 'qty': buy_qty,
+                'market_value': contract_price * 100,
+                'unrealized_plpc': 0,
                 'date_of': index.date()
             }))
             print(f'Purchased {contract_symbol} at {index}')
@@ -133,7 +135,6 @@ def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
         positions.remove(p)
         tracker.clear(p.symbol)
 
-
 backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions)
 
 full_total = 0
@@ -146,16 +147,7 @@ if actions > 0:
 
 pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
 
-# Separate the data into x and y
-fig = 1
-for cs in symbols:
-    c_series = np.array(close_series[cs])
-    ps = purchased_series[cs]
-    ss = sell_series[cs]
-    chart.chart_with_signals(c_series, ps, ss, f'Backtest {start}-{end}', 'Time', 'Close', fig)
-    fig = fig + 1
-
-fig = plt.figure(fig)
+fig = plt.figure(1)
 
 pl_series = np.array(pl_series)
 x = [float(p) for p in pl_series[:, 1]]

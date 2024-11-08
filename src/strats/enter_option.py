@@ -20,4 +20,4 @@ def enter(classification, last_close_underlying, trading_client, option_client):
     if qty != None and qty > 0:
         discord.send_alpaca_message(f'Limit order for {qty}x {contract_symbol} at ${ask_price}')
         buy.submit_order(contract_symbol, qty, ask_price, trading_client)
-        tracker.track(contract_symbol, 0, ask_price*100)
+        tracker.track(contract_symbol, 0, ask_price*100, 0)

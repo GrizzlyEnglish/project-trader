@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, tracker, options, features
 from src.strats import enter_option, exit_option
-from src.classifiers import indicator, barrier, trending
+from src.classifiers import trending
 from datetime import datetime, timedelta
 
 import ast
@@ -28,17 +28,14 @@ def generate_short_models(market_client, end):
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
         print('Indicator')
-        rmodel = class_model.generate_model(symbol, bars, indicator.classification)
-        print('Barrier')
-        dmodel = class_model.generate_model(symbol, bars, barrier.classification)
+        #rmodel = class_model.generate_model(symbol, bars, indicator.classification)
         print('Trending')
         tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
         models.append({
             'symbol': symbol,
             'model': {
-                'indicator': rmodel['model'],
-                'barrier': dmodel['model'],
+                #'indicator': rmodel['model'],
                 'trend': tmodel['model'],
             } 
         })
@@ -50,10 +47,12 @@ def classify(model, bars):
     predicitons = np.array(predicitons)
     if np.all(predicitons == predicitons[0]):
         return predicitons[0]
-    else:
-        return 'Hold'
 
-def do_enter(model, bars, symbol, positions):
+    return 'Hold'
+
+def do_enter(model, bars, symbol, positions, indicator):
+    if indicator == 0:
+        return False, 'Hold'
     has_open_option = next((cp for cp in positions if symbol in cp.symbol), None) != None
     signal = classify(model, bars)
     return signal != 'Hold' and not has_open_option, signal
@@ -61,7 +60,7 @@ def do_enter(model, bars, symbol, positions):
 def do_exit(position, signals):
     risk = int(os.getenv('RISK'))
     reward_scale = int(os.getenv('REWARD_SCALE'))
-    runnup = int(os.getenv('RUNNUP'))
+    trend = int(os.getenv('trend'))
 
     pl = float(position.unrealized_plpc) * 100
     cost = float(position.cost_basis)
@@ -88,8 +87,8 @@ def do_exit(position, signals):
         # Hold it we are signaling
         return False, ''
     
-    #if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=runnup)) and pl < 0:
-        #return True, 'held too long'
+    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=trend)) and pl < secure_limit:
+        return True, 'held too long'
 
     if market_value >= secure_gains:
         return True, 'secure gains' 
@@ -97,21 +96,18 @@ def do_exit(position, signals):
     if market_value <= stop_loss:
         return True, 'stop loss'
     
-    if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
+    if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C') and pl < 0:
         return True, 'reversal'
 
-    #if market_value <= secure_limit and not hst.empty and (hst['market_value'] > secure_limit).any():
-        #return True, 'secure limit' 
-    
-    #TODO: Determine how to sell when spook'd, and check for reversal
-    if market_value >= secure_limit and len(hst) > 20:
-        last_slope = features.slope(hst.iloc[-10:]['market_value'])[0]
-        last_two_slope = features.slope(hst.iloc[-20:-10]['market_value'])[0]
-        print(f'Slope: {last_slope}/{last_two_slope}')
-        if last_slope < 0 or last_slope < (last_two_slope/2):
-            return True, f'secure limit slope {last_slope}/{last_two_slope}'
+    # TODO: Look at the time interval
+    if market_value >= secure_limit and len(hst) > 30:
+        last_slope = features.slope(hst.iloc[-5:]['slope'])[0]
+        print(f'Slope: {last_slope}')
+        if last_slope < -0.1:
+            return True, f'secure limit slope'
 
-    tracker.track(position.symbol, pl, market_value)
+    slope = features.slope(hst['market_value'])[0] if len(hst) > 5 else 0
+    tracker.track(position.symbol, pl, market_value, slope)
 
     return False, ''
 
@@ -125,11 +121,17 @@ def enter(models, market_client, trading_client, option_client):
 
     for m in models:
         bars = get_data.get_model_bars(m['symbol'], market_client, m_st, m_end, 1, None, 'Min')
+        close = bars.iloc[-1]['close'] 
+        time = bars[-1:].index[0][1]
+        indicator = bars.iloc[-1]['indicator']
+
+        bars = class_model.group_bars(bars)
+        bars = class_model.preprocess_bars(bars)
         b = bars[-1:]
 
-        enter, signal = do_enter(m['model'], b, m['symbol'], positions)
+        enter, signal = do_enter(m['model'], b, m['symbol'], positions, indicator)
 
-        print(f'{m["symbol"]}: {b.index[0][1]} {signal}')
+        print(f'{m["symbol"]}: {time} {signal}')
 
         if enter:
             c = {
@@ -137,7 +139,7 @@ def enter(models, market_client, trading_client, option_client):
                 'signal': signal,
             }
             signals.append(c)
-            enter_option.enter(c, b.iloc[0]['close'], trading_client, option_client)
+            enter_option.enter(c, close, trading_client, option_client)
 
     return signals
 

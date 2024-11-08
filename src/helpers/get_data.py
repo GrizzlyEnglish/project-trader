@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from alpaca.trading.enums import OrderSide, AssetClass
 from alpaca.data.enums import Adjustment,DataFeed
 from alpaca.trading.requests import GetOrdersRequest
-from src.helpers import features
+from src.helpers import features, class_model
 
 def get_model_bars(symbol, market_client, start, end, time_window, classification, unit='Min'):
     bars = get_bars(symbol, start, end, market_client, time_window, unit)

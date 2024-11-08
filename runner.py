@@ -63,7 +63,7 @@ def run_threaded(job_func, *args):
 
 schedule.every().day.at("09:00").do(generate_short_models)
 
-schedule.every().day.at("15:00").do(dont_hold_overnight)
+#schedule.every().day.at("15:00").do(dont_hold_overnight)
 
 schedule.every(1).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)

@@ -9,6 +9,59 @@ from datetime import datetime
 import math
 import pandas as pd
 
+option_bars = {}
+
+def check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, force_exit):
+    for p in positions:
+        if p.symbol in option_bars:
+            bars = option_bars[p.symbol]
+        else:
+            oend = p_end
+            if oend >= datetime.now():
+                oend = datetime.now()
+            bars = options.get_bars(p.symbol, p_st, oend, option_client)
+            option_bars[p.symbol] = bars
+
+        if bars.empty:
+            print('No option data')
+            continue
+
+        dte = options.get_option_expiration_date(p.symbol)
+
+        exit = False
+        mv = float(p.market_value)
+        pl = float(p.unrealized_plpc)
+
+        # Option expired, sell it
+        if i[1].date() == dte.date() and i[1].hour > 18:
+            exit = True
+            reason = 'expired'
+        #if i[1].hour == 19:
+            #exit = True
+            #reason = 'exit before close'
+        if force_exit:
+            exit = True
+            reason = 'Up to date'
+
+        if exit == False:
+            b = bars[bars.index.get_level_values('timestamp') <= i[1]]
+            if b.empty:
+                mv = bars.iloc[0]['close'] * 100
+            else:
+                mv = b.iloc[-1]['close'] * 100
+
+            qty = float(p.qty)
+            mv = mv * qty
+            pl = mv - p.cost_basis
+            pld = features.get_percentage_diff(p.cost_basis, mv) / 100
+
+            p.unrealized_plpc = f'{pld}'
+        
+            p.market_value = f'{mv}'
+            exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
+
+        backtest_exit(p, exit, reason, row['close'], mv, i[1], pl, m['symbol'])
+
 def backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions):
     day_diff = int(os.getenv('DAYDIFF'))
     # From the cut off date loop every day
@@ -52,54 +105,14 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                     continue
 
                 row = held_bars.loc[i]
-                enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions)
+                enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions, row['indicator'])
 
                 backtest_enter(m['symbol'], i, row, signal, enter, m)
+
+                check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, False)
+
+            check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, True)
             
-                for p in positions:
-                    if p.symbol in option_bars:
-                        bars = option_bars[p.symbol]
-                    else:
-                        oend = p_end
-                        if oend >= datetime.now():
-                            oend = datetime.now()
-                        bars = options.get_bars(p.symbol, p_st, oend, option_client)
-                        option_bars[p.symbol] = bars
-
-                    if bars.empty:
-                        print('No option data')
-                        continue
-
-                    dte = options.get_option_expiration_date(p.symbol)
-
-                    # Option expired, sell it
-                    if i[1].date() == dte.date() and i[1].hour > 18:
-                        mv = float(p.market_value)
-                        exit = True
-                        reason = 'expired'
-                    if i[1].hour == 19:
-                        mv = float(p.market_value)
-                        exit = True
-                        reason = 'exit before close'
-                    else:
-                        b = bars[bars.index.get_level_values('timestamp') <= i[1]]
-                        if b.empty:
-                            mv = bars.iloc[0]['close'] * 100
-                        else:
-                            mv = b.iloc[-1]['close'] * 100
-
-                        qty = float(p.qty)
-                        mv = mv * qty
-                        pl = mv - p.cost_basis
-                        pld = features.get_percentage_diff(p.cost_basis, mv) / 100
-
-                        p.unrealized_plpc = f'{pld}'
-                    
-                        p.market_value = f'{mv}'
-                        exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
-
-                    backtest_exit(p, exit, reason, row['close'], mv, i[1], pl, m['symbol'])
-
         p_st = p_end 
 
         if p_st.date() >= end_dt.date():

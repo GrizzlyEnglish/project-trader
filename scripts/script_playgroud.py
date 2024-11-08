@@ -8,7 +8,6 @@ from alpaca.data.historical.option import OptionHistoricalDataClient, OptionTrad
 from alpaca.data.timeframe import TimeFrameUnit, TimeFrame
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, options, features
-from src.classifiers import dip, barrier
 from datetime import datetime, timedelta
 
 import os
@@ -30,4 +29,3 @@ option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 bars = get_data.get_bars('QQQ', datetime.now() - timedelta(days=90), datetime.now(), market_client, 1, 'Min')
 bars = features.feature_engineer_df(bars)
-class_model.generate_model('QQQ', bars, barrier.classification)

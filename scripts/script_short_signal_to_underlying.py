@@ -48,8 +48,8 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
     else:
         hold_signal[symbol].append([index])
 
-start = datetime(2024, 10, 28, 12, 30)
-end = datetime(2024, 11, 1, 12, 30)
+start = datetime(2024, 11, 5, 12, 30)
+end = datetime(2024, 11, 8, 12, 30)
 
 def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):
     return

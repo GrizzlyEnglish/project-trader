@@ -91,24 +91,30 @@ def create_model(symbol, df):
 
     feature = preprocess_bars(feature)
 
-    x_train, x_test, y_train, y_test = train_test_split(feature, 
-                                                        target, 
-                                                        shuffle = True, 
-                                                        test_size=0.65, 
-                                                        random_state=1)
-    model = RandomForestClassifier(max_depth=2400, random_state=43)
-    model.fit(x_train, y_train)
+    model = None
+    acc = 0
+    matrix = None
 
-    y_pred = model.predict(x_test)
+    for i in range(10):
+        x_train, x_test, y_train, y_test = train_test_split(feature, 
+                                                            target, 
+                                                            shuffle = True, 
+                                                            test_size=0.65, 
+                                                            random_state=1)
+        m = RandomForestClassifier(max_depth=2400, random_state=43)
+        m.fit(x_train, y_train)
 
-    kappa = metrics.cohen_kappa_score(y_test, y_pred)
+        y_pred = m.predict(x_test)
+        cm = metrics.confusion_matrix(y_test, y_pred)
+        rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
 
-    cm = metrics.confusion_matrix(y_test, y_pred)
-    rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
+        if rys > acc:
+            model = m
+            acc = rys
+            matrix = cm
 
     print(f'{symbol}')
-    print('Cohens Kappa Score:', kappa)
-    print(f'Ryans Kappa Score: {rys}')
-    print('Confusion Matrix:\n', cm)
+    print(f'Ryans Kappa Score: {acc}')
+    print('Confusion Matrix:\n', matrix)
 
     return model, rys
