@@ -11,7 +11,7 @@ import pandas as pd
 
 option_bars = {}
 
-def check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, force_exit):
+def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_client, backtest_exit, force_exit):
     for p in positions:
         if p.symbol in option_bars:
             bars = option_bars[p.symbol]
@@ -19,6 +19,7 @@ def check_positions(positions, i, row, m, signal, p_st, p_end, option_client, ba
             oend = p_end
             if oend >= datetime.now():
                 oend = datetime.now()
+            print(f'Getting option bars for {p.symbol} days {p_st} to {oend}')
             bars = options.get_bars(p.symbol, p_st, oend, option_client)
             option_bars[p.symbol] = bars
 
@@ -60,7 +61,7 @@ def check_positions(positions, i, row, m, signal, p_st, p_end, option_client, ba
             p.market_value = f'{mv}'
             exit, reason = short.do_exit(p, [{'symbol': m['symbol'], 'signal': signal}]) 
 
-        backtest_exit(p, exit, reason, row['close'], mv, i[1], pl, m['symbol'])
+        backtest_exit(p, exit, reason, last_close, mv, i[1], pl, m['symbol'])
 
 def backtest(start, end, backtest_enter, backtest_exit, market_client, option_client, positions):
     day_diff = int(os.getenv('DAYDIFF'))
@@ -69,39 +70,26 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
     end_dt = end
     print(f'Back test from {start_dt} to {end_dt}')
 
+    on_day = start_dt
+
+    # Loop every day generate a model for the day, then loop the days bars
     amt_days = (end - start).days
-    loops = int(max(math.ceil(amt_days / 20), 1))
-
-    p_st = start_dt
-
-    for l in range(loops):
-        p_end = p_st + timedelta(days=30)
-
-        if p_end > end_dt:
-            p_end = end_dt
-
-        m_end = p_st - timedelta(days=1)
-
-        print(f'Loop {l} from {p_st} to {p_end}')
-
-        print(f'Generating model up to {m_end}')
-        model_info = short.generate_short_models(market_client, m_end)
-
-        option_bars = {}
+    for t in range(amt_days):
+        print(f'Generating model for day {on_day}')
+        model_info = short.generate_short_models(market_client, on_day)
 
         for m in model_info:
-            print(f'Classifying start {p_st} to {p_end}')
-            pred_bars = get_data.get_bars(m['symbol'], p_st - timedelta(days=day_diff), p_end, market_client)
+            print(f'Classifying start {on_day} for {m["symbol"]}')
+            pred_bars = get_data.get_bars(m['symbol'], on_day - timedelta(days=day_diff), on_day + timedelta(days=1), market_client)
             pred_bars = features.feature_engineer_df(pred_bars)
             held_bars = pred_bars.copy()
             indexes = pred_bars.index
-            pred_bars = class_model.group_bars(pred_bars)
             pred_bars = class_model.preprocess_bars(pred_bars)
 
             for index,h in enumerate(pred_bars):
                 i = indexes[index]
 
-                if i[1].date() < p_st.date():
+                if i[1].date() < on_day.date() or i[1].date() > on_day.date():
                     continue
 
                 row = held_bars.loc[i]
@@ -109,11 +97,6 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
 
                 backtest_enter(m['symbol'], i, row, signal, enter, m)
 
-                check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, False)
+                check_positions(positions, i, row['close'], m, signal, on_day - timedelta(days=1), on_day + timedelta(days=1), option_client, backtest_exit, False)
 
-            check_positions(positions, i, row, m, signal, p_st, p_end, option_client, backtest_exit, True)
-            
-        p_st = p_end 
-
-        if p_st.date() >= end_dt.date():
-            break
+        on_day = on_day + timedelta(days=1)

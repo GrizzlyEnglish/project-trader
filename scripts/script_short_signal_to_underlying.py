@@ -39,16 +39,17 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
         put_signal[symbol] = []
         hold_signal[symbol] = []
 
-    close_prices[symbol].append([index, row['close']])
+    spot = len(close_prices[symbol]) + 1
+    close_prices[symbol].append([spot, row['close']])
 
     if signal == 'Buy':
-        call_signal[symbol].append([index])
+        call_signal[symbol].append([spot])
     elif signal == 'Sell':
-        put_signal[symbol].append([index])
+        put_signal[symbol].append([spot])
     else:
-        hold_signal[symbol].append([index])
+        hold_signal[symbol].append([spot])
 
-start = datetime(2024, 11, 5, 12, 30)
+start = datetime(2024, 11, 1, 12, 30)
 end = datetime(2024, 11, 8, 12, 30)
 
 def backtest_exit(p, exit, reason, close, mv, index, pl, symbol):

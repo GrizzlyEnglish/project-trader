@@ -29,8 +29,8 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 11, 7, 12, 30)
-start = end - timedelta(days=2)
+end = datetime(2024, 11, 8, 12, 30)
+start = end - timedelta(days=30)
 
 close_series = {}
 purchased_series = {}
@@ -74,11 +74,12 @@ def backtest_enter(symbol, idx, row, signal, enter, model):
             type = 'C'
             contract_type = 'call'
 
-        contract_symbol = options.create_option_symbol(symbol, datetime.now() if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index) , type, strike_price)
+        contract_symbol = options.create_option_symbol(symbol, index if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index) , type, strike_price)
 
         bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, option_client)
 
         if bars.empty:
+            print(f'No bars for {contract_symbol}')
             return
 
         contract_price = bars['close'].iloc[-1] * buy_qty

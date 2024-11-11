@@ -16,7 +16,7 @@ def sample_bars(bars):
     bars = pd.concat([
         bars[bars.label == 'buy'],
         bars[bars.label == 'sell'],
-        bars[bars.label == 'hold'].sample(n=holds)
+        bars[(bars.label == 'hold') & (bars.indicator != 0)]#.sample(n=holds)
     ])
 
     print(f'Model bars buy count: {buys} sell count: {sells} hold count: {holds}')
@@ -59,20 +59,6 @@ def classify(model, bars):
 
     return predicitons
 
-def group_bars(bars):
-    group = int(os.getenv('BAR_GROUP'))
-    new_bars = bars.copy()
-    for i in range(group):
-        j = i + 1
-        shifted_df = bars.shift(j)
-        shifted_df = shifted_df.add_suffix(f'___{i}')
-        if f'label___{i}' in shifted_df.columns:
-            shifted_df.pop(f'label___{i}')
-        new_bars = pd.concat([new_bars, shifted_df], axis=1, ignore_index=False)
-        del shifted_df
-    del bars
-    return new_bars.dropna()
-
 def preprocess_bars(bars):
     min_max_scaler = preprocessing.MinMaxScaler()
     return min_max_scaler.fit_transform(bars)
@@ -84,37 +70,25 @@ def create_model(symbol, df):
         print("%s has no data or not enough data to generate a model" % symbol)
         return None, 0
 
-    df = group_bars(df)
-    
     target = df['label']
     feature = df.drop('label', axis=1)
 
     feature = preprocess_bars(feature)
 
-    model = None
-    acc = 0
-    matrix = None
+    x_train, x_test, y_train, y_test = train_test_split(feature, 
+                                                        target, 
+                                                        shuffle = True, 
+                                                        test_size=0.65, 
+                                                        random_state=1)
+    model = RandomForestClassifier(max_depth=2400, random_state=43)
+    model.fit(x_train, y_train)
 
-    for i in range(10):
-        x_train, x_test, y_train, y_test = train_test_split(feature, 
-                                                            target, 
-                                                            shuffle = True, 
-                                                            test_size=0.65, 
-                                                            random_state=1)
-        m = RandomForestClassifier(max_depth=2400, random_state=43)
-        m.fit(x_train, y_train)
-
-        y_pred = m.predict(x_test)
-        cm = metrics.confusion_matrix(y_test, y_pred)
-        rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
-
-        if rys > acc:
-            model = m
-            acc = rys
-            matrix = cm
+    y_pred = model.predict(x_test)
+    cm = metrics.confusion_matrix(y_test, y_pred)
+    rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
 
     print(f'{symbol}')
-    print(f'Ryans Kappa Score: {acc}')
-    print('Confusion Matrix:\n', matrix)
+    print(f'Ryans Kappa Score: {rys}')
+    print('Confusion Matrix:\n', cm)
 
     return model, rys
