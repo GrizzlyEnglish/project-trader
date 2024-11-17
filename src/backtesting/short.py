@@ -31,7 +31,8 @@ def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_cli
 
         exit = False
         mv = float(p.market_value)
-        pl = float(p.unrealized_plpc)
+        plpc = float(p.unrealized_plpc)
+        pl = mv + (plpc * mv)
 
         # Option expired, sell it
         if i[1].date() == dte.date() and i[1].hour > 18:
@@ -75,28 +76,30 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
     # Loop every day generate a model for the day, then loop the days bars
     amt_days = (end - start).days
     for t in range(amt_days):
-        print(f'Generating model for day {on_day}')
-        model_info = short.generate_short_models(market_client, on_day)
+        if on_day.weekday() < 5:
 
-        for m in model_info:
-            print(f'Classifying start {on_day} for {m["symbol"]}')
-            pred_bars = get_data.get_bars(m['symbol'], on_day - timedelta(days=day_diff), on_day + timedelta(days=1), market_client)
-            pred_bars = features.feature_engineer_df(pred_bars)
-            held_bars = pred_bars.copy()
-            indexes = pred_bars.index
-            pred_bars = class_model.preprocess_bars(pred_bars)
+            print(f'Generating model for day {on_day}')
+            model_info = short.generate_short_models(market_client, on_day)
 
-            for index,h in enumerate(pred_bars):
-                i = indexes[index]
+            for m in model_info:
+                print(f'Classifying start {on_day} for {m["symbol"]}')
+                pred_bars = get_data.get_bars(m['symbol'], on_day - timedelta(days=day_diff), on_day + timedelta(days=1), market_client)
+                pred_bars = features.feature_engineer_df(pred_bars)
+                held_bars = pred_bars.copy()
+                indexes = pred_bars.index
+                pred_bars = class_model.preprocess_bars(pred_bars)
 
-                if i[1].date() < on_day.date() or i[1].date() > on_day.date():
-                    continue
+                for index,h in enumerate(pred_bars):
+                    i = indexes[index]
 
-                row = held_bars.loc[i]
-                enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions, row['indicator'])
+                    if i[1].date() < on_day.date() or i[1].date() > on_day.date():
+                        continue
 
-                backtest_enter(m['symbol'], i, row, signal, enter, m)
+                    row = held_bars.loc[i]
+                    enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions, row['indicator'])
 
-                check_positions(positions, i, row['close'], m, signal, on_day - timedelta(days=1), on_day + timedelta(days=1), option_client, backtest_exit, False)
+                    backtest_enter(m['symbol'], i, row, signal, enter, m)
+
+                    check_positions(positions, i, row['close'], m, signal, on_day - timedelta(days=1), on_day + timedelta(days=1), option_client, backtest_exit, False)
 
         on_day = on_day + timedelta(days=1)

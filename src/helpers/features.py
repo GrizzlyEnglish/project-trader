@@ -58,9 +58,7 @@ def trending_arr(df, label, amt, name, prepend=False, postpend=False, reverse=Tr
 def trending(df, label, amt, name, prepend=False, postpend=False, reverse=True):
     return slope(trending_arr(df, label, amt, name, prepend, postpend, reverse))
 
-def runnup(df, barrier, label, amt, name, prepend=False, postpend=False, reverse=True):
-    arr = trending_arr(df, label, amt, name, prepend, postpend, reverse)
-    arr = np.array(arr)
+def barrier(arr, barrier):
     if np.all(barrier < arr[1:]):
         return 1
     elif np.all(barrier > arr[1:]):
@@ -153,7 +151,7 @@ def my_indicator(df):
         if row['hour'] >= 19:
             return 0
         
-        amt = 5
+        amt = 5 if row.name[0] == 'SPY' else 3
 
         pvi = row['pvi'] <= 1 and row['pvi'] - row['pvi__last'] >= 0
         roc = row['roc'] <= 0 and row['roc'] - row['roc__last'] >= 0

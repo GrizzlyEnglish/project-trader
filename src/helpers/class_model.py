@@ -8,20 +8,23 @@ from sklearn.svm import SVC
 import os
 import pandas as pd
 
-def sample_bars(bars):
-    buys = len(bars[bars.label == 'buy'])
-    sells = len(bars[bars.label == 'sell'])
-    holds = min((buys + sells) * 2, len(bars[bars['label'] == 'hold']))
+def sample_bars(df):
+    bars = df.copy()
+    bars = bars[bars['indicator'] != 0]
+
+    buys = bars[bars.label == 'buy']
+    sells = bars[bars.label == 'sell']
+    holds = bars[bars.label == 'hold']
 
     bars = pd.concat([
-        bars[bars.label == 'buy'],
-        bars[bars.label == 'sell'],
-        bars[(bars.label == 'hold') & (bars.indicator != 0)]#.sample(n=holds)
+        buys,
+        sells,
+        holds
     ])
 
-    print(f'Model bars buy count: {buys} sell count: {sells} hold count: {holds}')
+    print(f'Model bars buy count: {len(buys)} sell count: {len(sells)} hold count: {len(holds)}')
 
-    return bars, buys, sells
+    return bars, len(buys), len(sells)
 
 def generate_model(symbol, bars, classification):
     bars = classification(bars)

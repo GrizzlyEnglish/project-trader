@@ -5,20 +5,25 @@ import numpy as np
 import os
 
 def classification(df):
-    trend = int(os.getenv('TREND'))
+    symbol = df.index[0][0]
+    trend = int(os.getenv(f'{symbol}_TREND'))
+    delta = float(os.getenv(f'{symbol}_DELTA'))
 
     def label(row):
-        if row['indicator'] == 0:
+        if row['hour'] >= 19:
             return 'hold'
 
-        b = row['close'] - 1
-        close_runnup = features.runnup(row, b, 'close', trend, 'next', True, False, False)
-        if close_runnup == 1 and row['indicator'] == 1:
+        arr = features.trending_arr(row, 'close', trend, 'next', True, False, False)
+        arr = np.array(arr)
+
+        b = row['close'] - delta
+        close_runnup = features.barrier(arr, b)
+        if close_runnup == 1:
             return 'buy'
 
-        b = row['close'] + 1
-        close_runnup = features.runnup(row, b, 'close', trend, 'next', True, False, False)
-        if close_runnup == -1 and row['indicator'] == -1:
+        b = row['close'] + delta
+        close_runnup = features.barrier(arr, b)
+        if close_runnup == -1:
             return 'sell'
         
         return 'hold'

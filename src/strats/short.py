@@ -60,7 +60,7 @@ def do_enter(model, bars, symbol, positions, indicator):
 def do_exit(position, signals):
     risk = int(os.getenv('RISK'))
     reward_scale = int(os.getenv('REWARD_SCALE'))
-    trend = int(os.getenv('trend'))
+    #trend = int(os.getenv('trend'))
 
     pl = float(position.unrealized_plpc) * 100
     cost = float(position.cost_basis)
@@ -78,8 +78,9 @@ def do_exit(position, signals):
     reward = risk * reward_scale
 
     secure_gains = math.floor(cost + reward)
-    secure_limit = cost + math.ceil(reward/2)
     stop_loss = math.floor(cost - risk)
+
+    secure_limit = cost + math.ceil(reward/2) or pl > 50
 
     print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal}')
 
@@ -87,8 +88,8 @@ def do_exit(position, signals):
         # Hold it we are signaling
         return False, ''
     
-    if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=trend)) and pl < secure_limit:
-        return True, 'held too long'
+    #if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=trend)) and secure_limit:
+        #return True, 'held too long'
 
     if market_value >= secure_gains:
         return True, 'secure gains' 
@@ -96,15 +97,18 @@ def do_exit(position, signals):
     if market_value <= stop_loss:
         return True, 'stop loss'
     
-    if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C') and pl < 0:
+    if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
         return True, 'reversal'
+    
+    if pl > 75:
+        return True, 'such gains'
 
     # TODO: Look at the time interval
-    if market_value >= secure_limit and len(hst) > 30:
-        last_slope = features.slope(hst.iloc[-5:]['slope'])[0]
-        print(f'Slope: {last_slope}')
-        if last_slope < -0.1:
-            return True, f'secure limit slope'
+    #if secure_limit and len(hst) > 5:
+        #last_slope = features.slope(hst.iloc[-5:]['slope'])[0]
+        #print(f'Slope: {last_slope}')
+        #if last_slope < -0.1 and pl > 0:
+            #return True, f'secure limit slope'
 
     slope = features.slope(hst['market_value'])[0] if len(hst) > 5 else 0
     tracker.track(position.symbol, pl, market_value, slope)
@@ -125,7 +129,6 @@ def enter(models, market_client, trading_client, option_client):
         time = bars[-1:].index[0][1]
         indicator = bars.iloc[-1]['indicator']
 
-        bars = class_model.group_bars(bars)
         bars = class_model.preprocess_bars(bars)
         b = bars[-1:]
 
