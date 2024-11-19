@@ -94,4 +94,4 @@ def create_model(symbol, df):
     print(f'Ryans Kappa Score: {rys}')
     print('Confusion Matrix:\n', cm)
 
-    return model, rys
+    return model, 0

@@ -25,7 +25,5 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-#class_model.generate_model('QQQ', 30, market_client, runnup.classification, datetime.now())
-
-bars = get_data.get_bars('QQQ', datetime.now() - timedelta(days=90), datetime.now(), market_client, 1, 'Min')
-bars = features.feature_engineer_df(bars)
+df = options.get_bars('SPY241114P00595000', datetime(2024, 11, 14, 17, 12), datetime(2024, 11, 15), option_client)
+print(df)

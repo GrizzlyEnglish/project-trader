@@ -16,14 +16,12 @@ def classification(df):
         arr = features.trending_arr(row, 'close', trend, 'next', True, False, False)
         arr = np.array(arr)
 
-        slope = features.slope(arr)
-
         call_diff = row['close'] + delta
         put_diff = row['close'] - delta
 
-        if (arr >= call_diff).any() and slope > 0 and row['close_short_trend'] > 0:
+        if (arr >= call_diff).any():
             return 'buy'
-        elif (arr <= put_diff).any() and slope < 0 and row['close_short_trend'] < 0:
+        elif (arr <= put_diff).any():
             return 'sell'
         
         return 'hold'

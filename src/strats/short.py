@@ -80,19 +80,26 @@ def do_exit(position, signals):
     secure_gains = math.floor(cost + reward)
     stop_loss = math.floor(cost - risk)
 
-    secure_limit = cost + math.ceil(reward/2) or pl > 50
-
     print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal}')
 
     if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
         # Hold it we are signaling
         return False, ''
     
-    #if not hst.empty and ((datetime.now () - hst.iloc[0]['timestamp']) > timedelta(minutes=trend)) and secure_limit:
-        #return True, 'held too long'
+    passed_secure_gains = not hst.empty and (hst['market_value'] >= secure_gains).any()
+    if passed_secure_gains:
+        if market_value <= (secure_gains + 1):
+            return True, 'secure gains' 
 
-    if market_value >= secure_gains:
-        return True, 'secure gains' 
+        idx = hst.index[hst['market_value'] >= secure_gains][-1]
+        sub_hst = hst.iloc[idx:]['market_value']
+        if len(sub_hst) > 3:
+            slope = features.slope()[0] if len(sub_hst) > 3 else 0
+            if slope < .02:
+                return True, 'secure gains' 
+
+    if pl > 75:
+        return True, 'such gains'
     
     if market_value <= stop_loss:
         return True, 'stop loss'
@@ -100,18 +107,7 @@ def do_exit(position, signals):
     if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
         return True, 'reversal'
     
-    if pl > 75:
-        return True, 'such gains'
-
-    # TODO: Look at the time interval
-    #if secure_limit and len(hst) > 5:
-        #last_slope = features.slope(hst.iloc[-5:]['slope'])[0]
-        #print(f'Slope: {last_slope}')
-        #if last_slope < -0.1 and pl > 0:
-            #return True, f'secure limit slope'
-
-    slope = features.slope(hst['market_value'])[0] if len(hst) > 5 else 0
-    tracker.track(position.symbol, pl, market_value, slope)
+    tracker.track(position.symbol, pl, market_value)
 
     return False, ''
 
