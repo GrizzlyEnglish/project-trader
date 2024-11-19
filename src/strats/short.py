@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from src.helpers import class_model, get_data, tracker, options, features
 from src.strats import enter_option, exit_option
-from src.classifiers import trending, barrier
+from src.classifiers import trending
 from datetime import datetime, timedelta
 
 import ast
@@ -28,14 +28,14 @@ def generate_short_models(market_client, end):
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
         print('Barrier')
-        bmodel = class_model.generate_model(symbol, bars, barrier.classification)
+        #bmodel = class_model.generate_model(symbol, bars, barrier.classification)
         print('Trending')
         tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
         models.append({
             'symbol': symbol,
             'model': {
-                'barrier': bmodel['model'],
+                #'barrier': bmodel['model'],
                 'trend': tmodel['model'],
             } 
         })

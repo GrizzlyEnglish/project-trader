@@ -19,9 +19,9 @@ def classification(df):
         call_diff = row['close'] + delta
         put_diff = row['close'] - delta
 
-        if (arr >= call_diff).any():
+        if (arr > call_diff).any() and (arr > put_diff).all() and row['close_short_trend'] > 0:
             return 'buy'
-        elif (arr <= put_diff).any():
+        elif (arr < put_diff).any() and (arr < call_diff).all() and row['close_short_trend'] < 0:
             return 'sell'
         
         return 'hold'
