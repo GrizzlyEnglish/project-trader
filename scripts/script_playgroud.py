@@ -25,5 +25,5 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-df = options.get_bars('SPY241114P00595000', datetime(2024, 11, 14, 17, 12), datetime(2024, 11, 15), option_client)
+df = options.get_bars('SPY241023P00578000', datetime(2024, 10, 23, 16, 24), datetime(2024, 10, 24), option_client)
 print(df)

@@ -38,9 +38,9 @@ def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_cli
         if i[1].date() == dte.date() and i[1].hour > 18:
             exit = True
             reason = 'expired'
-        #if i[1].hour == 19:
-            #exit = True
-            #reason = 'exit before close'
+        if i[1].hour == 19:
+            exit = True
+            reason = 'exit before close'
         if force_exit:
             exit = True
             reason = 'Up to date'
@@ -79,7 +79,7 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
         if on_day.weekday() < 5:
 
             print(f'Generating model for day {on_day}')
-            model_info = short.generate_short_models(market_client, on_day)
+            model_info = short.generate_short_models(market_client, on_day - timedelta(days=1))
 
             for m in model_info:
                 print(f'Classifying start {on_day} for {m["symbol"]}')
@@ -96,7 +96,8 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
                         continue
 
                     row = held_bars.loc[i]
-                    enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions, row['indicator'])
+                    indicator = features.my_indicator(row)
+                    enter, signal = short.do_enter(m['model'], [h], m['symbol'], positions, indicator)
 
                     backtest_enter(m['symbol'], i, row, signal, enter, m)
 

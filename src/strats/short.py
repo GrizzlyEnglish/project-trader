@@ -23,13 +23,13 @@ def generate_short_models(market_client, end):
     for symbol in symbols:
         print(f'--- {symbol} ---')
 
+        m_st = m_st.replace(hour=1, minute=0, second=0)
+        m_end = m_end.replace(hour=23, minute=59, second=59)
+
         bars = get_data.get_bars(symbol, m_st, m_end, market_client, 1, 'Min')
         bars = features.feature_engineer_df(bars)
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
-        print('Barrier')
-        #bmodel = class_model.generate_model(symbol, bars, barrier.classification)
-        print('Trending')
         tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
         models.append({
@@ -50,23 +50,29 @@ def classify(model, bars):
 
     return 'Hold'
 
-def do_enter(model, bars, symbol, positions, indicator):
+def do_enter(model, bar, symbol, positions, indicator):
     if indicator == 0:
         return False, 'Hold'
     has_open_option = next((cp for cp in positions if symbol in cp.symbol), None) != None
-    signal = classify(model, bars)
-    return signal != 'Hold' and not has_open_option, signal
+    if has_open_option:
+        return False, 'Hold'
+
+    signal = classify(model, bar)
+    print(f'signal {signal} indicator {indicator}')
+    if signal == 'Buy' and indicator == 1 or signal == 'Sell' and indicator == -1:
+        return True, signal
+
+    return False, 'Hold'
 
 def do_exit(position, signals):
-    risk = int(os.getenv('RISK'))
-    reward_scale = int(os.getenv('REWARD_SCALE'))
-    #trend = int(os.getenv('trend'))
+    symbol = options.get_underlying_symbol(position.symbol)
+    risk = int(os.getenv(f'{symbol}_RISK'))
+    reward_scale = int(os.getenv(f'{symbol}_REWARD_SCALE'))
 
     pl = float(position.unrealized_plpc) * 100
     cost = float(position.cost_basis)
     qty = float(position.qty)
     market_value = float(position.market_value)
-    symbol = options.get_underlying_symbol(position.symbol)
     symbol_signal = next((s for s in signals if s['symbol'] == symbol), None)
     signal = 'Hold'
     if symbol_signal != None:
@@ -91,16 +97,20 @@ def do_exit(position, signals):
         if market_value <= (secure_gains + 1):
             return True, 'secure gains' 
 
-        idx = hst.index[hst['market_value'] >= secure_gains][-1]
+        idx = hst.index[hst['market_value'] >= secure_gains][0]
         sub_hst = hst.iloc[idx:]['market_value']
         if len(sub_hst) > 3:
-            slope = features.slope()[0] if len(sub_hst) > 3 else 0
-            if slope < .02:
+            slope = features.slope(sub_hst[:-2])[0] if len(sub_hst) > 3 else 0
+            slope_next = features.slope(sub_hst[:-1])[0] if len(sub_hst) > 3 else 0
+            slope_next_next = features.slope(sub_hst)[0] if len(sub_hst) > 3 else 0
+            if slope > slope_next > slope_next_next:
                 return True, 'secure gains' 
+            
+    if pl < 0 and len(hst) > 5 and stop_loss > 75:
+        slope = features.slope(hst['market_value'])[0] if len(hst) > 3 else 0
+        if slope < -.5:
+            return True, 'stop loss with slope'
 
-    if pl > 75:
-        return True, 'such gains'
-    
     if market_value <= stop_loss:
         return True, 'stop loss'
     
@@ -128,7 +138,7 @@ def enter(models, market_client, trading_client, option_client):
         bars = class_model.preprocess_bars(bars)
         b = bars[-1:]
 
-        enter, signal = do_enter(m['model'], b, m['symbol'], positions, indicator)
+        enter, signal = do_enter(m['model'], b, m['symbol'], positions)
 
         print(f'{m["symbol"]}: {time} {signal}')
 

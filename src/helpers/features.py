@@ -58,13 +58,6 @@ def trending_arr(df, label, amt, name, prepend=False, postpend=False, reverse=Tr
 def trending(df, label, amt, name, prepend=False, postpend=False, reverse=True):
     return slope(trending_arr(df, label, amt, name, prepend, postpend, reverse))
 
-def barrier(arr, barrier):
-    if np.all(barrier < arr[1:]):
-        return 1
-    elif np.all(barrier > arr[1:]):
-        return -1
-    return 0
-
 def slope(arr):
     if len(arr) <= 1:
         return 0
@@ -137,49 +130,34 @@ def feature_engineer_df(df):
     shifted_df = df.shift(1)
     shifted_df = shifted_df.add_suffix(f'__last')
     df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
+    shifted_df = df.shift(2)
+    shifted_df = shifted_df.add_suffix(f'__last__last')
+    df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
     del shifted_df
 
-    df = my_indicator(df)
+    #df = my_indicator(df)
 
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)
 
     return df
 
-def my_indicator(df):
-    def indicator(row):
-        if row['hour'] >= 19:
-            return 0
-        
-        amt = 5 if row.name[0] == 'SPY' else 3
+def my_indicator(row):
+    macd = row['macd'] > row['macd__last'] > row['macd__last__last'] and row['histogram'] > row['histogram__last'] > row['histogram__last__last']
 
-        pvi = row['pvi'] <= 1 and row['pvi'] - row['pvi__last'] >= 0
-        roc = row['roc'] <= 0 and row['roc'] - row['roc__last'] >= 0
-        macd = row['macd'] <= 0 and row['histogram'] > 0
-        bb = row['percent_b'] <= .5
-        close = row['close_short_trend'] < 0
+    pvi = abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
+    roc = row['roc'] > 0 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last']) > 0.03
 
-        count = pvi + roc + macd + bb + close
+    if pvi and roc and macd:
+        return 1
 
-        if count >= amt:
-            return 1
+    nvi = abs(row['nvi'] - row['nvi__last']) > 0.1 and abs(row['nvi__last'] - row['nvi__last__last']) > 0
+    roc = row['roc'] < 0 and row['roc'] < row['roc__last'] < row['roc__last__last'] and abs(row['roc'] - row['roc__last']) > 0.03
 
-        nvi = row['nvi'] <= 1 and row['nvi'] - row['nvi__last'] >= 0
-        roc = row['roc'] >= 0 and row['roc'] - row['roc__last'] <= 0
-        macd = row['macd'] >= 0 and row['histogram'] <= 0
-        bb = row['percent_b'] >= .5
-        close = row['close_short_trend'] > 0
+    if nvi and roc:
+        return -1
 
-        count = nvi + roc + macd + bb + close
-
-        if count >= amt:
-            return -1
-
-        return 0 
-    
-    df['indicator'] = df.apply(indicator, axis=1)
-
-    return df
+    return 0 
 
 def dip(df, n, name):
     df[f'min_{name}'] = df.iloc[argrelextrema(df.close.values, np.less_equal,

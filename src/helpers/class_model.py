@@ -10,7 +10,7 @@ import pandas as pd
 
 def sample_bars(df):
     bars = df.copy()
-    bars = bars[bars['indicator'] != 0]
+    #bars = bars[bars['indicator'] != 0]
 
     buys = bars[bars.label == 'buy']
     sells = bars[bars.label == 'sell']
