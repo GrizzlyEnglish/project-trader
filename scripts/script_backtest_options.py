@@ -20,7 +20,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-end = datetime(2024, 11, 20, 12, 30)
-start = end - timedelta(days=1)
+end = datetime(2024, 11, 21, 12, 30)
+start = end - timedelta(days=30)
 
 options_short.run_option_backtest(start, end, True)

@@ -81,7 +81,7 @@ def feature_engineer_df(df):
     df.loc[:, 'change'] = df['close'].diff()
 
     # candle sticks
-    df['candle_bar'] = df['open'] - df['close']
+    df['candle_bar'] = df['close'] - df['open']
     df['candle_lines'] = df['high'] - df['low']
 
     df['hour'] = df.apply(get_hour, axis=1)

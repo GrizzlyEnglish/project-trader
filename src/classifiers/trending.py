@@ -3,11 +3,11 @@ from src.helpers import features
 import pandas as pd
 import numpy as np
 import os
+import math
 
 def classification(df):
     symbol = df.index[0][0]
-    delta = float(os.getenv(f'{symbol}_DELTA'))
-    ticks = int(os.getenv(f'{symbol}_TICKS'))
+    ticks = int(os.getenv(f'TICKS'))
 
     date_trends = {}
 
@@ -15,14 +15,20 @@ def classification(df):
         day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
 
         bars = day_trend['bars']
-        post = bars.loc[row.name[1]:]['close']
+        post = bars.loc[row.name[1]:]
 
-        post_arr = post[1:ticks]
+        post = post[1:ticks]
+        post_close = post['close']
 
-        if (post_arr > (row['close'] - delta)).all() and row['close_short_trend'] > 0:
+        greens = len(post[post['candle_bar'] > 0])
+        reds = len(post[post['candle_bar'] < 0])
+
+        half_ticks = math.ceil(ticks/2)
+
+        if greens >= half_ticks and (post_close > (row['close'] - 1)).all():
             return 'buy'
         
-        if (post_arr < (row['close'] + delta)).all() and row['close_short_trend'] < 0:
+        if reds >= half_ticks and (post_close < (row['close'] + 1)).all():
             return 'sell'
 
         return 'hold'
