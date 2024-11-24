@@ -124,7 +124,7 @@ def run_option_backtest(start, end, show_graph):
                 'sold_at': index,
                 'held_for': index - p.bought_at,
                 'sold_for': reason,
-                'pl': pl
+                'pl': (mv - p.cost_basis)
             }
             sell_series[symbol].append(index)
             telemetry.append(tel)
@@ -147,6 +147,10 @@ def run_option_backtest(start, end, show_graph):
     if actions > 0:
         accuracy = correct_actions/actions
         print(f'Accuracy {accuracy} total {full_total}')
+    
+    if len(positions) > 0:
+        for p in positions:
+            print(f'Still holding {p.symbol} with pl {p.unrealized_plpc}')
 
     pd.DataFrame(data=telemetry).to_csv(f'../results/short_backtest.csv', index=True)
 

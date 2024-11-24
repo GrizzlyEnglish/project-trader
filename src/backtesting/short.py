@@ -13,15 +13,9 @@ option_bars = {}
 
 def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_client, backtest_exit, force_exit):
     for p in positions:
-        if p.symbol in option_bars:
-            bars = option_bars[p.symbol]
-        else:
-            oend = p_end
-            if oend >= datetime.now():
-                oend = datetime.now()
-            print(f'Getting option bars for {p.symbol} days {p_st} to {oend}')
-            bars = options.get_bars(p.symbol, p_st, oend, option_client)
-            option_bars[p.symbol] = bars
+        print(f'Getting option bars for {p.symbol} days {p_st} to {p_end}')
+        bars = options.get_bars(p.symbol, p_st, p_end, option_client)
+        option_bars[p.symbol] = bars
 
         if bars.empty:
             print('No option data')
@@ -38,7 +32,7 @@ def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_cli
         if i[1].date() == dte.date() and i[1].hour > 18:
             exit = True
             reason = 'expired'
-        if i[1].hour == 19:
+        if i[1].hour == 19 and (p.symbol == 'SPY' or p.symbol == 'QQQ'):
             exit = True
             reason = 'exit before close'
         if force_exit:
@@ -48,9 +42,14 @@ def check_positions(positions, i, last_close, m, signal, p_st, p_end, option_cli
         if exit == False:
             b = bars[bars.index.get_level_values('timestamp') <= i[1]]
             if b.empty:
-                mv = bars.iloc[0]['close'] * 100
+                current_bar = bars.iloc[0]
             else:
-                mv = b.iloc[-1]['close'] * 100
+                current_bar = b.iloc[-1]
+            if current_bar.name[1].date() != i[1].date() or current_bar.name[1].date() > i[1].date():
+                print(current_bar)
+                print(i)
+                raise ValueError("Looking at the wrong date for the contract")
+            mv = current_bar['close'] * 100
 
             qty = float(p.qty)
             mv = mv * qty
@@ -101,6 +100,6 @@ def backtest(start, end, backtest_enter, backtest_exit, market_client, option_cl
 
                     backtest_enter(m['symbol'], i, row, signal, enter, m)
 
-                    check_positions(positions, i, row['close'], m, signal, on_day - timedelta(days=1), on_day + timedelta(days=1), option_client, backtest_exit, False)
+                    check_positions(positions, i, row['close'], m, signal, on_day.replace(hour=9, minute=0, second=0, microsecond=0), i[1] + timedelta(hours=1), option_client, backtest_exit, False)
 
         on_day = on_day + timedelta(days=1)

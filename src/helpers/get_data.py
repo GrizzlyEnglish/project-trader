@@ -25,31 +25,14 @@ def get_bars(symbol, start, end, market_client, timeframe=1, unit='Min'):
                             adjustment=Adjustment.ALL,
                             feed=DataFeed.IEX,
                             timeframe=TimeFrame(amount=timeframe, unit=alp_unit)))
-    return full_data.df
+    
+    df = full_data.df
+
+    return df
 
 def get_buying_power(trading_client):
     account = trading_client.get_account()
     return float(account.buying_power)
-
-def check_exit_pdt_gaurd(symbol, trading_client):
-    return check_pdt_gaurd(symbol, OrderSide.BUY, trading_client)
-
-def check_enter_pdt_gaurd(symbol, trading_client):
-    return check_pdt_gaurd(symbol, OrderSide.SELL, trading_client)
-
-# IF TRUE WE CANT FLIP
-def check_pdt_gaurd(symbol, side, trading_client):
-    previous_date = datetime.now() - timedelta(hours=13)
-    orders = trading_client.get_orders(GetOrdersRequest(status='closed', after=previous_date, side=side))
-    stock_orders = sum(1 for o in orders if o.asset_class == AssetClass.US_EQUITY and o.symbol == symbol)
-    options_orders = sum(1 for o in orders if o.asset_class == AssetClass.US_OPTION and o.symbol.startswith(symbol))
-    return (stock_orders + options_orders) > 0
-
-def check_option_gaurd(trading_client):
-    previous_date = datetime.now() - timedelta(hours=13)
-    orders = trading_client.get_orders(GetOrdersRequest(status='closed', after=previous_date, side=OrderSide.BUY))
-    options_orders = sum(1 for o in orders if o.asset_class == AssetClass.US_OPTION)
-    return options_orders > 5
 
 def get_positions(trading_client):
     current_positions = trading_client.get_all_positions()

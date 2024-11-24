@@ -30,15 +30,18 @@ def generate_short_models(market_client, end):
         bars = features.feature_engineer_df(bars)
 
         print(f'Model start {m_st} model end {m_end} with bar counr of {len(bars)}')
-        tmodel = class_model.generate_model(symbol, bars, trending.classification)
+        try:
+            tmodel = class_model.generate_model(symbol, bars, trending.classification)
 
-        models.append({
-            'symbol': symbol,
-            'model': {
-                #'barrier': bmodel['model'],
-                'trend': tmodel['model'],
-            } 
-        })
+            models.append({
+                'symbol': symbol,
+                'model': {
+                    #'barrier': bmodel['model'],
+                    'trend': tmodel['model'],
+                } 
+            })
+        except:
+            print(f'Failed to generate model for {symbol} on {m_st}/{m_end}')
 
     return models
 
@@ -66,8 +69,13 @@ def do_enter(model, bar, symbol, positions, indicator):
 
 def do_exit(position, signals):
     symbol = options.get_underlying_symbol(position.symbol)
-    risk = int(os.getenv(f'{symbol}_RISK'))
-    reward_scale = int(os.getenv(f'{symbol}_REWARD_SCALE'))
+
+    if symbol == 'SPY' or symbol == 'QQQ':
+        risk = int(os.getenv('HIGH_RISK'))
+        reward_scale = int(os.getenv(f'HIGH_RISK_SCALE'))
+    else:
+        risk = int(os.getenv('LOW_RISK'))
+        reward_scale = int(os.getenv(f'LOW_RISK_SCALE'))
 
     pl = float(position.unrealized_plpc) * 100
     cost = float(position.cost_basis)
