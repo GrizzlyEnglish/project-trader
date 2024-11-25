@@ -144,7 +144,6 @@ def feature_engineer_df(df):
 
 def my_indicator(row):
     macd = row['macd'] > row['macd__last'] > row['macd__last__last'] and row['histogram'] > row['histogram__last'] > row['histogram__last__last']
-
     pvi = abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
     roc = row['roc'] > 0 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last']) > 0.03
 

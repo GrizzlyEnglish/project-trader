@@ -54,13 +54,10 @@ def int_to_label(row):
     elif row == 2: return 'Hold'
 
 def classify(model, bars):
-    predicitons = []
-    for key in model.keys():
-        pred = model[key].predict(bars)
-        pred = [int_to_label(p) for p in pred]
-        predicitons.append(pred[-1])
-
-    return predicitons
+    bars = preprocess_bars(bars)
+    pred = model.predict(bars)
+    #pred = [int_to_label(p) for p in pred]
+    return pred[-1]
 
 def preprocess_bars(bars):
     min_max_scaler = preprocessing.MinMaxScaler()
@@ -94,4 +91,4 @@ def create_model(symbol, df):
     print(f'Ryans Kappa Score: {rys}')
     print('Confusion Matrix:\n', cm)
 
-    return model, 0
+    return model
