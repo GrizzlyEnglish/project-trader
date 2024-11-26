@@ -195,16 +195,16 @@ class BacktestOptionShort:
                     model_builder = trending_model.TrendingModel(symbol, self.market_client)
 
                     # Get the model bars
-                    b_st = on_day - timedelta(days=self.day_diff)
-                    b_end = (on_day - timedelta(days=1)).replace(hour=20, minute=0)
-                    print(f'Getting model bars from {b_st} to {b_end}')
-                    bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
+                    #b_st = on_day - timedelta(days=self.day_diff)
+                    #b_end = (on_day - timedelta(days=1)).replace(hour=20, minute=0)
+                    #print(f'Getting model bars from {b_st} to {b_end}')
+                    #bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
 
                     # Build the model
-                    print(f'Generating model for day {on_day}')
-                    model_builder.add_bars(bars)
-                    model_builder.feature_engineer_bars()
-                    model_builder.classify()
+                    #print(f'Generating model for day {on_day}')
+                    #model_builder.add_bars(bars)
+                    #model_builder.feature_engineer_bars()
+                    #model_builder.classify()
 
                     # Get the signal bars
                     b_st = on_day - timedelta(days=self.day_diff)
@@ -213,7 +213,7 @@ class BacktestOptionShort:
                     bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
                     bars = features.feature_engineer_df(bars)
 
-                    signaler.add_model(model_builder.generate_model())
+                    #signaler.add_model(model_builder.generate_model())
 
                     # Just get the bars for the day
                     dtstr = on_day.strftime("%Y-%m-%d")

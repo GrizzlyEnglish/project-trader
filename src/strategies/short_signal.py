@@ -27,6 +27,10 @@ class Short:
 
         if indicator == 0:
             return False, 'hold'
+        elif indicator == 1:
+            return True, 'buy'
+        else:
+            return True, 'sell'
 
         has_open_option = next((cp for cp in self.positions if self.symbol in cp.symbol), None) != None
         if has_open_option:

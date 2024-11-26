@@ -5,9 +5,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import get_data, features
-from src.classifiers import trending
-from src.backtesting import chart
+from src.helpers import get_data, features, chart
 
 import numpy as np
 import ast
@@ -32,7 +30,7 @@ fig = 1
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 day_diff = int(os.getenv('DAYDIFF'))
 
-end = datetime(2024, 10, 23, 20)
+end = datetime(2024, 11, 6, 20)
 start = end - timedelta(days=day_diff)
 
 for symbol in symbols:
@@ -60,13 +58,13 @@ for symbol in symbols:
 
     for index, row in day_bars.iterrows():
         spot = len(close_prices[symbol]) + 1
-        close_prices[symbol].append([spot, row['close']])
+        close_prices[symbol].append([index, row['close']])
         if row['indicator'] == 1:
-            call_signal[symbol].append(spot)
+            call_signal[symbol].append(index)
         elif row['indicator'] == -1:
-            put_signal[symbol].append(spot)
+            put_signal[symbol].append(index)
         else:
-            hold_signal[symbol].append(spot)
+            hold_signal[symbol].append(index)
 
 for cs in symbols:
     print(f'{cs}: Call signal:{len(call_signal[cs])} Put signal:{len(put_signal[cs])} Hold signal: {len(hold_signal[cs])}')
