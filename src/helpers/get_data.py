@@ -6,13 +6,6 @@ from alpaca.data.enums import Adjustment,DataFeed
 from alpaca.trading.requests import GetOrdersRequest
 from src.helpers import features, class_model
 
-def get_model_bars(symbol, market_client, start, end, time_window, classification, unit='Min'):
-    bars = get_bars(symbol, start, end, market_client, time_window, unit)
-    bars = features.feature_engineer_df(bars)
-    if classification != None:
-        bars = classification(bars)
-    return bars
-
 def get_bars(symbol, start, end, market_client, timeframe=1, unit='Min'):
     alp_unit = TimeFrameUnit.Minute
 

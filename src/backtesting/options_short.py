@@ -9,14 +9,13 @@ import math
 
 class BacktestOptionShort:
 
-    def __init__(self, symbols, end, days, buy_amount, day_diff, market_client, trading_client, option_client) -> None:
+    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client) -> None:
         self.symbols = symbols
         self.end = end
         self.start = end - timedelta(days=days)
         self.market_client = market_client
         self.trading_client = trading_client
         self.option_client = option_client
-        self.buy_qty = buy_amount 
         self.day_diff = day_diff
         self.option_exit = option_exit.OptionExit(trading_client)
         self.close_series = {}
@@ -35,7 +34,7 @@ class BacktestOptionShort:
             self.sell_series[s] = []
             self.total[s] = 0
 
-    def enter(self, symbol, row, signal, enter) -> None:
+    def enter(self, symbol, row, signal, enter, buy_qty) -> None:
         index = row.name
 
         market_open = datetime.combine(index, time(13, 30), timezone.utc)
@@ -64,7 +63,7 @@ class BacktestOptionShort:
                 print(f'No bars for {contract_symbol}')
                 return
 
-            contract_price = bars['close'].iloc[-1] * self.buy_qty
+            contract_price = bars['close'].iloc[-1] * buy_qty
 
             if contract_price > 0:
                 class DotAccessibleDict:
@@ -78,7 +77,7 @@ class BacktestOptionShort:
                     'price': contract_price,
                     'cost_basis': contract_price * 100,
                     'bought_at': index,
-                    'qty': self.buy_qty,
+                    'qty': buy_qty,
                     'market_value': contract_price * 100,
                     'unrealized_plpc': 0,
                     'date_of': index.date()
@@ -102,7 +101,8 @@ class BacktestOptionShort:
                 'sold_at': index,
                 'held_for': index - p.bought_at,
                 'sold_for': reason,
-                'pl': (mv - p.cost_basis)
+                'pl': (mv - p.cost_basis),
+                'qty': p.qty
             }
             self.sell_series[symbol].append(index)
             self.telemetry.append(tel)
@@ -195,16 +195,16 @@ class BacktestOptionShort:
                     model_builder = trending_model.TrendingModel(symbol, self.market_client)
 
                     # Get the model bars
-                    #b_st = on_day - timedelta(days=self.day_diff)
-                    #b_end = (on_day - timedelta(days=1)).replace(hour=20, minute=0)
-                    #print(f'Getting model bars from {b_st} to {b_end}')
-                    #bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
+                    b_st = on_day - timedelta(days=self.day_diff)
+                    b_end = (on_day - timedelta(days=1)).replace(hour=20, minute=0)
+                    print(f'Getting model bars from {b_st} to {b_end}')
+                    bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
 
                     # Build the model
-                    #print(f'Generating model for day {on_day}')
-                    #model_builder.add_bars(bars)
-                    #model_builder.feature_engineer_bars()
-                    #model_builder.classify()
+                    print(f'Generating model for day {on_day}')
+                    model_builder.add_bars(bars)
+                    model_builder.feature_engineer_bars()
+                    model_builder.classify()
 
                     # Get the signal bars
                     b_st = on_day - timedelta(days=self.day_diff)
@@ -213,7 +213,7 @@ class BacktestOptionShort:
                     bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
                     bars = features.feature_engineer_df(bars)
 
-                    #signaler.add_model(model_builder.generate_model())
+                    signaler.add_model(model_builder.generate_model())
 
                     # Just get the bars for the day
                     dtstr = on_day.strftime("%Y-%m-%d")
@@ -222,12 +222,12 @@ class BacktestOptionShort:
                     for index in range(len(day_bars)): 
                         row = day_bars.iloc[[index]]
                         # Build the signaler to determine entry
-                        signaler.add_bars(bars.loc[:(symbol, row.index[0])])
+                        signaler.add_bars(bars.loc[:(symbol, row.index[0])].copy())
                         signaler.add_positions(self.positions)
 
-                        enter, signal = signaler.signal()
+                        enter, signal, buy_qty = signaler.signal()
 
-                        self.enter(symbol, row.iloc[0], signal, enter)
+                        self.enter(symbol, row.iloc[0], signal, enter, buy_qty)
 
                         self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
 

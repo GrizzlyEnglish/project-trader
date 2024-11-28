@@ -50,7 +50,9 @@ class OptionExit:
             secure_gains = math.floor(cost + reward)
             stop_loss = math.floor(cost - risk)
 
-            print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal}')
+            slope = features.slope(hst['p/l'])[0] if len(hst) > 3 else 0
+
+            print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal} slope: {slope}')
 
             if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
                 # Hold it we are signaling
@@ -71,8 +73,7 @@ class OptionExit:
                         continue
                     
             if pl < 0 and len(hst) > 5 and stop_loss > 75:
-                slope = features.slope(hst['market_value'])[0] if len(hst) > 3 else 0
-                if slope < -.5:
+                if slope < -5:
                     exits.append([position, 'stop loss with slope'])
                     continue
 

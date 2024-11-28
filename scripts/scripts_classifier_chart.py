@@ -1,13 +1,11 @@
 import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import get_data
-from src.classifiers import barrier
-from src.backtesting import chart
+from src.helpers import get_data, chart
+from src.strategies import trending_model
 
 import math
 import pandas as pd
@@ -33,7 +31,13 @@ fig = 1
 m_end = datetime(2024, 10, 11, 12, 30)
 m_st = m_end - timedelta(days=90)
 
-bars = get_data.get_model_bars('QQQ', market_client, m_st, m_end, 1, barrier.classification, 'Min')
+model = trending_model.TrendingModel('SPY', market_client)
+bars = get_data.get_bars('SPY', m_st, m_end, market_client)
+model.add_bars(bars)
+model.feature_engineer_bars()
+model.classify()
+
+bars = model.bars
 
 bars = bars.tail(500)
 

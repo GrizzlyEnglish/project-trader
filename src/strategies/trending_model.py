@@ -32,17 +32,11 @@ class TrendingModel:
             post = bars.loc[row.name[1]:]
 
             post = post[1:ticks]
-            post_close = post['close']
 
-            greens = len(post[post['candle_bar'] > 0])
-            reds = len(post[post['candle_bar'] < 0])
-
-            half_ticks = math.ceil(ticks/2)
-
-            if greens >= half_ticks and (post_close > (row['close'] - 1)).all():
+            if all(value >= row['close'] for value in post['open']) and all(value >= row['close'] for value in post['close']):
                 return 'buy'
             
-            if reds >= half_ticks and (post_close < (row['close'] + 1)).all():
+            if all(value <= row['close'] for value in post['open']) and all(value <= row['close'] for value in post['close']):
                 return 'sell'
 
             return 'hold'
