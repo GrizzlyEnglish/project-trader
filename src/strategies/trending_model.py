@@ -31,12 +31,15 @@ class TrendingModel:
             bars = day_trend['bars']
             post = bars.loc[row.name[1]:]
 
-            post = post[1:ticks]
+            #post = post[1:ticks]
+            
+            open_trend = features.slope(post['open'])
+            close = post.iloc[-1]['close']
 
-            if all(value >= row['close'] for value in post['open']) and all(value >= row['close'] for value in post['close']):
+            if open_trend > 0 and close >= row['close']:
                 return 'buy'
             
-            if all(value <= row['close'] for value in post['open']) and all(value <= row['close'] for value in post['close']):
+            if open_trend < 0 and close <= row['close']:
                 return 'sell'
 
             return 'hold'

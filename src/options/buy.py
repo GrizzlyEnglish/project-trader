@@ -5,6 +5,9 @@ from src.helpers import options, get_data, buy, tracker
 from src.messaging import discord
 from datetime import datetime
 
+import os
+import math
+
 class Buy:
 
     def __init__(self, trading_client, option_client) -> None:
@@ -34,6 +37,12 @@ class Buy:
             print(e)
             return False
 
+    def get_buying_power(ask_price, buying_power):
+        amt = int(os.getenv('BUY_AMOUNT'))
+
+        option_price = ask_price * 100
+        return min(math.floor(buying_power / option_price), amt)
+
     def purchase(self, classification, last_close_underlying) -> None:
         symbol = classification['symbol']
         classif = classification['signal']
@@ -43,6 +52,8 @@ class Buy:
 
         is_put = classif == 'Sell'
 
+        # TODO: Fix this
+        '''
         contract_symbol = options.create_option_symbol(symbol, options.next_friday(datetime.now()), 'P' if is_put else 'C', last_close_underlying)
         last_quote = options.get_option_snap_shot(contract_symbol, self.option_client)
         ask_price = last_quote.latest_quote.ask_price
@@ -53,3 +64,4 @@ class Buy:
             discord.send_alpaca_message(f'Limit order for {qty}x {contract_symbol} at ${ask_price}')
             self.submit_order(contract_symbol, qty, ask_price, self.trading_client)
             tracker.track(contract_symbol, 0, ask_price*100)
+        '''

@@ -1,6 +1,7 @@
 from datetime import datetime, time, timezone, timedelta
 from src.strategies import short_signal, trending_model, option_exit
 from src.helpers import options, features, tracker, get_data
+from src.data import options_data
 
 import pandas as pd
 import numpy as np
@@ -9,13 +10,14 @@ import math
 
 class BacktestOptionShort:
 
-    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client) -> None:
+    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client, polygon_client, use_polygon = False) -> None:
         self.symbols = symbols
         self.end = end
         self.start = end - timedelta(days=days)
         self.market_client = market_client
         self.trading_client = trading_client
         self.option_client = option_client
+        self.polygon_client = polygon_client
         self.day_diff = day_diff
         self.option_exit = option_exit.OptionExit(trading_client)
         self.close_series = {}
@@ -27,6 +29,9 @@ class BacktestOptionShort:
         self.actions = 0
         self.correct_actions = 0
         self.total = {}
+        self.use_polygon = use_polygon
+
+        self.held_option_bars = {}
 
         for s in self.symbols:
             self.close_series[s] = []
@@ -34,7 +39,7 @@ class BacktestOptionShort:
             self.sell_series[s] = []
             self.total[s] = 0
 
-    def enter(self, symbol, row, signal, enter, buy_qty) -> None:
+    def enter(self, symbol, row, signal, enter, buy_qty, on_day) -> None:
         index = row.name
 
         market_open = datetime.combine(index, time(13, 30), timezone.utc)
@@ -46,8 +51,6 @@ class BacktestOptionShort:
         close = row['close']
         self.close_series[symbol].append([index, close])
 
-        strike_price = math.floor(close)
-
         if enter:
             type = 'P'
             contract_type = 'put'
@@ -55,24 +58,28 @@ class BacktestOptionShort:
                 type = 'C'
                 contract_type = 'call'
 
-            contract_symbol = options.create_option_symbol(symbol, index if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index) , type, strike_price)
+            dte = index if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index)
+            data = options_data.OptionData(symbol, dte, type, close, self.option_client, self.polygon_client)
+            data.set_polygon(self.use_polygon)
 
-            bars = options.get_bars(contract_symbol, index - timedelta(hours=1), index, self.option_client)
+            bars = data.get_bars(on_day.replace(hour=9), on_day.replace(hour=23))
+
+            self.held_option_bars[data.symbol] = bars
 
             if bars.empty:
-                print(f'No bars for {contract_symbol}')
+                print(f'No bars for {data.symbol}')
                 return
 
-            contract_price = bars['close'].iloc[-1] * buy_qty
+            contract_price = bars[bars.index.get_level_values('timestamp') <= index]['close'].iloc[-1] * buy_qty
 
             if contract_price > 0:
                 class DotAccessibleDict:
                     def __init__(self, **entries):
                         self.__dict__.update(entries)
                 self.positions.append(DotAccessibleDict(**{
-                    'symbol': contract_symbol,
+                    'symbol': data.symbol,
                     'contract_type': contract_type,
-                    'strike_price': strike_price,
+                    'strike_price': data.strike,
                     'close': close,
                     'price': contract_price,
                     'cost_basis': contract_price * 100,
@@ -82,7 +89,7 @@ class BacktestOptionShort:
                     'unrealized_plpc': 0,
                     'date_of': index.date()
                 }))
-                print(f'Purchased {contract_symbol} at {index}')
+                print(f'Purchased {data.symbol} at {index}')
                 self.purchased_series[symbol].append(index)
 
     def exit(self, p, exit, reason, close, mv, index, pl, symbol) -> None:
@@ -117,8 +124,15 @@ class BacktestOptionShort:
     def check_positions(self, index, last_close, symbol, signal, p_st, p_end, force_exit) -> None:
         filtered_positions = [p for p in self.positions if options.get_underlying_symbol(p.symbol) == symbol]
         for p in filtered_positions:
+
+            '''
             print(f'Getting option bars for {p.symbol} days {p_st} to {p_end}')
-            bars = options.get_bars(p.symbol, p_st, p_end, self.option_client)
+            data = options_data.OptionData(symbol, datetime.now(), '', 0, self.option_client, self.polygon_client)
+            data.set_symbol(p.symbol)
+            data.set_polygon(True)
+            bars = data.get_bars(p_st, p_end)
+            '''
+            bars = self.held_option_bars[p.symbol]
 
             if bars.empty:
                 print('No option data')
@@ -134,12 +148,10 @@ class BacktestOptionShort:
 
             # Option expired, sell it
             dt = index
-            if dt.date() == dte.date() and dt.hour > 18:
+            print(f'Checking {p.symbol} at {dt}')
+            if dt.date() == dte.date() and dt.hour == 19 and dt.minute > 30:
                 exit = True
                 reason = 'expired'
-            if dt.hour == 19 and (p.symbol == 'SPY' or p.symbol == 'QQQ'):
-                exit = True
-                reason = 'exit before close'
             if force_exit:
                 exit = True
                 reason = 'up to date'
@@ -174,7 +186,7 @@ class BacktestOptionShort:
 
             self.exit(p, exit, reason, last_close, mv, dt, pl, symbol)
 
-    def run(self, show_graph = True) -> None:
+    def run(self, show_graph = True) -> int:
         start_dt = self.start
         end_dt = self.end
 
@@ -189,6 +201,10 @@ class BacktestOptionShort:
             if on_day.weekday() < 5:
 
                 on_day = on_day.replace(hour=9, minute=30)
+
+                if on_day == datetime(2024, 6, 19):
+                    on_day = on_day + timedelta(days=1)
+                    continue
 
                 for symbol in self.symbols:
                     signaler = short_signal.Short(symbol, self.market_client)
@@ -216,20 +232,25 @@ class BacktestOptionShort:
                     signaler.add_model(model_builder.generate_model())
 
                     # Just get the bars for the day
-                    dtstr = on_day.strftime("%Y-%m-%d")
-                    day_bars = bars.loc[(symbol, dtstr)]
+                    try:
+                        dtstr = on_day.strftime("%Y-%m-%d")
+                        day_bars = bars.loc[(symbol, dtstr)]
 
-                    for index in range(len(day_bars)): 
-                        row = day_bars.iloc[[index]]
-                        # Build the signaler to determine entry
-                        signaler.add_bars(bars.loc[:(symbol, row.index[0])].copy())
-                        signaler.add_positions(self.positions)
+                        for index in range(len(day_bars)): 
+                            row = day_bars.iloc[[index]]
+                            # Build the signaler to determine entry
+                            signaler.add_bars(bars.loc[:(symbol, row.index[0])].copy())
+                            signaler.add_positions(self.positions)
 
-                        enter, signal, buy_qty = signaler.signal()
+                            enter, signal, buy_qty = signaler.signal()
 
-                        self.enter(symbol, row.iloc[0], signal, enter, buy_qty)
+                            self.enter(symbol, row.iloc[0], signal, enter, buy_qty, on_day)
 
-                        self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
+                            self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
+                    except KeyError as e: 
+                        continue
+                    except Exception as e:
+                        continue
 
             on_day = on_day + timedelta(days=1)
 
@@ -265,3 +286,5 @@ class BacktestOptionShort:
 
             # Show the plot
             plt.show()
+        
+        return full_total
