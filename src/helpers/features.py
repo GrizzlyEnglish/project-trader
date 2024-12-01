@@ -238,7 +238,7 @@ def vortex_indicator(df, quotes):
     return df
 
 def moving_average(df, quotes):
-    results = indicators.get_kama(quotes, 10, small_window, large_window)
+    results = indicators.get_kama(quotes, 30, small_window, large_window)
 
     df.loc[:, 'efficiency_ratio'] = [r.efficiency_ratio for r in results]
     df.loc[:, 'kama'] = [r.kama for r in results]

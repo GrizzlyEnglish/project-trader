@@ -37,10 +37,10 @@ class Short:
 
         print(f'Signal {signal} indicator {indicator}')
 
-        if indicator == 1:
+        if indicator == 1 and signal != 'sell':
             qty = buy_amount*2 if signal == 'buy' else buy_amount
             return True, 'buy', qty
-        elif indicator == -1:
+        elif indicator == -1 and signal != 'buy':
             qty = buy_amount*2 if signal == 'sell' else buy_amount
             return True, 'sell', qty
         else:

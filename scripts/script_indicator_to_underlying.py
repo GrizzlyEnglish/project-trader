@@ -30,7 +30,7 @@ fig = 1
 symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 day_diff = int(os.getenv('DAYDIFF'))
 
-end = datetime(2024, 7, 9, 20)
+end = datetime(2024, 2, 21, 20)
 start = end - timedelta(days=day_diff)
 
 for symbol in symbols:

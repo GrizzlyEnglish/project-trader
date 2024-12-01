@@ -8,8 +8,9 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import get_data, options
-from src.data import options_data
+from src.helpers import get_data, features
+
+import numpy as np
 
 load_dotenv()
 
@@ -24,8 +25,29 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-end = datetime(2024, 6, 18, 19)
-start = end - timedelta(days=1)
-df = get_data.get_bars('SPY', start, end, market_client)
+symbol = 'SPY'
 
-print(df)
+end = datetime(2024, 2, 29, 19)
+start = end - timedelta(days=90)
+df = get_data.get_bars(symbol, start, end, market_client)
+df = features.feature_engineer_df(df)
+
+end = datetime(2024, 2, 29, 19)
+start = end - timedelta(days=30)
+df2 = get_data.get_bars(symbol, start, end, market_client)
+df2 = features.feature_engineer_df(df2)
+
+df = df.tail(len(df2))
+
+comparison = df != df2 
+differences = df[comparison] 
+differences = differences.where(comparison) 
+differences = differences.dropna(axis=1, how='all')
+print("Differences between DataFrames:") 
+print(differences)
+
+k1 = df['kama'][:-4]
+print(k1)
+
+k2 = df2['kama'][:-4]
+print(k2)

@@ -89,7 +89,7 @@ class BacktestOptionShort:
                     'unrealized_plpc': 0,
                     'date_of': index.date()
                 }))
-                print(f'Purchased {data.symbol} at {index}')
+                print(f'Purchased {data.symbol} at {index} with close at {close}')
                 self.purchased_series[symbol].append(index)
 
     def exit(self, p, exit, reason, close, mv, index, pl, symbol) -> None:
@@ -125,13 +125,6 @@ class BacktestOptionShort:
         filtered_positions = [p for p in self.positions if options.get_underlying_symbol(p.symbol) == symbol]
         for p in filtered_positions:
 
-            '''
-            print(f'Getting option bars for {p.symbol} days {p_st} to {p_end}')
-            data = options_data.OptionData(symbol, datetime.now(), '', 0, self.option_client, self.polygon_client)
-            data.set_symbol(p.symbol)
-            data.set_polygon(True)
-            bars = data.get_bars(p_st, p_end)
-            '''
             bars = self.held_option_bars[p.symbol]
 
             if bars.empty:

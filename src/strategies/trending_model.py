@@ -21,7 +21,6 @@ class TrendingModel:
     def classify(self):
         df = self.bars
         symbol = df.index[0][0]
-        ticks = int(os.getenv(f'TICKS'))
 
         date_trends = {}
 
@@ -31,15 +30,15 @@ class TrendingModel:
             bars = day_trend['bars']
             post = bars.loc[row.name[1]:]
 
-            #post = post[1:ticks]
-            
             open_trend = features.slope(post['open'])
-            close = post.iloc[-1]['close']
 
-            if open_trend > 0 and close >= row['close']:
+            filtered_arr = [value for value in post['close'] if value > (row['close'] + 1) or value < (row['close'] - 1)]
+            first = 0 if not filtered_arr else filtered_arr[0]
+
+            if open_trend > 0 and first > row['close']:
                 return 'buy'
             
-            if open_trend < 0 and close <= row['close']:
+            if open_trend < 0 and first != 0 and first < row['close']:
                 return 'sell'
 
             return 'hold'

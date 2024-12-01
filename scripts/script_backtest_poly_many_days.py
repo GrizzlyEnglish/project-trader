@@ -29,7 +29,7 @@ polygon_client = RESTClient(api_key=polygon_key)
 
 totals = []
 end = datetime(2024, 2, 24, 12, 30)
-for i in range(10):
+for i in range(2):
     runner = options_short.BacktestOptionShort(symbols, end, 5, day_diff, market_client, trading_client, option_client, polygon_client)
     t = runner.run(False)
     totals.append([end, t])

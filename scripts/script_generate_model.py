@@ -24,7 +24,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 model = trending_model.TrendingModel('SPY', market_client)
-end = datetime(2023, 11, 27, 20)
+end = datetime(2024, 11, 27, 20)
 bars = get_data.get_bars('SPY', end - timedelta(days=30), end, market_client)
 model.add_bars(bars)
 model.feature_engineer_bars()
