@@ -31,6 +31,9 @@ class BacktestOptionShort:
         self.total = {}
         self.use_polygon = use_polygon
 
+        self.account = 30000
+        self.account_bars = []
+
         self.held_option_bars = {}
 
         for s in self.symbols:
@@ -46,6 +49,8 @@ class BacktestOptionShort:
         market_close = datetime.combine(index, time(19, 1), timezone.utc)
 
         if index <= market_open or index >= market_close:
+            if enter:
+                print('Not purcharsing outside market hours')
             return
 
         close = row['close']
@@ -58,8 +63,7 @@ class BacktestOptionShort:
                 type = 'C'
                 contract_type = 'call'
 
-            dte = index if symbol == 'QQQ' or symbol == 'SPY' else options.next_friday(index)
-            data = options_data.OptionData(symbol, dte, type, close, self.option_client, self.polygon_client)
+            data = options_data.OptionData(symbol, index, type, close, self.option_client, self.polygon_client)
             data.set_polygon(self.use_polygon)
 
             bars = data.get_bars(on_day.replace(hour=9), on_day.replace(hour=23))
@@ -91,6 +95,7 @@ class BacktestOptionShort:
                 }))
                 print(f'Purchased {data.symbol} at {index} with close at {close}')
                 self.purchased_series[symbol].append(index)
+                self.account = self.account - (contract_price * 100)
 
     def exit(self, p, exit, reason, close, mv, index, pl, symbol) -> None:
         if exit:
@@ -120,6 +125,7 @@ class BacktestOptionShort:
             self.total[symbol] = self.total[symbol] + (mv - p.cost_basis)
             self.positions.remove(p)
             tracker.clear(p.symbol)
+            self.account = self.account + mv
 
     def check_positions(self, index, last_close, symbol, signal, p_st, p_end, force_exit) -> None:
         filtered_positions = [p for p in self.positions if options.get_underlying_symbol(p.symbol) == symbol]
@@ -155,7 +161,7 @@ class BacktestOptionShort:
                     current_bar = bars.iloc[0]
                 else:
                     current_bar = b.iloc[-1]
-                if current_bar.name[1].date() != dt.date() or current_bar.name[1].date() > dt.date():
+                if (symbol == 'SPY' or symbol == 'QQQ') and (current_bar.name[1].date() != dt.date() or current_bar.name[1].date() > dt.date()):
                     print(current_bar)
                     print(dt)
                     raise ValueError("Looking at the wrong date for the contract")
@@ -240,9 +246,14 @@ class BacktestOptionShort:
                             self.enter(symbol, row.iloc[0], signal, enter, buy_qty, on_day)
 
                             self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
+
+                            total_market_value = sum(float(item.market_value) for item in self.positions)
+                            self.account_bars.append([len(self.account_bars) + 1, self.account + total_market_value])
                     except KeyError as e: 
+                        print(e)
                         continue
                     except Exception as e:
+                        print(e)
                         continue
 
             on_day = on_day + timedelta(days=1)
@@ -261,7 +272,7 @@ class BacktestOptionShort:
             for p in self.positions:
                 print(f'Still holding {p.symbol} with pl {p.unrealized_plpc}')
 
-        pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest.csv', index=True)
+        pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}.csv', index=True)
 
         if show_graph:
             fig = plt.figure(1)

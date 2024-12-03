@@ -21,7 +21,7 @@ class Short:
     def add_positions(self, positions) -> None:
         self.positions = positions
 
-    def signal(self) -> Tuple[bool, str]:
+    def signal(self) -> Tuple[bool, str, int]:
         bar = self.bars[-1:]
         indicator = features.my_indicator(bar.iloc[0])
         buy_amount = int(os.getenv('BUY_AMOUNT'))
@@ -35,7 +35,7 @@ class Short:
 
         signal = class_model.classify(self.model, self.bars)
 
-        print(f'Signal {signal} indicator {indicator}')
+        print(f'Signal {signal} indicator {indicator} {bar.index[0][1]}')
 
         if indicator == 1 and signal != 'sell':
             qty = buy_amount*2 if signal == 'buy' else buy_amount

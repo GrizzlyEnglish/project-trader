@@ -1,5 +1,5 @@
 from src.strategies import trending_model, option_exit, short_signal
-from src.helpers import get_data, tracker
+from src.helpers import get_data, tracker, features
 from src.options import sell, buy
 from datetime import timedelta, datetime
 
@@ -34,30 +34,24 @@ class Short_Strat:
     def check_enter(self) -> None:
         m_end = datetime.now() + timedelta(days=1)
         m_st = m_end - timedelta(days=self.day_diff)
-        positions = get_data.get_positions(self.trading_client)
+        positions = get_data.get_option_positions(self.trading_client)
 
         for m in self.models:
-            bars = get_data.get_model_bars(m['symbol'], self.market_client, m_st, m_end, 1, None, 'Min')
-            close = bars.iloc[-1]['close'] 
-            time = bars[-1:].index[0][1]
+            print(f'Getting days bars from {m_st} to {m_end}')
+            bars = get_data.get_bars(m['symbol'], m_st, m_end, self.market_client)
+            bars = features.feature_engineer_df(bars)
 
             signaler = short_signal.Short(m['symbol'], self.market_client)
 
             signaler.add_bars(bars)
             signaler.add_model(m['model'])
             signaler.add_positions(positions)
-            signaler.feature_engineer_bars()
 
-            enter, signal = signaler.signal()
+            enter, signal, qty = signaler.signal()
 
-            print(f'{m["symbol"]}: {time} {signal}')
+            print(f'{m["symbol"]}: {bars.iloc[-1].name[1]} {signal}')
 
-            if enter:
-                c = {
-                    'symbol': m['symbol'],
-                    'signal': signal,
-                }
-                self.buyer.purchase(c, close)
+            self.buyer.purchase(m['symbol'], enter, signal, bars.iloc[-1]['close'], qty)
 
     def check_exit(self) -> None:
         positions = get_data.get_option_positions(self.trading_client)

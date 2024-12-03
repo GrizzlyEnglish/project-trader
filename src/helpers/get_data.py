@@ -23,10 +23,6 @@ def get_bars(symbol, start, end, market_client, timeframe=1, unit='Min'):
 
     return df
 
-def get_buying_power(trading_client):
-    account = trading_client.get_account()
-    return float(account.buying_power)
-
 def get_option_positions(trading_client):
     current_positions = trading_client.get_all_positions()
     return [p for p in current_positions if p.asset_class == AssetClass.US_OPTION]

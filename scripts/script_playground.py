@@ -8,7 +8,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import get_data, features
+from src.data import options_data
 
 import numpy as np
 
@@ -29,25 +29,15 @@ symbol = 'SPY'
 
 end = datetime(2024, 2, 29, 19)
 start = end - timedelta(days=90)
-df = get_data.get_bars(symbol, start, end, market_client)
-df = features.feature_engineer_df(df)
 
-end = datetime(2024, 2, 29, 19)
-start = end - timedelta(days=30)
-df2 = get_data.get_bars(symbol, start, end, market_client)
-df2 = features.feature_engineer_df(df2)
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 12), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+print(od.symbol)
 
-df = df.tail(len(df2))
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 13), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+print(od.symbol)
 
-comparison = df != df2 
-differences = df[comparison] 
-differences = differences.where(comparison) 
-differences = differences.dropna(axis=1, how='all')
-print("Differences between DataFrames:") 
-print(differences)
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 14), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+print(od.symbol)
 
-k1 = df['kama'][:-4]
-print(k1)
-
-k2 = df2['kama'][:-4]
-print(k2)
+od = options_data.OptionData(symbol, datetime(2024, 2, 28, 14), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+print(od.symbol)

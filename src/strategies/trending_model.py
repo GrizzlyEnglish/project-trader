@@ -25,6 +25,11 @@ class TrendingModel:
         date_trends = {}
 
         def label(row):
+            delta = float(os.getenv('HIGH_RISK_DELTA'))
+
+            if self.symbol != 'SPY' or self.symbol != 'QQQ':
+                delta = float(os.getenv('LOW_RISK_DELTA'))
+
             day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
 
             bars = day_trend['bars']
@@ -32,7 +37,7 @@ class TrendingModel:
 
             open_trend = features.slope(post['open'])
 
-            filtered_arr = [value for value in post['close'] if value > (row['close'] + 1) or value < (row['close'] - 1)]
+            filtered_arr = [value for value in post['close'] if value > (row['close'] + delta) or value < (row['close'] - delta)]
             first = 0 if not filtered_arr else filtered_arr[0]
 
             if open_trend > 0 and first > row['close']:

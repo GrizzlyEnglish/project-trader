@@ -26,7 +26,8 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbol = 'QQQ'
+symbol = 'GOOGL'
+delta = .25
 end = datetime(2024, 11, 30, 19)
 start = end - timedelta(days=30)
 df = get_data.get_bars(symbol, start, end, market_client)
@@ -34,7 +35,7 @@ df = features.feature_engineer_df(df)
 df['indicator'] = df.apply(features.my_indicator, axis=1)
 
 def max_or_min_first(arr, num): 
-    filtered_arr = [value for value in arr if value > (num + 1) or value < (num - 1)] 
+    filtered_arr = [value for value in arr if value > (num + delta) or value < (num - delta)] 
 
     if not filtered_arr:
         return 0

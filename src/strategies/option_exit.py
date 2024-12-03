@@ -57,6 +57,10 @@ class OptionExit:
             if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
                 # Hold it we are signaling
                 continue
+
+            if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
+                exits.append([position, 'reversal'])
+                continue
             
             passed_secure_gains = not hst.empty and (hst['market_value'] >= secure_gains).any()
             if passed_secure_gains:
@@ -79,12 +83,8 @@ class OptionExit:
 
             if market_value <= stop_loss:
                 exits.append([position, 'stop loss'])
-                continue
-            
-            if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
-                exits.append([position, 'reversal'])
-                continue
-            
+                continue     
+         
             tracker.track(position.symbol, pl, market_value)
 
         return exits

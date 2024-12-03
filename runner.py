@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from src.strats import short
-from src.helpers import get_data, load_parameters
+from src.helpers import get_data
+from src.runner import generate_models
+from src.strategies import short_strat
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
@@ -10,6 +11,7 @@ from alpaca.data.historical.option import OptionHistoricalDataClient
 import schedule
 import time
 import os
+import ast
 
 load_dotenv()
 
@@ -17,6 +19,8 @@ api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
 paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
+day_diff = int(os.getenv('DAYDIFF'))
+symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
@@ -45,21 +49,23 @@ def check_short_enter():
     global short_models, signals
 
     print("Checking for entry to short positions")
-    signals = short.enter(short_models, market_client, trading_client, option_client)
+    strat.check_enter()
 
 def generate_short_models():
     global short_models
 
     print("Generating short models")
-    short_models = short.generate_short_models(market_client, datetime.now() - timedelta(days=1))
+    short_models = strat.create_models((datetime.now() - timedelta(days=1)).replace(hour=23))
 
 def check_exit():
     print("Checking for exits")
-    short.exit(signals, market_client, trading_client, option_client)
+    strat.check_exit()
 
 def run_threaded(job_func, *args):
     with ThreadPoolExecutor(max_workers=5) as executor:
         executor.submit(job_func, *args)
+
+strat = short_strat.Short_Strat(symbols, day_diff, market_client, trading_client, option_client)
 
 schedule.every().day.at("09:00").do(generate_short_models)
 

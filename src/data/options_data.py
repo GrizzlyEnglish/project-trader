@@ -9,18 +9,27 @@ import pandas as pd
 
 class OptionData:
 
-    def __init__(self, underlying_symbol, dte, c_or_p, strike_price, option_client, polygon_client) -> None:
+    def __init__(self, underlying_symbol, current_time, c_or_p, strike_price, option_client, polygon_client) -> None:
         self.option_client = option_client
         self.polygon_client = polygon_client
         self.underlying_symbol = underlying_symbol
         self.is_polygon = False
-        self.strike = self.determine_strike(strike_price, dte, c_or_p)
+        dte = current_time if underlying_symbol == 'QQQ' or underlying_symbol == 'SPY' else options.next_friday(current_time)
+        self.strike = self.determine_strike(strike_price, current_time, dte, c_or_p, underlying_symbol)
         self.symbol = options.create_option_symbol(underlying_symbol, dte, c_or_p, self.strike)
 
-    def determine_strike(self, strike, dte, c_or_p) -> int:
-        oob = dte.replace(hour=9)
-        dst = ((dte - oob).total_seconds() / 3600) / 2
-        strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
+    def determine_strike(self, strike, current_time, dte, c_or_p, underlying_symbol) -> int:
+        eob = dte.replace(hour=18)
+        dst = math.floor((eob - current_time).total_seconds() / 3600 / 2)
+        if dst > 6:
+            dst = 0
+        else:
+            dst = min(dst, 3)
+        new_strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
+        print(f'{dst} with {eob-current_time} {c_or_p} changing {strike} to {new_strike}')
+        strike = new_strike
+        if underlying_symbol != 'SPY' and underlying_symbol != 'QQQ':
+            strike = (math.ceil(strike / 5) * 5) if c_or_p == 'C' else (math.ceil(strike / 5) * 5)
         return strike
 
     def set_symbol(self, symbol) -> None:
