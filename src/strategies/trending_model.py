@@ -40,7 +40,7 @@ class TrendingModel:
         date_trends = {}
 
         def label(row):
-            delta = float(os.getenv('HIGH_RISK_DELTA'))
+            delta = float(os.getenv(f'{symbol}_DELTA'))
 
             day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
 

@@ -19,20 +19,21 @@ api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
 paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
-delta = float(os.getenv('HIGH_RISK_DELTA'))
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-model_end = datetime(2024, 10, 1, 20)
+symbol = 'SPY'
+model_end = datetime(2024, 2, 1, 20)
+delta = float(os.getenv(f'{symbol}_DELTA'))
 
-model = trending_model.TrendingModel('SPY', model_end, 90, 600, market_client)
+model = trending_model.TrendingModel(symbol, model_end, 90, 200, market_client)
 
 knn = model.generate_model()
 
 end = datetime(2024, 11, 29, 20)
-test_bars = get_data.get_bars('SPY', end - timedelta(days=30), end, market_client)
+test_bars = get_data.get_bars(symbol, end - timedelta(days=90), end, market_client)
 test_bars = features.feature_engineer_df(test_bars)
 
 total_action = 1
@@ -59,8 +60,15 @@ for dt in dates:
                 first = features.max_or_min_first(np.array(post['close']), delta, row['close'])
 
                 ind = 'sell' if row['indicator'] == -1 else 'buy'
-                pred_acc = 'correct' if pred == 'sell' and row['close'] > first else 'incorrect'
-                ind_acc = 'correct' if ind == 'sell' and row['close'] > first else 'incorrect'
+                pred_acc = 'incorrect'
+                ind_acc = 'incorrect'
+
+                if (pred == 'sell' and row['close'] > first and first != 0) or (pred == 'buy' and row['close'] < first):
+                    pred_acc = 'correct'
+
+                if (ind == 'sell' and row['close'] > first and first != 0) or (ind == 'buy' and row['close'] < first):
+                    ind_acc = 'correct'
+
                 pred_correct_action = pred_correct_action + (1 if pred_acc == 'correct' else 0)
                 ind_correct_action = ind_correct_action + (1 if ind_acc == 'correct' else 0)
                 total_action = total_action + 1

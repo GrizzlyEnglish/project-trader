@@ -6,7 +6,7 @@ from src.data import options_data
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import math
+import os
 
 class BacktestOptionShort:
 
@@ -199,7 +199,8 @@ class BacktestOptionShort:
         models = {}
 
         for symbol in self.symbols:
-            model_builder = trending_model.TrendingModel(symbol, end_dt - timedelta(days=1), 90, 200, self.market_client)
+            n = int(os.getenv(f'{symbol}_N'))
+            model_builder = trending_model.TrendingModel(symbol, end_dt - timedelta(days=1), 90, n, self.market_client)
             models[symbol] = model_builder.generate_model()
 
         for t in range(amt_days):
@@ -241,7 +242,10 @@ class BacktestOptionShort:
                             self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
 
                             total_market_value = sum(float(item.market_value) for item in self.positions)
-                            self.account_bars.append([len(self.account_bars) + 1, self.account + total_market_value])
+
+                            amt = self.account + total_market_value
+                            if len(self.account_bars) == 0 or self.account_bars[-1][1] != amt:
+                                self.account_bars.append([len(self.account_bars) + 1, amt])
                     except KeyError as e: 
                         print(e)
                         continue

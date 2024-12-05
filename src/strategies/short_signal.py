@@ -24,7 +24,6 @@ class Short:
     def signal(self) -> Tuple[bool, str, int]:
         bar = self.bars[-1:]
         indicator = features.my_indicator(bar.iloc[0])
-        buy_amount = int(os.getenv('BUY_AMOUNT'))
 
         if indicator == 0:
             return False, 'hold', 0

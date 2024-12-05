@@ -21,13 +21,13 @@ class OptionData:
     def determine_strike(self, strike, current_time, dte, c_or_p) -> int:
         eob = dte.replace(hour=18)
         dst = math.floor((eob - current_time).total_seconds() / 3600)
-        if dst < 3:
+        if dst < 2:
             self.dte = self.dte + timedelta(days=1)
             if self.dte.weekday() == 5:
                 self.dte = self.dte + timedelta(days=2)
-            dst = 3
+            dst = 1
         else:
-            dst = min(6 - dst, 3)
+            dst = 6 - dst
         new_strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
         print(f'{dst} with {eob-current_time} {c_or_p} changing {strike} to {new_strike}')
         strike = new_strike
