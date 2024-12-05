@@ -11,6 +11,11 @@ class OptionExit:
         self.signals = []
         self.trading_client = trading_client
 
+        self.slope_loss = int(os.getenv('SLOPE_LOSS'))
+        self.stop_loss_val = int(os.getenv('STOP_LOSS'))
+        self.slope_gains = int(os.getenv('SLOPE_GAINS'))
+        self.secure_gains_val = int(os.getenv('SECURE_GAINS'))
+
     def add_positions(self, positions) -> None:
         self.positions = positions
 
@@ -26,13 +31,6 @@ class OptionExit:
         for position in self.positions:
             symbol = options.get_underlying_symbol(position.symbol)
 
-            if symbol == 'SPY' or symbol == 'QQQ':
-                risk = int(os.getenv('HIGH_RISK'))
-                reward_scale = int(os.getenv(f'HIGH_RISK_SCALE'))
-            else:
-                risk = int(os.getenv('LOW_RISK'))
-                reward_scale = int(os.getenv(f'LOW_RISK_SCALE'))
-
             pl = float(position.unrealized_plpc) * 100
             cost = float(position.cost_basis)
             qty = float(position.qty)
@@ -43,48 +41,52 @@ class OptionExit:
                 signal = symbol_signal['signal']
             hst = tracker.get(position.symbol)
 
-            # Determine the actual amount we are risking, and how much to gain
-            risk = min(cost, risk*qty)
-            reward = risk * reward_scale
-
-            secure_gains = math.floor(cost + reward)
-            stop_loss = math.floor(cost - risk)
-
             slope = features.slope(hst['p/l'])[0] if len(hst) > 3 else 0
+            immediate_slope = features.slope(hst[-3:]['p/l'])[0] if len(hst) > 3 else 0
+            gains = (market_value - cost) / qty
 
-            print(f'{position.symbol} P/L % {pl} {stop_loss}/{secure_gains} current: {market_value} bought: {cost} signal: {signal} slope: {slope}')
+            print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} signal: {signal} slope: {slope}/{immediate_slope}')
 
-            if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
-                # Hold it we are signaling
+            if self.signal_check(signal, position, exits) or self.stop_loss(hst, pl, gains, position, market_value, slope, exits) or self.secure_gains(hst, gains, slope, position, exits):
                 continue
-
-            if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
-                exits.append([position, 'reversal'])
-                continue
-            
-            passed_secure_gains = not hst.empty and (hst['market_value'] >= secure_gains).any()
-            if passed_secure_gains:
-                if market_value <= (secure_gains + 1):
-                    exits.append([position, 'secure_gains'])
-                    continue
-
-                idx = hst.index[hst['market_value'] >= secure_gains][0]
-                sub_hst = hst.iloc[idx:]['market_value']
-                if len(sub_hst) > 3:
-                    slope = features.slope(sub_hst)[0]
-                    if slope < 1:
-                        exits.append([position, 'secure_gains'])
-                        continue
-                    
-            if pl < 0 and len(hst) > 5 and stop_loss > 75:
-                if slope < -5:
-                    exits.append([position, 'stop loss with slope'])
-                    continue
-
-            if market_value <= stop_loss:
-                exits.append([position, 'stop loss'])
-                continue     
          
-            tracker.track(position.symbol, pl, market_value)
+            tracker.track(position.symbol, pl, gains, market_value)
 
         return exits
+    
+    def signal_check(self, signal, position, exits) -> bool:
+        if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
+            # Hold it we are signaling
+            return True
+
+        if (signal == 'Buy' and position.symbol[-9] == 'P') or (signal == 'Sell' and position.symbol[-9] == 'C'):
+            exits.append([position, 'reversal'])
+            return True
+
+        return False
+    
+    def secure_gains(self, hst, gains, slope, position, exits) -> bool:
+        passed_secure_gains = not hst.empty and (hst['gains'] >= self.secure_gains_val).any()
+        if passed_secure_gains and slope < 2:
+            exits.append([position, 'secure gains'])
+            return True
+        
+        if len(hst) > 5 and gains > self.slope_gains:
+            if slope < -1:
+                exits.append([position, 'secure gains with slope'])
+                return True
+
+        return False
+
+    def stop_loss(self, hst, pl, gains, position, market_value, slope, exits) -> bool:
+        if pl < 0:
+            if -gains >= self.stop_loss_val:
+                exits.append([position, 'stop loss'])
+                return True
+
+            if len(hst) > 5 and -gains < self.slope_loss:
+                if slope < -1:
+                    exits.append([position, 'stop loss with slope'])
+                    return True
+
+        return False

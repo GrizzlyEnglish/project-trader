@@ -34,14 +34,6 @@ df = get_data.get_bars(symbol, start, end, market_client)
 df = features.feature_engineer_df(df)
 df['indicator'] = df.apply(features.my_indicator, axis=1)
 
-def max_or_min_first(arr, num): 
-    filtered_arr = [value for value in arr if value > (num + delta) or value < (num - delta)] 
-
-    if not filtered_arr:
-        return 0
-    
-    return filtered_arr[0]
-
 actions = 0
 correct = 0
 incorrect_bars = []
@@ -55,7 +47,7 @@ for dt in dates:
         if row['indicator'] != 0: 
             actions = actions + 1
             post = day_bars.loc[row.name:]
-            first = max_or_min_first(np.array(post['close']), row['close'])
+            first = features.max_or_min_first(np.array(post['close']), delta, row['close'])
             if row['indicator'] == 1 and first > row['close']:
                 print(f'Call correct {row["close"]}/{first} on {index}')
                 correct = correct + 1

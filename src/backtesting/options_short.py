@@ -147,8 +147,9 @@ class BacktestOptionShort:
 
             # Option expired, sell it
             dt = index
+            last_option_bar_dt = bars.iloc[-1].name[1]
             print(f'Checking {p.symbol} at {dt}')
-            if dt.date() == dte.date() and dt.hour == 19 and dt.minute > 30:
+            if (dt.date() == dte.date() and dt.hour == 19 and dt.minute > 30) or (dt.date() == last_option_bar_dt.date() and dt > last_option_bar_dt):
                 exit = True
                 reason = 'expired'
             if force_exit:
@@ -195,6 +196,11 @@ class BacktestOptionShort:
 
         # Loop every day generate a model for the day, then loop the days bars
         amt_days = (end_dt - start_dt).days
+        models = {}
+
+        for symbol in self.symbols:
+            model_builder = trending_model.TrendingModel(symbol, end_dt - timedelta(days=1), 90, 200, self.market_client)
+            models[symbol] = model_builder.generate_model()
 
         for t in range(amt_days):
             if on_day.weekday() < 5:
@@ -207,28 +213,15 @@ class BacktestOptionShort:
 
                 for symbol in self.symbols:
                     signaler = short_signal.Short(symbol, self.market_client)
-                    model_builder = trending_model.TrendingModel(symbol, self.market_client)
-
-                    # Get the model bars
-                    b_st = on_day - timedelta(days=self.day_diff)
-                    b_end = (on_day - timedelta(days=1)).replace(hour=20, minute=0)
-                    print(f'Getting model bars from {b_st} to {b_end}')
-                    bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
-
-                    # Build the model
-                    print(f'Generating model for day {on_day}')
-                    model_builder.add_bars(bars)
-                    model_builder.feature_engineer_bars()
-                    model_builder.classify()
 
                     # Get the signal bars
                     b_st = on_day - timedelta(days=self.day_diff)
-                    b_end = on_day.replace(hour=20, minute=0)
+                    b_end = on_day.replace(hour=23, minute=0)
                     print(f'Getting days bars from {b_st} to {b_end}')
                     bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
                     bars = features.feature_engineer_df(bars)
 
-                    signaler.add_model(model_builder.generate_model())
+                    signaler.add_model(models[symbol])
 
                     # Just get the bars for the day
                     try:

@@ -4,6 +4,9 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics, preprocessing
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 import os
 import pandas as pd
@@ -49,21 +52,21 @@ def label_to_int(row):
     elif row == 'hold': return 2
 
 def int_to_label(row):
-    if row == 0: return 'Buy'
-    elif row == 1: return 'Sell'
-    elif row == 2: return 'Hold'
+    if row == 0: return 'buy'
+    elif row == 1: return 'sell'
+    elif row == 2: return 'hold'
 
 def classify(model, bars):
     bars = preprocess_bars(bars)
-    pred = model.predict(bars)
-    #pred = [int_to_label(p) for p in pred]
-    return pred[-1]
+    pred = model.predict([bars[-1]])
+    pred = [int_to_label(p) for p in pred]
+    return pred[0]
 
 def preprocess_bars(bars):
     min_max_scaler = preprocessing.MinMaxScaler()
     return min_max_scaler.fit_transform(bars)
 
-def create_model(symbol, df):
+def create_model(symbol, df, n):
     df = df.dropna()
 
     if df.empty:
@@ -71,6 +74,7 @@ def create_model(symbol, df):
         return None, 0
 
     target = df['label']
+    target = [label_to_int(t) for t in target]
     feature = df.drop('label', axis=1)
 
     feature = preprocess_bars(feature)
@@ -80,15 +84,28 @@ def create_model(symbol, df):
                                                         shuffle = True, 
                                                         test_size=0.65, 
                                                         random_state=1)
-    model = RandomForestClassifier(max_depth=2400, random_state=43)
-    model.fit(x_train, y_train)
+    #model = RandomForestClassifier(max_depth=2400, random_state=43)
+    #model.fit(x_train, y_train)
 
-    y_pred = model.predict(x_test)
-    cm = metrics.confusion_matrix(y_test, y_pred)
-    rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
+    knn = KNeighborsClassifier(n_neighbors=n, p=2, weights='distance', algorithm='auto')
+    knn.fit(x_train, y_train)
 
-    print(f'{symbol}')
-    print(f'Ryans Kappa Score: {rys}')
-    print('Confusion Matrix:\n', cm)
+    print(f'Results with {n} and 2')
 
-    return model
+    y_pred = knn.predict(x_test)
+
+    print(accuracy_score(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
+
+    return knn
+
+    #y_pred = model.predict(x_test)
+    #cm = metrics.confusion_matrix(y_test, y_pred)
+    #rys = (cm[0][0] + cm[1][1])/(cm[0][0] + cm[1][1] + cm[2][0] + cm[2][1] + cm[1][0] + cm[0][1])
+
+    #print(f'{symbol}')
+    #print(f'Ryans Kappa Score: {rys}')
+    #print('Confusion Matrix:\n', cm)
+
+    #return model

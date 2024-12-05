@@ -9,6 +9,7 @@ from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from src.data import options_data
+from src.helpers import options
 
 import numpy as np
 
@@ -30,14 +31,14 @@ symbol = 'SPY'
 end = datetime(2024, 2, 29, 19)
 start = end - timedelta(days=90)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 12), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
 print(od.symbol)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 13), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 17), 'C', 280, option_client, polygon_client)
 print(od.symbol)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 14), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+od = options_data.OptionData(symbol, datetime(2024, 2, 29, 14), 'C', 280, option_client, polygon_client)
 print(od.symbol)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 28, 14), datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
+od = options_data.OptionData(symbol, datetime(2024, 2, 28, 13), 'C', 280, option_client, polygon_client)
 print(od.symbol)

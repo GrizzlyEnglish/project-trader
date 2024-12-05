@@ -37,12 +37,10 @@ class Short:
 
         print(f'Signal {signal} indicator {indicator} {bar.index[0][1]}')
 
-        if indicator == 1 and signal != 'sell':
-            qty = buy_amount*2 if signal == 'buy' else buy_amount
-            return True, 'buy', qty
-        elif indicator == -1 and signal != 'buy':
-            qty = buy_amount*2 if signal == 'sell' else buy_amount
-            return True, 'sell', qty
+        if signal == 'buy':
+            return True, 'buy', 1
+        elif signal == 'sell':
+            return True, 'sell', 1
         else:
             return False, 'hold', 0
 

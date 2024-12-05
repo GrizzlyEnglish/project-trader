@@ -285,3 +285,9 @@ def get_percentage_diff(initial_value, final_value):
     profit_loss = final_value - initial_value 
     percent = (profit_loss / initial_value) * 100 
     return percent
+
+def max_or_min_first(arr, delta, num): 
+    filtered_arr = [value for value in arr if value > (num + delta) or value < (num - delta)] 
+    if not filtered_arr:
+        return 0
+    return filtered_arr[0]

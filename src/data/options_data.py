@@ -1,7 +1,7 @@
 from alpaca.data.historical.option import OptionBarsRequest
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.data.requests import OptionSnapshotRequest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from src.helpers import options
 
 import math
@@ -14,22 +14,23 @@ class OptionData:
         self.polygon_client = polygon_client
         self.underlying_symbol = underlying_symbol
         self.is_polygon = False
-        dte = current_time if underlying_symbol == 'QQQ' or underlying_symbol == 'SPY' else options.next_friday(current_time)
-        self.strike = self.determine_strike(strike_price, current_time, dte, c_or_p, underlying_symbol)
-        self.symbol = options.create_option_symbol(underlying_symbol, dte, c_or_p, self.strike)
+        self.dte = current_time
+        self.strike = self.determine_strike(strike_price, current_time, self.dte, c_or_p)
+        self.symbol = options.create_option_symbol(underlying_symbol, self.dte, c_or_p, self.strike)
 
-    def determine_strike(self, strike, current_time, dte, c_or_p, underlying_symbol) -> int:
+    def determine_strike(self, strike, current_time, dte, c_or_p) -> int:
         eob = dte.replace(hour=18)
-        dst = math.floor((eob - current_time).total_seconds() / 3600 / 2)
-        if dst > 6:
-            dst = 0
+        dst = math.floor((eob - current_time).total_seconds() / 3600)
+        if dst < 3:
+            self.dte = self.dte + timedelta(days=1)
+            if self.dte.weekday() == 5:
+                self.dte = self.dte + timedelta(days=2)
+            dst = 3
         else:
-            dst = min(dst, 3)
+            dst = min(6 - dst, 3)
         new_strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
         print(f'{dst} with {eob-current_time} {c_or_p} changing {strike} to {new_strike}')
         strike = new_strike
-        if underlying_symbol != 'SPY' and underlying_symbol != 'QQQ':
-            strike = (math.ceil(strike / 5) * 5) if c_or_p == 'C' else (math.ceil(strike / 5) * 5)
         return strike
 
     def set_symbol(self, symbol) -> None:
