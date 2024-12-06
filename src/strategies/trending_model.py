@@ -40,6 +40,9 @@ class TrendingModel:
         date_trends = {}
 
         def label(row):
+            if row['indicator'] == 0:
+                return 'hold'
+
             delta = float(os.getenv(f'{symbol}_DELTA'))
 
             day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
@@ -50,9 +53,9 @@ class TrendingModel:
             for index, r2 in post.iterrows(): 
                 d = r2['close'] - row['close']
 
-                if d > delta:
+                if d > 1:
                     return 'buy'
-                elif d < -delta:
+                elif d < -1.25:
                     return 'sell'
 
             return 'hold'
@@ -73,7 +76,7 @@ class TrendingModel:
             return self.model
 
         bars = self.bars[self.bars['indicator'] != 0]
-        bars = self.bars[self.bars['label'] != 'hold']
+        bars = bars[bars['label'] != 'hold']
 
         bars.pop('indicator')
 

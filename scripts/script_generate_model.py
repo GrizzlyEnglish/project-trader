@@ -28,7 +28,7 @@ symbol = 'SPY'
 model_end = datetime(2024, 2, 1, 20)
 delta = float(os.getenv(f'{symbol}_DELTA'))
 
-model = trending_model.TrendingModel(symbol, model_end, 90, 200, market_client)
+model = trending_model.TrendingModel(symbol, model_end, 90, 20, market_client)
 
 knn = model.generate_model()
 
