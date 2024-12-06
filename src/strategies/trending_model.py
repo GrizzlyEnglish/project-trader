@@ -8,7 +8,7 @@ import pandas as pd
 
 class TrendingModel:
 
-    def __init__(self, symbol, end_date, day_diff, neighbors, market_client) -> None:
+    def __init__(self, symbol, end_date, day_diff, neighbors, market_client, force_build = False) -> None:
         self.market_client = market_client
         self.symbol = symbol
         self.start = end_date - timedelta(days=day_diff)
@@ -18,7 +18,7 @@ class TrendingModel:
 
         # attempt to load first otherwise build it
         self.file_path = f"../generated/{self.symbol}_{neighbors}.joblib" 
-        if os.path.exists(self.file_path):
+        if not force_build and os.path.exists(self.file_path):
             self.model = joblib.load(self.file_path)
 
         if self.model == None:
@@ -39,10 +39,7 @@ class TrendingModel:
 
         date_trends = {}
 
-        def label(row):
-            if row['indicator'] == 0:
-                return 'hold'
-
+        def set_post_trend(row):
             delta = float(os.getenv(f'{symbol}_DELTA'))
 
             day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
@@ -50,14 +47,15 @@ class TrendingModel:
             bars = day_trend['bars']
             post = bars.loc[row.name[1]:]
 
-            for index, r2 in post.iterrows(): 
-                d = r2['close'] - row['close']
-
-                if d > 1:
-                    return 'buy'
-                elif d < -1.25:
-                    return 'sell'
-
+            slope = features.slope(post['close'])
+            return 0 if slope == 0 else slope[0]
+        
+        def label(row):
+            if row['post_trend'] > up_pt:
+                return 'buy'
+            if row['post_trend'] < down_pt:
+                return 'sell'
+            
             return 'hold'
 
         dates = np.unique(df.index.get_level_values('timestamp').date)
@@ -69,13 +67,21 @@ class TrendingModel:
             }
 
         df['indicator'] = df.apply(features.my_indicator, axis=1)
+        df['post_trend'] = df.apply(set_post_trend, axis=1)
+
+        up_pt = df[df['post_trend'] > 0]['post_trend'].mean() + df[df['post_trend'] > 0]['post_trend'].std()
+        down_pt = df[df['post_trend'] < 0]['post_trend'].mean() - df[df['post_trend'] < 0]['post_trend'].std()
+
         df['label'] = df.apply(label, axis=1)
+
+        df.pop('post_trend')
 
     def generate_model(self) -> dict:
         if self.model != None:
             return self.model
 
-        bars = self.bars[self.bars['indicator'] != 0]
+        bars = self.bars.copy()
+        #bars = bars[bars['indicator'] != 0]
         bars = bars[bars['label'] != 'hold']
 
         bars.pop('indicator')
