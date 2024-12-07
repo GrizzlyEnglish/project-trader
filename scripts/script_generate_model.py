@@ -28,7 +28,7 @@ symbol = 'QQQ'
 model_end = datetime(2024, 2, 1, 20)
 delta = float(os.getenv(f'{symbol}_DELTA'))
 
-model = trending_model.TrendingModel(symbol, model_end, 90, 20, market_client)
+model = trending_model.TrendingModel(symbol, model_end, 120, 25, market_client, True)
 
 knn = model.generate_model()
 
@@ -51,7 +51,7 @@ for dt in dates:
         day_bars['indicator'] = day_bars.apply(features.my_indicator, axis=1)
 
         for index, row in day_bars.iterrows(): 
-            if row['indicator'] != 0:
+            if not row.isna().any() and row['indicator'] != 0:
                 r = row.drop('indicator')
                 pred = knn.predict([r])
 

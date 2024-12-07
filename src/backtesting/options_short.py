@@ -56,7 +56,9 @@ class BacktestOptionShort:
         close = row['close']
         self.close_series[symbol].append([index, close])
 
-        if enter:
+        has_open_option = next((cp for cp in self.positions if symbol in cp.symbol), None) != None
+
+        if enter and not has_open_option:
             type = 'P'
             contract_type = 'put'
             if signal == 'buy':

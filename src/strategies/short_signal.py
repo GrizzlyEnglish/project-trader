@@ -28,17 +28,18 @@ class Short:
         if indicator == 0:
             return False, 'hold', 0
 
-        has_open_option = next((cp for cp in self.positions if self.symbol in cp.symbol), None) != None
-        if has_open_option:
-            return False, 'hold', 0
+        #has_open_option = next((cp for cp in self.positions if self.symbol in cp.symbol), None) != None
+        #if has_open_option:
+            #return False, 'hold', 0
 
-        signal = class_model.classify(self.model, self.bars)
+        #signal = class_model.classify(self.model, self.bars)
+        signal = 'N/A'
 
         print(f'Signal {signal} indicator {indicator} {bar.index[0][1]}')
 
-        if signal == 'buy':
+        if indicator == 1:
             return True, 'buy', 1
-        elif signal == 'sell':
+        elif indicator == -1:
             return True, 'sell', 1
         else:
             return False, 'hold', 0

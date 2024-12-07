@@ -25,7 +25,7 @@ class TrendingModel:
             self.setup_bars()
 
     def setup_bars(self) -> None:
-        self.bars = get_data.get_bars(self.symbol, self.end - timedelta(days=90), self.end, self.market_client)
+        self.bars = get_data.get_bars(self.symbol, self.start, self.end, self.market_client)
         self.bars = features.feature_engineer_df(self.bars)
         self.classify()
 
@@ -39,25 +39,23 @@ class TrendingModel:
 
         date_trends = {}
 
-        def set_post_trend(row):
+        def label(row):
             delta = float(os.getenv(f'{symbol}_DELTA'))
 
             day_trend = date_trends[row.name[1].strftime("%Y-%m-%d")]
 
             bars = day_trend['bars']
             post = bars.loc[row.name[1]:]
+            post = post[post['indicator'] != 0]
 
-            slope = features.slope(post['close'])
-            return 0 if slope == 0 else slope[0]
-        
-        def label(row):
-            if row['post_trend'] > up_pt:
-                return 'buy'
-            if row['post_trend'] < down_pt:
-                return 'sell'
-            
-            return 'hold'
+            for index, r2 in post.iterrows(): 
+                d = r2['close'] - row['close']
+                if d > delta:
+                    return 'buy'
+                elif d < -delta:
+                    return 'sell'
 
+        df['indicator'] = df.apply(features.my_indicator, axis=1)
         dates = np.unique(df.index.get_level_values('timestamp').date)
         for dt in dates:
             dtstr = dt.strftime("%Y-%m-%d")
@@ -66,15 +64,7 @@ class TrendingModel:
                 'bars': day_bars,
             }
 
-        df['indicator'] = df.apply(features.my_indicator, axis=1)
-        df['post_trend'] = df.apply(set_post_trend, axis=1)
-
-        up_pt = df[df['post_trend'] > 0]['post_trend'].mean() + df[df['post_trend'] > 0]['post_trend'].std()
-        down_pt = df[df['post_trend'] < 0]['post_trend'].mean() - df[df['post_trend'] < 0]['post_trend'].std()
-
         df['label'] = df.apply(label, axis=1)
-
-        df.pop('post_trend')
 
     def generate_model(self) -> dict:
         if self.model != None:

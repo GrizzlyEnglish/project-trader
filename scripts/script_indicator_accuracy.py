@@ -26,16 +26,19 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbol = 'GOOGL'
-delta = .25
-end = datetime(2024, 11, 30, 19)
-start = end - timedelta(days=30)
+symbol = 'SPY'
+delta = float(os.getenv(f'{symbol}_DELTA'))
+end = datetime(2024, 11, 29, 19)
+start = end - timedelta(days=90)
 df = get_data.get_bars(symbol, start, end, market_client)
 df = features.feature_engineer_df(df)
 df['indicator'] = df.apply(features.my_indicator, axis=1)
 
 actions = 0
-correct = 0
+p_correct = 0
+c_correct = 0
+calls = 0
+puts = 0
 incorrect_bars = []
 correct_bars = []
 dates = np.unique(df.index.get_level_values('timestamp').date)
@@ -48,19 +51,22 @@ for dt in dates:
             actions = actions + 1
             post = day_bars.loc[row.name:]
             first = features.max_or_min_first(np.array(post['close']), delta, row['close'])
-            if row['indicator'] == 1 and first > row['close']:
-                print(f'Call correct {row["close"]}/{first} on {index}')
-                correct = correct + 1
-                correct_bars.append(row)
-            elif row['indicator'] == -1 and first != 0 and first < row['close']:
-                print(f'Put correct {row["close"]}/{first} on {index}')
-                correct = correct + 1
-                correct_bars.append(row)
-            else:
-                print(f'{"Call" if row["indicator"] == 1 else "Put"} incorrect {row["close"]}/{first} on {index}')
-                incorrect_bars.append(row)
+            if row['indicator'] == 1:
+                calls = calls + 1
+                if first > row['close']:
+                    print(f'Call correct {row["close"]}/{first} on {index}')
+                    c_correct = c_correct + 1
+                    correct_bars.append(row)
+            elif row['indicator'] == -1:
+                puts = puts + 1
+                if first != 0 and first < row['close']:
+                    print(f'Put correct {row["close"]}/{first} on {index}')
+                    p_correct = p_correct + 1
+                    correct_bars.append(row)
             
-print(f'accuracy {correct/actions}')
+print(f'accuracy {(p_correct+c_correct)/actions}')
+print(f'put accuracy {p_correct/puts} actions {puts}')
+print(f'call accuracy {c_correct/calls} actions {calls}')
 
 pd.DataFrame(data=correct_bars).to_csv(f'../results/correct_bars.csv', index=True)
 pd.DataFrame(data=incorrect_bars).to_csv(f'../results/incorrect_bars.csv', index=True)

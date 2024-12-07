@@ -127,7 +127,7 @@ def feature_engineer_df(df):
     df = dip(df, short_trend, 'short')
     df = dip(df, long_trend, 'long')
 
-    d = df.copy()[['macd', 'pvi', 'roc', 'nvi', 'histogram']]
+    d = df.copy()[['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b']]
     shifted_df = d.shift(1)
     shifted_df = shifted_df.add_suffix(f'__last')
     df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
@@ -142,20 +142,18 @@ def feature_engineer_df(df):
     return df
 
 def my_indicator(row):
-    macd = any(-0.1 < value < 0.1 for value in [row['macd'], row['macd__last'], row['macd__last__last']])
-
-    hist = row['histogram'] < 0 and row['histogram'] > row['histogram__last__last']
     pvi = row['pvi'] < 1 and abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
     roc = row['roc'] > -0.1 and row['roc'] < 0.15 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
+    pb = row['percent_b'] > row['percent_b__last'] and row['percent_b'] > .3
 
-    if pvi and roc and macd and hist:
+    if pvi and roc and row['candle_bar'] > .3 and pb:
         return 1
 
-    hist = row['histogram'] > 0 and row['histogram'] < row['histogram__last__last']
     nvi = row['nvi'] < 1 and abs(row['nvi'] - row['nvi__last']) > 0.1 and abs(row['nvi__last'] - row['nvi__last__last']) > 0
     roc = row['roc'] < 0.1 and row['roc'] > -0.15 and row['roc'] < row['roc__last'] < row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
+    pb = row['percent_b'] < row['percent_b__last'] and row['percent_b'] < .8
 
-    if nvi and roc and macd and hist:
+    if nvi and roc and row['candle_bar'] < -.3 and pb:
         return -1
 
     return 0 

@@ -67,7 +67,7 @@ class OptionExit:
     
     def secure_gains(self, hst, gains, slope, immediate_slope, position, secure_gains_val, slope_gains, exits) -> bool:
         passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
-        if passed_secure_gains and ((slope < 1 and immediate_slope < 0) or (slope < 2 and immediate_slope < -1)):
+        if passed_secure_gains and ((slope < 1 and immediate_slope < 0) or (slope < 3 and immediate_slope < -2)):
             exits.append([position, 'secure gains'])
             return True
         
