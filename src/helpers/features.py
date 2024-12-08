@@ -66,9 +66,9 @@ def slope(arr):
     poly_coeffs[np.isnan(poly_coeffs)] = 0  # possible speed-up: insert zeros where needed
     return poly_coeffs[0, :]  # slope only
 
-def feature_engineer_df(df):
+def get_quotes(df):
     bars_i = df.reset_index()
-    quotes = [ 
+    return [ 
         Quote(date, open, high, low, close, volume) 
             for date, open, high, low, close, volume 
             in zip(bars_i['timestamp'],
@@ -77,6 +77,21 @@ def feature_engineer_df(df):
                 bars_i['low'],
                 bars_i['close'], 
                 bars_i['volume'], strict=True)]
+
+def feature_engineer_options(df):
+    quotes = get_quotes(df)
+    df = vortex_indicator(df, quotes)
+
+    trend_col = ['pvi', 'nvi'] 
+    df = trends(df, 4, 'short', trend_col)
+    df = trends(df, 8, 'long', trend_col)
+
+    df = last_two_bars(df, ['pvi', 'nvi', 'pvi_short_trend', 'nvi_short_trend'])
+
+    return df
+
+def feature_engineer_bars(df):
+    quotes = get_quotes(df)
 
     df.loc[:, 'change'] = df['close'].diff()
 
@@ -108,9 +123,9 @@ def feature_engineer_df(df):
 
     df = smi(df, quotes)
 
-    df = trends(df, short_trend, 'short')
-
-    df = trends(df, long_trend, 'long')
+    trend_col = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height', 'upper_band', 'lower_band'] 
+    df = trends(df, short_trend, 'short', trend_col)
+    df = trends(df, long_trend, 'long', trend_col)
 
     df = mfi(df, quotes)
 
@@ -127,7 +142,15 @@ def feature_engineer_df(df):
     df = dip(df, short_trend, 'short')
     df = dip(df, long_trend, 'long')
 
-    d = df.copy()[['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b']]
+    df = last_two_bars(df, ['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b'])
+
+    for col in df.select_dtypes(include=['bool']).columns:
+        df[col] = df[col].astype(int)
+
+    return df
+
+def last_two_bars(df, columns):
+    d = df.copy()[columns]
     shifted_df = d.shift(1)
     shifted_df = shifted_df.add_suffix(f'__last')
     df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
@@ -135,10 +158,6 @@ def feature_engineer_df(df):
     shifted_df = shifted_df.add_suffix(f'__last__last')
     df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
     del shifted_df
-
-    for col in df.select_dtypes(include=['bool']).columns:
-        df[col] = df[col].astype(int)
-
     return df
 
 def my_indicator(row):
@@ -173,8 +192,7 @@ def crossed(df, col, crossed_value):
     df[f'{col}_cross_below'] = (df[col] <= crossed_value) & (df[col].shift() > crossed_value)
     return df
 
-def trends(df, look_back, name):
-    col_names = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height', 'upper_band', 'lower_band']
+def trends(df, look_back, name, col_names):
     for i in range(look_back):
         j = i + 1
         df2 = df[col_names]

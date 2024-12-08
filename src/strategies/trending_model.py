@@ -26,7 +26,7 @@ class TrendingModel:
 
     def setup_bars(self) -> None:
         self.bars = get_data.get_bars(self.symbol, self.start, self.end, self.market_client)
-        self.bars = features.feature_engineer_df(self.bars)
+        self.bars = features.feature_engineer_bars(self.bars)
         self.classify()
 
     def set_params(self, n, p) -> None:

@@ -9,7 +9,7 @@ from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from src.data import options_data
-from src.helpers import options
+from src.helpers import options, features
 
 import numpy as np
 
@@ -28,17 +28,37 @@ polygon_client = RESTClient(api_key=polygon_key)
 
 symbol = 'SPY'
 
-end = datetime(2024, 2, 29, 19)
+end = datetime(2024, 12, 6, 19)
 start = end - timedelta(days=90)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 18), 'C', 280, option_client, polygon_client)
-print(od.symbol)
+od = options_data.OptionData(symbol, datetime(2024, 12, 6, 18), 'C', 608, option_client, polygon_client)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 17), 'C', 280, option_client, polygon_client)
-print(od.symbol)
+bars = od.get_bars(start, end)
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 29, 14), 'C', 280, option_client, polygon_client)
-print(od.symbol)
+bars = bars.dropna()
 
-od = options_data.OptionData(symbol, datetime(2024, 2, 28, 13), 'C', 280, option_client, polygon_client)
-print(od.symbol)
+print('PVI increase')
+for i, r in bars.iterrows():
+    if r['pvi'] > .75 and r['pvi_short_trend'] > 0 and r['pvi_short_trend__last'] < 0:
+        post = bars.loc[i:]
+        count = 0
+        for i, r2 in post.iterrows():
+            if r2['close'] > (r['close'] - .02):
+                count = count + 1
+            else:
+                print(f'{i} increased for {count} bars with')
+                break
+
+'''
+print('NVI increase')
+for i, r in bars.iterrows():
+    if r['nvi'] > 1 and r['pvi_short_trend'] > 0 and r['pvi_short_trend__last'] < 0:
+        post = bars.loc[i:]
+        count = 0
+        for i, r2 in post.iterrows():
+            if r2['close'] < (r['close'] + .2):
+                count = count + 1
+            else:
+                print(f'{i} decreased for {count} bars with')
+                break
+'''

@@ -20,7 +20,7 @@ class OptionExit:
     def add_signals(self, signals) -> None:
         self.signals = signals
 
-    def exit(self) -> List[Tuple[dict, str]]:
+    def exit(self, bar) -> List[Tuple[dict, str]]:
         exits = []
 
         for position in self.positions:
@@ -46,8 +46,10 @@ class OptionExit:
             gains = (market_value - cost) / qty
 
             print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} signal: {signal} slope: {slope}/{immediate_slope}')
+            print(f'     nvi short: {bar["nvi_short_trend"]} pvi short: {bar["pvi_short_trend"]}')
+            print(f'     nvi long: {bar["nvi_long_trend"]} pvi long: {bar["pvi_long_trend"]}')
 
-            if self.signal_check(signal, position, exits) or self.stop_loss(pl, gains, position, slope, stop_loss_val, slope_loss, exits) or self.secure_gains(hst, gains, slope, immediate_slope, position, secure_gains_val, slope_gains, exits):
+            if self.signal_check(signal, position, exits) or self.stop_loss(pl, gains, position, stop_loss_val, slope_loss, exits, bar) or self.secure_gains(hst, gains, position, secure_gains_val, slope_gains, exits, bar):
                 continue
          
             tracker.track(position.symbol, pl, gains, market_value)
@@ -65,27 +67,28 @@ class OptionExit:
 
         return False
     
-    def secure_gains(self, hst, gains, slope, immediate_slope, position, secure_gains_val, slope_gains, exits) -> bool:
+    def secure_gains(self, hst, gains, position, secure_gains_val, slope_gains, exits, bar) -> bool:
         passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
-        if passed_secure_gains and ((slope < 1 and immediate_slope < 0) or (slope < 3 and immediate_slope < -2)):
-            exits.append([position, 'secure gains'])
-            return True
+        if passed_secure_gains:
+            if bar['nvi_short_trend'] > bar['nvi_short_trend__last'] and bar['pvi_short_trend'] < 0.07:
+                exits.append([position, 'secure gains'])
+                return True
         
-        if gains > slope_gains and immediate_slope < -2:
-            exits.append([position, 'secure gains with slope'])
-            return True
+        #if gains > slope_gains and bar['nvi_short_trend'] > 0 and bar['nvi_short_trend__last'] < bar['nvi_short_trend___last']:
+            #exits.append([position, 'secure gains with slope'])
+            #return True
 
         return False
 
-    def stop_loss(self, pl, gains, position, slope, stop_loss_val, slope_loss, exits) -> bool:
+    def stop_loss(self, pl, gains, position, stop_loss_val, slope_loss, exits, bar) -> bool:
         if pl < 0:
             g = -gains
             if g >= stop_loss_val:
                 exits.append([position, 'stop loss'])
                 return True
 
-            if g > slope_loss and slope < -1:
-                exits.append([position, 'stop loss with slope'])
-                return True
+            #if g > slope_loss and bar['nvi_short_trend'] > 0 and bar['nvi_short_trend__last'] < bar['nvi_short_trend__last']:
+                #exits.append([position, 'stop loss with slope'])
+                #return True
 
         return False

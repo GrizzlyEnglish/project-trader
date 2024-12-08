@@ -43,7 +43,7 @@ for symbol in symbols:
     put_signal[symbol] = []
 
     bars = get_data.get_bars(symbol, start, end, market_client, 1, 'Min')
-    bars = features.feature_engineer_df(bars)
+    bars = features.feature_engineer_bars(bars)
     bars = trending.classification(bars)
 
     calls = bars[bars['label'] == 'buy']

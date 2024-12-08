@@ -2,7 +2,7 @@ from alpaca.data.historical.option import OptionBarsRequest
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.data.requests import OptionSnapshotRequest
 from datetime import datetime, timezone, timedelta
-from src.helpers import options
+from src.helpers import options, features
 
 import math
 import pandas as pd
@@ -40,10 +40,12 @@ class OptionData:
         self.is_polygon = is_polygon
 
     def get_bars(self, start, end):
+        bars = []
         if self.is_polygon:
-            return self.get_polygon_bars(start, end)
+            bars = self.get_polygon_bars(start, end)
         else:
-            return self.get_alpaca_bars(start, end)
+            bars = self.get_alpaca_bars(start, end)
+        return features.feature_engineer_options(bars)
 
     def get_polygon_bars(self, start, end):
         bars = self.polygon_client.list_aggs(ticker=f'O:{self.symbol}', multiplier=1, timespan="minute", from_=start, to=end)

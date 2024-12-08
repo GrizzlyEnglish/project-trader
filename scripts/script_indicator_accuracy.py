@@ -31,7 +31,7 @@ delta = float(os.getenv(f'{symbol}_DELTA'))
 end = datetime(2024, 11, 29, 19)
 start = end - timedelta(days=90)
 df = get_data.get_bars(symbol, start, end, market_client)
-df = features.feature_engineer_df(df)
+df = features.feature_engineer_bars(df)
 df['indicator'] = df.apply(features.my_indicator, axis=1)
 
 actions = 0

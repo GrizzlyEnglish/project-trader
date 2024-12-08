@@ -34,7 +34,7 @@ knn = model.generate_model()
 
 end = datetime(2024, 11, 29, 20)
 test_bars = get_data.get_bars(symbol, end - timedelta(days=90), end, market_client)
-test_bars = features.feature_engineer_df(test_bars)
+test_bars = features.feature_engineer_bars(test_bars)
 
 total_action = 1
 pred_correct_action = 1

@@ -181,7 +181,7 @@ class BacktestOptionShort:
 
                 self.option_exit.add_positions([p])
                 self.option_exit.add_signals([{'symbol': symbol, 'signal': signal}])
-                exits = self.option_exit.exit()
+                exits = self.option_exit.exit(current_bar)
                 if len(exits) > 0:
                     exit = exits[0][0]
                     reason = exits[0][1]
@@ -222,7 +222,7 @@ class BacktestOptionShort:
                     b_end = on_day.replace(hour=23, minute=0)
                     print(f'Getting days bars from {b_st} to {b_end}')
                     bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
-                    bars = features.feature_engineer_df(bars)
+                    bars = features.feature_engineer_bars(bars)
 
                     signaler.add_model(models[symbol])
 

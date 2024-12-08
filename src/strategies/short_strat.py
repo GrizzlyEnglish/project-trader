@@ -39,7 +39,7 @@ class Short_Strat:
         for m in self.models:
             print(f'Getting days bars from {m_st} to {m_end}')
             bars = get_data.get_bars(m['symbol'], m_st, m_end, self.market_client)
-            bars = features.feature_engineer_df(bars)
+            bars = features.feature_engineer_bars(bars)
 
             signaler = short_signal.Short(m['symbol'], self.market_client)
 
