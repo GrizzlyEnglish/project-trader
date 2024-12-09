@@ -29,11 +29,10 @@ class BacktestOptionShort:
         self.total = {}
 
         self.account = 30000
-        self.account_bars = []
-
-        self.held_option_bars = {}
+        self.account_bars = {}
 
         for s in self.symbols:
+            self.account_bars[s] = []
             self.close_series[s] = []
             self.purchased_series[s] = []
             self.sell_series[s] = []
@@ -41,14 +40,6 @@ class BacktestOptionShort:
 
     def enter(self, symbol, row, signal, buy_qty) -> None:
         index = row.name[1]
-
-        # TODO: Move to strat
-        market_open = datetime.combine(index, time(13, 30), timezone.utc)
-        market_close = datetime.combine(index, time(19, 1), timezone.utc)
-
-        if index <= market_open or index >= market_close:
-            print('Not purcharsing outside market hours')
-            return None, None
 
         close = row['close']
         type = 'P'
@@ -65,7 +56,8 @@ class BacktestOptionShort:
             return None, None
 
         up_to = bars[bars.index.get_level_values('timestamp') <= index]
-        contract_price = up_to['close'].iloc[-1] * buy_qty
+        contract_price = up_to['close'].iloc[-1]
+        cost = contract_price * 100 * buy_qty
 
         bars = bars[bars.index.get_level_values('timestamp') >= index]
 
@@ -79,19 +71,19 @@ class BacktestOptionShort:
                 'strike_price': data.strike,
                 'close': close,
                 'price': contract_price,
-                'cost_basis': contract_price * 100,
+                'cost_basis': cost,
                 'bought_at': index,
                 'qty': buy_qty,
-                'market_value': contract_price * 100,
+                'market_value': cost,
                 'unrealized_plpc': 0,
                 'date_of': index.date()
             })
             print(f'Purchased {data.symbol} at {index} with close at {close}')
             self.purchased_series[symbol].append(index)
-            self.account = self.account - (contract_price * 100)
-            return position, bars
+            self.account = self.account - cost 
+            return position, bars, cost
         
-        return None, None
+        return None, None, 0
 
     def exit(self, p, symbol, reason, index, bar) -> None:
         print(f'Sold {p.symbol} for {reason}')
@@ -150,6 +142,8 @@ class BacktestOptionShort:
             # Need to know when we were holding so if a signal happens when holding we dont buy extra
             held_positions = []
 
+            balance = 3000
+
             # Enter and find exit
             for index, row in bars.iterrows():
                 print(f'Signal for {symbol} on {index[1]}')
@@ -167,10 +161,11 @@ class BacktestOptionShort:
 
                 # Enter
                 #TODO: determine how to increase buy amount
-                position, position_bars = self.enter(symbol, row, row['signal'], 1)
+                position, position_bars, cost = self.enter(symbol, row, row['signal'], 1)
 
                 # Determine exit
                 if position != None:
+                    balance = balance - cost
                     entered = index[1]
                     reason = 'expired'
                     for pindex, prow in position_bars.iterrows():
@@ -180,6 +175,8 @@ class BacktestOptionShort:
 
                         qty = float(position.qty)
                         mv = mv * qty
+                        temp_balance = balance + mv
+                        self.account_bars[symbol].append([len(self.account_bars[symbol]) + 1, temp_balance])
                         pld = features.get_percentage_diff(position.cost_basis, mv) / 100
 
                         position.unrealized_plpc = f'{pld}'
@@ -190,6 +187,7 @@ class BacktestOptionShort:
                             break
 
                     self.exit(position, symbol, reason, pindex[1], prow)
+                    balance = balance + float(position.market_value)
                     held_positions.append([entered, pindex[1]])
 
         full_total = 0
@@ -221,6 +219,18 @@ class BacktestOptionShort:
             plt.xlabel('Option type')
             plt.ylabel('P/L')
             plt.title('Option backtest p/l')
+
+            fig = plt.figure(2)
+
+            for symbol in self.symbols:
+                x = [s[0] for s in self.account_bars[symbol]]
+                d = [s[1] for s in self.account_bars[symbol]]
+                plt.plot(x, d, label=symbol) 
+
+            plt.legend() 
+            plt.title('Account balance per symbol') 
+            plt.xlabel('Bar') 
+            plt.ylabel('$') 
 
             # Show the plot
             plt.show()

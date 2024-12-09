@@ -1,6 +1,7 @@
-from typing import Tuple, List
+from typing import Tuple
+from datetime import datetime, time, timezone
 
-from src.helpers import features, options, tracker
+from src.helpers import options, tracker
 
 import os
 import pandas as pd
@@ -66,6 +67,13 @@ class ShortOption:
 
     def enter(self, bars) -> pd.DataFrame:
         def determine_signal(row): 
+            idx = row.name[1]
+            market_open = datetime.combine(idx, time(13, 30), timezone.utc)
+            market_close = datetime.combine(idx, time(19, 1), timezone.utc)
+
+            if idx <= market_open or idx >= market_close:
+                return 'hold'
+
             if row['indicator'] == 1:
                 return 'buy'
             elif row['indicator'] == -1:
