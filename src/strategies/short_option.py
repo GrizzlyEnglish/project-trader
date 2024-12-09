@@ -22,13 +22,9 @@ class ShortOption:
         market_value = float(position.market_value)
         hst = tracker.get(position.symbol)
 
-        slope = features.slope(hst['p/l'])[0] if len(hst) > 3 else 0
-        immediate_slope = features.slope(hst[-3:]['p/l'])[0] if len(hst) > 3 else 0
         gains = (market_value - cost) / qty
 
-        print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} slope: {slope}/{immediate_slope}')
-        print(f'     nvi short: {bar["nvi_short_trend"]} pvi short: {bar["pvi_short_trend"]}')
-        print(f'     nvi long: {bar["nvi_long_trend"]} pvi long: {bar["pvi_long_trend"]}')
+        print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} nvi {bar["nvi_short_trend"]}/{bar["pvi_long_trend"]} pvi {bar["pvi_short_trend"]}/{bar["pvi_long_trend"]}')
 
         tracker.track(position.symbol, pl, gains, market_value)
 
@@ -55,7 +51,7 @@ class ShortOption:
     def secure_gains(self, hst, gains, secure_gains_val, bar) -> bool:
         passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
         if passed_secure_gains:
-            if bar['nvi_short_trend'] > bar['nvi_short_trend__last'] and bar['pvi_short_trend'] < 0.07:
+            if bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < 0.05:
                 return True, 'secure gains'
         
         return False, 'hold'

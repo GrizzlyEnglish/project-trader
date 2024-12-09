@@ -10,14 +10,13 @@ import pytz
 
 class BacktestOptionShort:
 
-    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client, polygon_client, use_polygon = False) -> None:
+    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client) -> None:
         self.symbols = symbols
         self.end = end
         self.start = end - timedelta(days=days)
         self.market_client = market_client
         self.trading_client = trading_client
         self.option_client = option_client
-        self.polygon_client = polygon_client
         self.day_diff = day_diff
         self.close_series = {}
         self.purchased_series = {}
@@ -28,7 +27,6 @@ class BacktestOptionShort:
         self.actions = 0
         self.correct_actions = 0
         self.total = {}
-        self.use_polygon = use_polygon
 
         self.account = 30000
         self.account_bars = []
@@ -59,9 +57,7 @@ class BacktestOptionShort:
             type = 'C'
             contract_type = 'call'
 
-        data = options_data.OptionData(symbol, index, type, close, self.option_client, self.polygon_client)
-        data.set_polygon(self.use_polygon)
-
+        data = options_data.OptionData(symbol, index, type, close, self.option_client)
         bars = data.get_bars(index.replace(hour=9), index.replace(hour=23))
 
         if bars.empty:
@@ -97,7 +93,7 @@ class BacktestOptionShort:
         
         return None, None
 
-    def exit(self, p, symbol, reason, index) -> None:
+    def exit(self, p, symbol, reason, index, bar) -> None:
         print(f'Sold {p.symbol} for {reason}')
         tel = {
             'contract': p.symbol,
@@ -110,7 +106,13 @@ class BacktestOptionShort:
             'held_for': index - p.bought_at,
             'sold_for': reason,
             'pl': (float(p.market_value) - p.cost_basis),
-            'qty': p.qty
+            'qty': p.qty,
+            'nvi': bar['nvi'],
+            'pvi': bar['pvi'],
+            'nvi_short': bar['nvi_short_trend'],
+            'nvi_long': bar['nvi_long_trend'],
+            'pvi_short': bar['pvi_short_trend'],
+            'pvi_long': bar['pvi_long_trend'],
         }
         self.sell_series[symbol].append(index)
         self.telemetry.append(tel)
@@ -187,7 +189,7 @@ class BacktestOptionShort:
                         if exit:
                             break
 
-                    self.exit(position, symbol, reason, pindex[1])
+                    self.exit(position, symbol, reason, pindex[1], prow)
                     held_positions.append([entered, pindex[1]])
 
         full_total = 0
