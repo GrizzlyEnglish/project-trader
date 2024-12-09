@@ -8,10 +8,12 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.data import options_data
+from src.data import options_data, bars_data
 from src.helpers import options, features
+from src.strategies import short_option
 
 import numpy as np
+import pandas as pd
 
 load_dotenv()
 
@@ -26,39 +28,16 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbol = 'SPY'
+symbol = 'QQQ'
 
 end = datetime(2024, 12, 6, 19)
 start = end - timedelta(days=90)
 
-od = options_data.OptionData(symbol, datetime(2024, 12, 6, 18), 'C', 608, option_client, polygon_client)
+bars_handlers = bars_data.BarData(symbol, start - timedelta(days=30), end, market_client)
+bars = bars_handlers.get_bars(1, 'Min')
 
-bars = od.get_bars(start, end)
+strat = short_option.ShortOption()
+bars = strat.enter(bars)
 
-bars = bars.dropna()
 
-print('PVI increase')
-for i, r in bars.iterrows():
-    if r['pvi'] > .75 and r['pvi_short_trend'] > 0 and r['pvi_short_trend__last'] < 0:
-        post = bars.loc[i:]
-        count = 0
-        for i, r2 in post.iterrows():
-            if r2['close'] > (r['close'] - .02):
-                count = count + 1
-            else:
-                print(f'{i} increased for {count} bars with')
-                break
-
-'''
-print('NVI increase')
-for i, r in bars.iterrows():
-    if r['nvi'] > 1 and r['pvi_short_trend'] > 0 and r['pvi_short_trend__last'] < 0:
-        post = bars.loc[i:]
-        count = 0
-        for i, r2 in post.iterrows():
-            if r2['close'] < (r['close'] + .2):
-                count = count + 1
-            else:
-                print(f'{i} decreased for {count} bars with')
-                break
-'''
+pd.DataFrame(data=bars).to_csv(f'../results/signals.csv', index=True)

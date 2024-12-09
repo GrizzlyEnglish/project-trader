@@ -1,11 +1,4 @@
-from alpaca.trading.enums import AssetStatus
-from alpaca.trading.requests import GetOptionContractsRequest
 from datetime import datetime, timedelta
-from src.helpers import features
-
-import os
-import math
-import numpy as np
 
 def next_friday(date):
     days_until_friday = (4 - date.weekday() + 7) % 7

@@ -1,12 +1,12 @@
 from datetime import datetime, time, timezone, timedelta
-from src.strategies import short_signal, trending_model, option_exit
-from src.helpers import options, features, tracker, get_data
-from src.data import options_data
+from src.strategies import short_option 
+from src.helpers import options, features, tracker
+from src.data import options_data, bars_data
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import pytz
 
 class BacktestOptionShort:
 
@@ -19,7 +19,6 @@ class BacktestOptionShort:
         self.option_client = option_client
         self.polygon_client = polygon_client
         self.day_diff = day_diff
-        self.option_exit = option_exit.OptionExit(trading_client)
         self.close_series = {}
         self.purchased_series = {}
         self.sell_series = {}
@@ -42,220 +41,154 @@ class BacktestOptionShort:
             self.sell_series[s] = []
             self.total[s] = 0
 
-    def enter(self, symbol, row, signal, enter, buy_qty, on_day) -> None:
-        index = row.name
+    def enter(self, symbol, row, signal, buy_qty) -> None:
+        index = row.name[1]
 
+        # TODO: Move to strat
         market_open = datetime.combine(index, time(13, 30), timezone.utc)
         market_close = datetime.combine(index, time(19, 1), timezone.utc)
 
         if index <= market_open or index >= market_close:
-            if enter:
-                print('Not purcharsing outside market hours')
-            return
+            print('Not purcharsing outside market hours')
+            return None, None
 
         close = row['close']
-        self.close_series[symbol].append([index, close])
+        type = 'P'
+        contract_type = 'put'
+        if signal == 'buy':
+            type = 'C'
+            contract_type = 'call'
 
-        has_open_option = next((cp for cp in self.positions if symbol in cp.symbol), None) != None
+        data = options_data.OptionData(symbol, index, type, close, self.option_client, self.polygon_client)
+        data.set_polygon(self.use_polygon)
 
-        if enter and not has_open_option:
-            type = 'P'
-            contract_type = 'put'
-            if signal == 'buy':
-                type = 'C'
-                contract_type = 'call'
+        bars = data.get_bars(index.replace(hour=9), index.replace(hour=23))
 
-            data = options_data.OptionData(symbol, index, type, close, self.option_client, self.polygon_client)
-            data.set_polygon(self.use_polygon)
+        if bars.empty:
+            print(f'No bars for {data.symbol}')
+            return None, None
 
-            bars = data.get_bars(on_day.replace(hour=9), on_day.replace(hour=23))
+        up_to = bars[bars.index.get_level_values('timestamp') <= index]
+        contract_price = up_to['close'].iloc[-1] * buy_qty
 
-            self.held_option_bars[data.symbol] = bars
+        bars = bars[bars.index.get_level_values('timestamp') >= index]
 
-            if bars.empty:
-                print(f'No bars for {data.symbol}')
-                return
+        if contract_price > 0:
+            class DotAccessibleDict:
+                def __init__(self, **entries):
+                    self.__dict__.update(entries)
+            position = DotAccessibleDict(**{
+                'symbol': data.symbol,
+                'contract_type': contract_type,
+                'strike_price': data.strike,
+                'close': close,
+                'price': contract_price,
+                'cost_basis': contract_price * 100,
+                'bought_at': index,
+                'qty': buy_qty,
+                'market_value': contract_price * 100,
+                'unrealized_plpc': 0,
+                'date_of': index.date()
+            })
+            print(f'Purchased {data.symbol} at {index} with close at {close}')
+            self.purchased_series[symbol].append(index)
+            self.account = self.account - (contract_price * 100)
+            return position, bars
+        
+        return None, None
 
-            contract_price = bars[bars.index.get_level_values('timestamp') <= index]['close'].iloc[-1] * buy_qty
-
-            if contract_price > 0:
-                class DotAccessibleDict:
-                    def __init__(self, **entries):
-                        self.__dict__.update(entries)
-                self.positions.append(DotAccessibleDict(**{
-                    'symbol': data.symbol,
-                    'contract_type': contract_type,
-                    'strike_price': data.strike,
-                    'close': close,
-                    'price': contract_price,
-                    'cost_basis': contract_price * 100,
-                    'bought_at': index,
-                    'qty': buy_qty,
-                    'market_value': contract_price * 100,
-                    'unrealized_plpc': 0,
-                    'date_of': index.date()
-                }))
-                print(f'Purchased {data.symbol} at {index} with close at {close}')
-                self.purchased_series[symbol].append(index)
-                self.account = self.account - (contract_price * 100)
-
-    def exit(self, p, exit, reason, close, mv, index, pl, symbol) -> None:
-        if exit:
-            print(f'Sold {symbol} for {reason}')
-            tel = {
-                'symbol': symbol,
-                'contract': p.symbol,
-                'strike_price': p.strike_price,
-                'sold_close': close,
-                'bought_close': p.close,
-                'type': p.contract_type,
-                'bought_price': p.cost_basis,
-                'sold_price': mv,
-                'bought_at': p.bought_at,
-                'sold_at': index,
-                'held_for': index - p.bought_at,
-                'sold_for': reason,
-                'pl': (mv - p.cost_basis),
-                'qty': p.qty
-            }
-            self.sell_series[symbol].append(index)
-            self.telemetry.append(tel)
-            self.pl_series.append([tel['type'], (tel['sold_price'] - tel['bought_price'])])
-            self.actions = self.actions + 1
-            if pl > 0 or mv == 0:
-                self.correct_actions = self.correct_actions + 1
-            self.total[symbol] = self.total[symbol] + (mv - p.cost_basis)
-            self.positions.remove(p)
-            tracker.clear(p.symbol)
-            self.account = self.account + mv
-
-    def check_positions(self, index, last_close, symbol, signal, p_st, p_end, force_exit) -> None:
-        filtered_positions = [p for p in self.positions if options.get_underlying_symbol(p.symbol) == symbol]
-        for p in filtered_positions:
-
-            bars = self.held_option_bars[p.symbol]
-
-            if bars.empty:
-                print('No option data')
-                continue
-
-            dte = options.get_option_expiration_date(p.symbol)
-
-            exit = False
-            mv = float(p.market_value)
-            plpc = float(p.unrealized_plpc)
-            pl = mv + (plpc * mv)
-            reason = ''
-
-            # Option expired, sell it
-            dt = index
-            last_option_bar_dt = bars.iloc[-1].name[1]
-            print(f'Checking {p.symbol} at {dt}')
-            if (dt.date() == dte.date() and dt.hour == 19 and dt.minute > 30) or (dt.date() == last_option_bar_dt.date() and dt > last_option_bar_dt):
-                exit = True
-                reason = 'expired'
-            if force_exit:
-                exit = True
-                reason = 'up to date'
-
-            if exit == False:
-                b = bars[bars.index.get_level_values('timestamp') <= dt]
-                if b.empty:
-                    current_bar = bars.iloc[0]
-                else:
-                    current_bar = b.iloc[-1]
-                if (symbol == 'SPY' or symbol == 'QQQ') and (current_bar.name[1].date() != dt.date() or current_bar.name[1].date() > dt.date()):
-                    print(current_bar)
-                    print(dt)
-                    raise ValueError("Looking at the wrong date for the contract")
-                mv = current_bar['close'] * 100
-
-                qty = float(p.qty)
-                mv = mv * qty
-                pl = mv - p.cost_basis
-                pld = features.get_percentage_diff(p.cost_basis, mv) / 100
-
-                p.unrealized_plpc = f'{pld}'
-            
-                p.market_value = f'{mv}'
-
-                self.option_exit.add_positions([p])
-                self.option_exit.add_signals([{'symbol': symbol, 'signal': signal}])
-                exits = self.option_exit.exit(current_bar)
-                if len(exits) > 0:
-                    exit = exits[0][0]
-                    reason = exits[0][1]
-
-            self.exit(p, exit, reason, last_close, mv, dt, pl, symbol)
+    def exit(self, p, symbol, reason, index) -> None:
+        print(f'Sold {p.symbol} for {reason}')
+        tel = {
+            'contract': p.symbol,
+            'strike_price': p.strike_price,
+            'type': p.contract_type,
+            'bought_price': p.cost_basis,
+            'sold_price': float(p.market_value),
+            'bought_at': p.bought_at,
+            'sold_at': index,
+            'held_for': index - p.bought_at,
+            'sold_for': reason,
+            'pl': (float(p.market_value) - p.cost_basis),
+            'qty': p.qty
+        }
+        self.sell_series[symbol].append(index)
+        self.telemetry.append(tel)
+        pl = tel['sold_price'] - tel['bought_price']
+        self.pl_series.append([tel['type'], pl])
+        self.actions = self.actions + 1
+        if pl > 0:
+            self.correct_actions = self.correct_actions + 1
+        self.total[symbol] = self.total[symbol] + (float(p.market_value) - p.cost_basis)
+        tracker.clear(p.symbol)
+        self.account = self.account + float(p.market_value)
 
     def run(self, show_graph = True) -> int:
         start_dt = self.start
         end_dt = self.end
 
+        start_dt = start_dt.replace(hour=23, minute=59, second=0, microsecond=0) 
+        start_dt = pytz.UTC.localize(start_dt)
+
         print(f'Back test from {start_dt} to {end_dt}')
 
-        on_day = start_dt
-
-        # Loop every day generate a model for the day, then loop the days bars
-        amt_days = (end_dt - start_dt).days
-        models = {}
+        strat = short_option.ShortOption()
 
         for symbol in self.symbols:
-            n = int(os.getenv(f'{symbol}_N'))
-            model_builder = trending_model.TrendingModel(symbol, end_dt - timedelta(days=1), 90, n, self.market_client)
-            models[symbol] = model_builder.generate_model()
+            # Get all the bars in this time frame and look for my indicators
+            bars_handlers = bars_data.BarData(symbol, start_dt - timedelta(days=30), end_dt, self.market_client)
+            bars = bars_handlers.get_bars(1, 'Min')
 
-        for t in range(amt_days):
-            if on_day.weekday() < 5:
+            # Only do what we want
+            bars = bars[bars.index.get_level_values('timestamp') >= start_dt]
 
-                on_day = on_day.replace(hour=9, minute=30)
+            # Get just the ones we'd buy
+            bars = strat.enter(bars)
 
-                if on_day == datetime(2024, 6, 19):
-                    on_day = on_day + timedelta(days=1)
+            # Need to know when we were holding so if a signal happens when holding we dont buy extra
+            held_positions = []
+
+            # Enter and find exit
+            for index, row in bars.iterrows():
+                print(f'Signal for {symbol} on {index[1]}')
+
+                # Check if holding
+                currently_holding = False
+                for hp in held_positions:
+                    if index[1] >= hp[0] and index[1] <= hp[1]:
+                        print('Holding a position dont enter this')
+                        currently_holding = True
+                        break
+
+                if currently_holding:
                     continue
 
-                for symbol in self.symbols:
-                    signaler = short_signal.Short(symbol, self.market_client)
+                # Enter
+                #TODO: determine how to increase buy amount
+                position, position_bars = self.enter(symbol, row, row['signal'], 1)
 
-                    # Get the signal bars
-                    b_st = on_day - timedelta(days=self.day_diff)
-                    b_end = on_day.replace(hour=23, minute=0)
-                    print(f'Getting days bars from {b_st} to {b_end}')
-                    bars = get_data.get_bars(symbol, b_st, b_end, self.market_client)
-                    bars = features.feature_engineer_bars(bars)
+                # Determine exit
+                if position != None:
+                    entered = index[1]
+                    reason = 'expired'
+                    for pindex, prow in position_bars.iterrows():
+                        print(f'Checking {position.symbol} at {pindex}')
 
-                    signaler.add_model(models[symbol])
+                        mv = prow['close'] * 100
 
-                    # Just get the bars for the day
-                    try:
-                        dtstr = on_day.strftime("%Y-%m-%d")
-                        day_bars = bars.loc[(symbol, dtstr)]
+                        qty = float(position.qty)
+                        mv = mv * qty
+                        pld = features.get_percentage_diff(position.cost_basis, mv) / 100
 
-                        for index in range(len(day_bars)): 
-                            row = day_bars.iloc[[index]]
-                            # Build the signaler to determine entry
-                            signaler.add_bars(bars.loc[:(symbol, row.index[0])].copy())
-                            signaler.add_positions(self.positions)
+                        position.unrealized_plpc = f'{pld}'
+                        position.market_value = f'{mv}'
 
-                            enter, signal, buy_qty = signaler.signal()
+                        exit, reason = strat.exit(position, prow)
+                        if exit:
+                            break
 
-                            self.enter(symbol, row.iloc[0], signal, enter, buy_qty, on_day)
-
-                            self.check_positions(row.index[0], row.iloc[0]['close'], symbol, signal, on_day.replace(hour=9), row.index[0], False)
-
-                            total_market_value = sum(float(item.market_value) for item in self.positions)
-
-                            amt = self.account + total_market_value
-                            if len(self.account_bars) == 0 or self.account_bars[-1][1] != amt:
-                                self.account_bars.append([len(self.account_bars) + 1, amt])
-                    except KeyError as e: 
-                        print(e)
-                        continue
-                    except Exception as e:
-                        print(e)
-                        continue
-
-            on_day = on_day + timedelta(days=1)
+                    self.exit(position, symbol, reason, pindex[1])
+                    held_positions.append([entered, pindex[1]])
 
         full_total = 0
         for cs in self.symbols:

@@ -147,6 +147,8 @@ def feature_engineer_bars(df):
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)
 
+    df['indicator'] = df.apply(my_indicator, axis=1)
+
     return df
 
 def last_two_bars(df, columns):
