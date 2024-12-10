@@ -99,48 +99,38 @@ def feature_engineer_bars(df):
     df['candle_bar'] = df['close'] - df['open']
     df['candle_lines'] = df['high'] - df['low']
 
-    df['hour'] = df.apply(get_hour, axis=1)
-    df['minutes'] = df.apply(get_minutes, axis=1)
-    df['in_time'] = df.apply(in_time, axis=1)
-    df['date'] = df.apply(get_date, axis=1)
-    df['dayofweek'] = df.apply(get_day_of_week, axis=1)
-    df['dayofyear'] = df.apply(get_day_of_year, axis=1)
-    df['month'] = df.apply(get_month, axis=1)
+    #df['hour'] = df.apply(get_hour, axis=1)
+    #df['minutes'] = df.apply(get_minutes, axis=1)
+    #df['in_time'] = df.apply(in_time, axis=1)
+    #df['date'] = df.apply(get_date, axis=1)
+    #df['dayofweek'] = df.apply(get_day_of_week, axis=1)
+    #df['dayofyear'] = df.apply(get_day_of_year, axis=1)
+    #df['month'] = df.apply(get_month, axis=1)
 
     df = moving_average(df, quotes)
-
     df = macd(df, quotes)
-
     df = rate_of_change(df, quotes)
-
-    df = obv(df, quotes)
-
-    df = rsi(df, quotes)
-
+    #df = obv(df, quotes)
+    #df = rsi(df, quotes)
     df = vortex_indicator(df, quotes)
-
     df = bands(df, quotes)
-
     df = smi(df, quotes)
+    df = mfi(df, quotes)
+    #df = truerange(df)
+    #df = squeeze(df)
 
-    trend_col = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height', 'upper_band', 'lower_band'] 
+    trend_col = ['close', 'open', 'pvi', 'nvi', 'mfi', 'smi'] 
     df = trends(df, short_trend, 'short', trend_col)
     df = trends(df, long_trend, 'long', trend_col)
 
-    df = mfi(df, quotes)
+    #df = crossed(df, 'pvi', 1)
+    #df = crossed(df, 'nvi', 1)
+    #df = crossed(df, 'roc', 0)
+    #df = crossed(df, 'macd', 0)
+    #df = crossed(df, 'histogram', 0)
 
-    df = truerange(df)
-
-    df = squeeze(df)
-
-    df = crossed(df, 'pvi', 1)
-    df = crossed(df, 'nvi', 1)
-    df = crossed(df, 'roc', 0)
-    df = crossed(df, 'macd', 0)
-    df = crossed(df, 'histogram', 0)
-
-    df = dip(df, short_trend, 'short')
-    df = dip(df, long_trend, 'long')
+    #df = dip(df, short_trend, 'short')
+    #df = dip(df, long_trend, 'long')
 
     df = last_two_bars(df, ['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b'])
 
@@ -164,17 +154,20 @@ def last_two_bars(df, columns):
 
 def my_indicator(row):
     pvi = row['pvi'] < 1 and abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
-    roc = row['roc'] > -0.1 and row['roc'] < 0.15 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
+    roc = row['roc'] > -0.05 and row['roc'] < 0.05 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
     pb = row['percent_b'] > row['percent_b__last'] and row['percent_b'] > .3
+    candle = row['candle_bar'] > 0
+    mi_diff = row['mfi'] - row['smi']
+    mi = (mi_diff > 0 and mi_diff < 80) or (row['smi'] > 0 and row['mfi'] < 32)
 
-    if pvi and roc and row['candle_bar'] > .3 and pb:
+    if pvi and roc and candle and pb and mi:
         return 1
 
     nvi = row['nvi'] < 1 and abs(row['nvi'] - row['nvi__last']) > 0.1 and abs(row['nvi__last'] - row['nvi__last__last']) > 0
     roc = row['roc'] < 0.1 and row['roc'] > -0.15 and row['roc'] < row['roc__last'] < row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
     pb = row['percent_b'] < row['percent_b__last'] and row['percent_b'] < .8
 
-    if nvi and roc and row['candle_bar'] < -.3 and pb:
+    if nvi and roc and row['candle_bar'] < 0 and pb:
         return -1
 
     return 0 
@@ -204,6 +197,10 @@ def trends(df, look_back, name, col_names):
 
     for col_name in col_names:
         df[f'{col_name}_{name}_trend'] = trending(df, col_name, look_back, name, True, False)
+
+    for col_name in col_names:
+        for i in range(look_back):
+            df.pop(f'{col_name}_{i}_{name}')
 
     return df
 

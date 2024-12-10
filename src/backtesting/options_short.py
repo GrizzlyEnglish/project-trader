@@ -53,7 +53,7 @@ class BacktestOptionShort:
 
         if bars.empty:
             print(f'No bars for {data.symbol}')
-            return None, None
+            return None, None, 0
 
         up_to = bars[bars.index.get_level_values('timestamp') <= index]
         contract_price = up_to['close'].iloc[-1]

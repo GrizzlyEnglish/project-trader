@@ -8,7 +8,8 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.historical.option import OptionHistoricalDataClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from src.helpers import get_data, features
+from src.helpers import features
+from src.data import bars_data
 
 import numpy as np
 import pandas as pd
@@ -26,12 +27,12 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbol = 'SPY'
+symbol = 'QQQ'
 delta = float(os.getenv(f'{symbol}_DELTA'))
 end = datetime(2024, 11, 29, 19)
-start = end - timedelta(days=90)
-df = get_data.get_bars(symbol, start, end, market_client)
-df = features.feature_engineer_bars(df)
+start = end - timedelta(days=365)
+bars_handlers = bars_data.BarData(symbol, start, end, market_client)
+df = bars_handlers.get_bars(1, 'Min')
 df['indicator'] = df.apply(features.my_indicator, axis=1)
 
 actions = 0
@@ -54,15 +55,17 @@ for dt in dates:
             if row['indicator'] == 1:
                 calls = calls + 1
                 if first > row['close']:
-                    print(f'Call correct {row["close"]}/{first} on {index}')
+                    #print(f'Call correct {row["close"]}/{first} on {index}')
                     c_correct = c_correct + 1
                     correct_bars.append(row)
+                else:
+                    incorrect_bars.append(row)
             elif row['indicator'] == -1:
                 puts = puts + 1
                 if first != 0 and first < row['close']:
-                    print(f'Put correct {row["close"]}/{first} on {index}')
+                    #print(f'Put correct {row["close"]}/{first} on {index}')
                     p_correct = p_correct + 1
-                    correct_bars.append(row)
+                    #correct_bars.append(row)
             
 print(f'accuracy {(p_correct+c_correct)/actions}')
 print(f'put accuracy {p_correct/puts} actions {puts}')

@@ -41,6 +41,8 @@ class OptionData:
     def get_bars(self, start, end):
         bars = []
         bars = self.get_alpaca_bars(start, end)
+        if bars.empty:
+            return bars
         return features.feature_engineer_options(bars)
 
     def get_alpaca_bars(self, start, end):
