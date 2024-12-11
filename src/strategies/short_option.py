@@ -16,6 +16,7 @@ class ShortOption:
 
         stop_loss_val = int(os.getenv(f'{symbol}_STOP_LOSS'))
         secure_gains_val = int(os.getenv(f'{symbol}_SECURE_GAINS'))
+        pvi_gain_gaurd = float(os.getenv(f'{symbol}_GAIN_GAURD'))
 
         pl = float(position.unrealized_plpc) * 100
         cost = float(position.cost_basis)
@@ -33,7 +34,7 @@ class ShortOption:
         if loss_exit:
             return True, reason
 
-        gains_exit, reason = self.secure_gains(hst, gains, secure_gains_val, bar)
+        gains_exit, reason = self.secure_gains(hst, gains, secure_gains_val, bar, pvi_gain_gaurd)
         if gains_exit:
             return True, reason
         
@@ -49,10 +50,10 @@ class ShortOption:
 
         return False, 'hold'
     
-    def secure_gains(self, hst, gains, secure_gains_val, bar) -> bool:
+    def secure_gains(self, hst, gains, secure_gains_val, bar, pvi_gain_gaurd) -> bool:
         passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
         if passed_secure_gains:
-            if bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < 0.05:
+            if bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < pvi_gain_gaurd:
                 return True, 'secure gains'
         
         return False, 'hold'

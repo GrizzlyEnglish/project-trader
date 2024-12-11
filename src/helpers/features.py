@@ -156,7 +156,7 @@ def my_indicator(row):
     pvi = row['pvi'] < 1 and abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
     roc = row['roc'] > -0.05 and row['roc'] < 0.05 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
     pb = row['percent_b'] > row['percent_b__last'] and row['percent_b'] > .3
-    candle = row['candle_bar'] > 0
+    candle = row.name[0] == 'QQQ' or row['candle_bar'] > 0.3
     mi_diff = row['mfi'] - row['smi']
     mi = (mi_diff > 0 and mi_diff < 80) or (row['smi'] > 0 and row['mfi'] < 32)
 
@@ -166,8 +166,9 @@ def my_indicator(row):
     nvi = row['nvi'] < 1 and abs(row['nvi'] - row['nvi__last']) > 0.1 and abs(row['nvi__last'] - row['nvi__last__last']) > 0
     roc = row['roc'] < 0.1 and row['roc'] > -0.15 and row['roc'] < row['roc__last'] < row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
     pb = row['percent_b'] < row['percent_b__last'] and row['percent_b'] < .8
+    candle = row.name[0] == 'QQQ' or row['candle_bar'] < 0
 
-    if nvi and roc and row['candle_bar'] < 0 and pb:
+    if nvi and roc and candle and pb:
         return -1
 
     return 0 

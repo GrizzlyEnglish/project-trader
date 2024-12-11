@@ -30,7 +30,7 @@ polygon_client = RESTClient(api_key=polygon_key)
 symbol = 'QQQ'
 delta = float(os.getenv(f'{symbol}_DELTA'))
 end = datetime(2024, 11, 29, 19)
-start = end - timedelta(days=365)
+start = end - timedelta(days=90)
 bars_handlers = bars_data.BarData(symbol, start, end, market_client)
 df = bars_handlers.get_bars(1, 'Min')
 df['indicator'] = df.apply(features.my_indicator, axis=1)

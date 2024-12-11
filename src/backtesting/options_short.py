@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import pytz
+import math
 
 class BacktestOptionShort:
 
@@ -31,12 +32,17 @@ class BacktestOptionShort:
         self.account = 30000
         self.account_bars = {}
 
+        self.correct_bars = {}
+        self.incorrect_bars = {}
+
         for s in self.symbols:
             self.account_bars[s] = []
             self.close_series[s] = []
             self.purchased_series[s] = []
             self.sell_series[s] = []
             self.total[s] = 0
+            self.correct_bars[s] = []
+            self.incorrect_bars[s] = []
 
     def enter(self, symbol, row, signal, buy_qty) -> None:
         index = row.name[1]
@@ -56,6 +62,9 @@ class BacktestOptionShort:
             return None, None, 0
 
         up_to = bars[bars.index.get_level_values('timestamp') <= index]
+        if up_to.empty:
+            print(f'No bars for filtered {data.symbol}')
+            return None, None, 0
         contract_price = up_to['close'].iloc[-1]
         cost = contract_price * 100 * buy_qty
 
@@ -85,7 +94,7 @@ class BacktestOptionShort:
         
         return None, None, 0
 
-    def exit(self, p, symbol, reason, index, bar) -> None:
+    def exit(self, p, symbol, reason, index, bar, underlying_bar) -> None:
         print(f'Sold {p.symbol} for {reason}')
         tel = {
             'contract': p.symbol,
@@ -113,6 +122,9 @@ class BacktestOptionShort:
         self.actions = self.actions + 1
         if pl > 0:
             self.correct_actions = self.correct_actions + 1
+            self.correct_bars[symbol].append(underlying_bar)
+        else:
+            self.incorrect_bars[symbol].append(underlying_bar)
         self.total[symbol] = self.total[symbol] + (float(p.market_value) - p.cost_basis)
         tracker.clear(p.symbol)
         self.account = self.account + float(p.market_value)
@@ -184,9 +196,11 @@ class BacktestOptionShort:
 
                         exit, reason = strat.exit(position, prow)
                         if exit:
+                            #d = position_bars.loc[pindex:]
+                            #pd.DataFrame(data=d).to_csv(f'../results/{position.symbol}_{math.floor(pld*100)}.csv', index=True)
                             break
 
-                    self.exit(position, symbol, reason, pindex[1], prow)
+                    self.exit(position, symbol, reason, pindex[1], prow, row)
                     balance = balance + float(position.market_value)
                     held_positions.append([entered, pindex[1]])
 
@@ -198,13 +212,16 @@ class BacktestOptionShort:
         accuracy = 0
         if self.actions > 0:
             accuracy = self.correct_actions/self.actions
-            print(f'Accuracy {accuracy} total {full_total}')
+            print(f'Accuracy {accuracy} total {full_total} with {self.actions} actions')
         
         if len(self.positions) > 0:
             for p in self.positions:
                 print(f'Still holding {p.symbol} with pl {p.unrealized_plpc}')
 
         pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}.csv', index=True)
+        for symbol in self.symbols:
+            pd.DataFrame(data=self.correct_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_correct_bars.csv', index=True)
+            pd.DataFrame(data=self.incorrect_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_incorrect_bars.csv', index=True)
 
         if show_graph:
             fig = plt.figure(1)
@@ -235,4 +252,4 @@ class BacktestOptionShort:
             # Show the plot
             plt.show()
         
-        return full_total
+        return full_total, accuracy
