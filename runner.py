@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from src.helpers import get_data
-from src.runner import generate_models
-from src.strategies import short_strat
+from src.data import bars_data, options_data
+from src.options import buy, sell
+from src.strategies import short_option
+from src.helpers import options
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
@@ -29,6 +30,10 @@ option_client = OptionHistoricalDataClient(api_key, api_secret)
 short_models = []
 signals = []
 
+strat = short_option.ShortOption()
+buyer = buy.Buy(trading_client, option_client) 
+seller = sell.Sell(trading_client, option_client)
+
 # Helpers
 def is_within_open_market(offset=False):
     now = datetime.now()
@@ -41,40 +46,42 @@ def is_within_open_market(offset=False):
 
 def dont_hold_overnight():
     print("Close all currently open positions, so we dont hold overnight")
-    positions = get_data.get_positions(trading_client)
-    for p in positions:
-        trading_client.close_position(p.symbol)
+    current_positions = trading_client.get_all_positions()
+    for position in current_positions:
+        seller.exit(position, 'dont hold overnight')
 
 def check_short_enter():
     global short_models, signals
 
     print("Checking for entry to short positions")
-    strat.check_enter()
-
-def generate_short_models():
-    global short_models
-
-    print("Generating short models")
-    short_models = strat.create_models((datetime.now() - timedelta(days=1)).replace(hour=23))
+    for symbol in symbols:
+        data = bars_data.BarData(symbol, datetime.now() - timedelta(days=day_diff), datetime.now() + timedelta(minutes=1), market_client)
+        bars = data.get_bars()
+        bars = strat.enter(bars[-1])
+        if not bars.empty:
+            #TODO: Scale qty
+            buyer.purchase(symbol, True, bars[-1]['signal'], bars[-1]['close'], 1)
 
 def check_exit():
     print("Checking for exits")
-    strat.check_exit()
+    current_positions = trading_client.get_all_positions()
+    d = options_data.OptionData(underyling, datetime.now(), 'c', 1, option_client)
+    for position in current_positions:
+        underyling = options.get_underlying_symbol(position.symbol)
+        d.set_symbol(position.symbol)
+        bars = d.get_bars()
+        exit, reason = strat.exit(position, bars[-1])
+        if exit:
+            seller.exit(position, reason)
 
 def run_threaded(job_func, *args):
     with ThreadPoolExecutor(max_workers=5) as executor:
         executor.submit(job_func, *args)
 
-strat = short_strat.Short_Strat(symbols, day_diff, market_client, trading_client, option_client)
-
-schedule.every().day.at("09:00").do(generate_short_models)
-
-#schedule.every().day.at("15:00").do(dont_hold_overnight)
+schedule.every().day.at("15:00").do(dont_hold_overnight)
 
 schedule.every(1).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
-
-generate_short_models()
 
 # Immediately run these
 if is_within_open_market():
