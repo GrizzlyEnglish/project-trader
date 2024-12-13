@@ -51,10 +51,10 @@ class ShortOption:
         return False, 'hold'
     
     def secure_gains(self, hst, gains, secure_gains_val, bar, pvi_gain_gaurd) -> bool:
-        passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
-        if passed_secure_gains:
-            if bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < pvi_gain_gaurd:
-                return True, 'secure gains'
+        #passed_secure_gains = gains > secure_gains_val or (not hst.empty and (hst['gains'] >= secure_gains_val).any())
+        #if passed_secure_gains:
+        if bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < pvi_gain_gaurd:
+            return True, 'secure gains'
         
         return False, 'hold'
 
@@ -84,6 +84,5 @@ class ShortOption:
             
         b = bars.copy()
         b['signal'] = b.apply(determine_signal, axis=1)
-        b = b[b['signal'] != 'hold']
 
         return b

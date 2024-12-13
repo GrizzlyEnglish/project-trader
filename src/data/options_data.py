@@ -43,6 +43,8 @@ class OptionData:
         bars = self.get_alpaca_bars(start, end)
         if bars.empty:
             return bars
+        if len(bars) < 20:
+            return pd.DataFrame()
         return features.feature_engineer_options(bars)
 
     def get_alpaca_bars(self, start, end):

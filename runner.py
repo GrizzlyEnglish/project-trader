@@ -13,6 +13,7 @@ import schedule
 import time
 import os
 import ast
+import pytz
 
 load_dotenv()
 
@@ -55,17 +56,20 @@ def check_short_enter():
 
     print("Checking for entry to short positions")
     for symbol in symbols:
-        data = bars_data.BarData(symbol, datetime.now() - timedelta(days=day_diff), datetime.now() + timedelta(minutes=1), market_client)
+        data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
         bars = data.get_bars()
-        bars = strat.enter(bars[-1])
+        bars = strat.enter(bars)
         if not bars.empty:
             #TODO: Scale qty
-            buyer.purchase(symbol, True, bars[-1]['signal'], bars[-1]['close'], 1)
+            b = bars.iloc[-1]
+            print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
+            if b['signal'] != 'hold':
+                buyer.purchase(symbol, True, b['signal'], b['close'], 1)
 
 def check_exit():
     print("Checking for exits")
     current_positions = trading_client.get_all_positions()
-    d = options_data.OptionData(underyling, datetime.now(), 'c', 1, option_client)
+    d = options_data.OptionData('', datetime.now(), 'c', 1, option_client)
     for position in current_positions:
         underyling = options.get_underlying_symbol(position.symbol)
         d.set_symbol(position.symbol)

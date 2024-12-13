@@ -28,16 +28,12 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbol = 'QQQ'
+data = options_data.OptionData('QQQ', datetime.now(), 'C', 571, option_client)
+data.set_symbol('QQQ240102C00403000')
+o_bars = data.get_bars(datetime.now() - timedelta(days=365), datetime.now())
 
-end = datetime(2024, 12, 6, 19)
-start = end - timedelta(days=90)
-
-bars_handlers = bars_data.BarData(symbol, start - timedelta(days=30), end, market_client)
+bars_handlers = bars_data.BarData('QQQ', datetime(2024,1,2), datetime(2024,1,3), market_client)
 bars = bars_handlers.get_bars(1, 'Min')
 
-strat = short_option.ShortOption()
-bars = strat.enter(bars)
-
-
-pd.DataFrame(data=bars).to_csv(f'../results/signals.csv', index=True)
+print(bars)
+print(o_bars)

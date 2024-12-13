@@ -35,6 +35,8 @@ class BacktestOptionShort:
         self.correct_bars = {}
         self.incorrect_bars = {}
 
+        self.missing_bars = []
+
         for s in self.symbols:
             self.account_bars[s] = []
             self.close_series[s] = []
@@ -55,15 +57,20 @@ class BacktestOptionShort:
             contract_type = 'call'
 
         data = options_data.OptionData(symbol, index, type, close, self.option_client)
-        bars = data.get_bars(index.replace(hour=9), index.replace(hour=23))
+        bars = data.get_bars((index - timedelta(days=1)).replace(hour=9), index + timedelta(days=1))
 
         if bars.empty:
             print(f'No bars for {data.symbol}')
+            self.missing_bars.append(data.symbol)
             return None, None, 0
+
+        # Make sure we are only looking at the bars for the given date
+        bars = bars[bars.index.get_level_values('timestamp').date == index.date()]
 
         up_to = bars[bars.index.get_level_values('timestamp') <= index]
         if up_to.empty:
             print(f'No bars for filtered {data.symbol}')
+            self.missing_bars.append(data.symbol)
             return None, None, 0
         contract_price = up_to['close'].iloc[-1]
         cost = contract_price * 100 * buy_qty
@@ -150,6 +157,8 @@ class BacktestOptionShort:
 
             # Get just the ones we'd buy
             bars = strat.enter(bars)
+            # Can ignore hold
+            bars = bars[bars['signal'] != 'hold']
 
             # Need to know when we were holding so if a signal happens when holding we dont buy extra
             held_positions = []
@@ -217,6 +226,8 @@ class BacktestOptionShort:
         if len(self.positions) > 0:
             for p in self.positions:
                 print(f'Still holding {p.symbol} with pl {p.unrealized_plpc}')
+
+        print(f'Tried to buy {len(self.missing_bars)} but lacked data')
 
         pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}.csv', index=True)
         for symbol in self.symbols:

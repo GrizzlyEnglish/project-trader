@@ -32,10 +32,10 @@ polygon_client = RESTClient(api_key=polygon_key)
 
 totals = []
 
-loss = 40
-gains = 40
+loss = 5
+gains = 25
 gaurd = 0.01
-d = 1
+d = 5
 symbol = 'QQQ'
 
 for i in range(5):
@@ -45,9 +45,12 @@ for i in range(5):
         os.environ[f'{symbol}_STOP_LOSS'] = f'{loss}'
         os.environ[f'{symbol}_GAIN_GAURD'] = f'{gaurd}'
 
-        end = datetime(2024, 12, 9, 12, 30)
-        runner = options_short.BacktestOptionShort([symbol], end, 90, day_diff, market_client, trading_client, option_client)
+        end = datetime(2024, 8, 1, 12, 30)
+        runner = options_short.BacktestOptionShort([symbol], end, 30, day_diff, market_client, trading_client, option_client)
         t, acc = runner.run(False)
+
+        if t > 0:
+            print(f'This one was')
 
         totals.append([t, acc, loss, gains, gaurd])
 

@@ -30,6 +30,8 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-end = datetime(2024, 12, 9, 12, 30)
-runner = options_short.BacktestOptionShort(symbols, end, 90, day_diff, market_client, trading_client, option_client)
+end = datetime(2024, 12, 12, 12, 30)
+start = datetime(2024, 1, 1)
+days = (end - start).days
+runner = options_short.BacktestOptionShort(symbols, end, days, day_diff, market_client, trading_client, option_client)
 t = runner.run(True)
