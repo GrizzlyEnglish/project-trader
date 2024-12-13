@@ -1,21 +1,19 @@
-from sklearn.cluster import KMeans
-from stock_indicators import indicators, Quote, CandlePart
-from sklearn.preprocessing import MinMaxScaler
+from stock_indicators import indicators, Quote
+from scipy.signal import argrelextrema
 
 import numpy as np
-import math
-import os
 import pandas as pd
 
 small_window = 50
 large_window = 200
 length_KC = 20
 mult_KC = 1.5
+short_trend = 30
+long_trend = 60
 
 def get_hour(row):
     idx = row.name[1]
     return idx.hour
-
 
 def get_minutes(row):
     idx = row.name[1]
@@ -40,14 +38,14 @@ def get_date(row):
     idx = row.name[1]
     return idx.year * (idx.month + idx.day)
 
-def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
+def trending_arr(df, label, amt, name, prepend=False, postpend=False, reverse=True):
     arr = []
 
     if prepend:
         arr.append(df[label])
 
     for i in range(amt):
-        arr.append(df[f'{label}_{i}'])
+        arr.append(df[f'{label}_{i}_{name}'])
 
     if postpend:
         arr.append(df[label])
@@ -55,7 +53,10 @@ def trending(df, label, amt, prepend=False, postpend=False, reverse=True):
     if reverse:
         arr.reverse()
 
-    return slope(arr)
+    return arr
+
+def trending(df, label, amt, name, prepend=False, postpend=False, reverse=True):
+    return slope(trending_arr(df, label, amt, name, prepend, postpend, reverse))
 
 def slope(arr):
     if len(arr) <= 1:
@@ -65,9 +66,9 @@ def slope(arr):
     poly_coeffs[np.isnan(poly_coeffs)] = 0  # possible speed-up: insert zeros where needed
     return poly_coeffs[0, :]  # slope only
 
-def feature_engineer_df(df, look_back):
+def get_quotes(df):
     bars_i = df.reset_index()
-    quotes = [ 
+    return [ 
         Quote(date, open, high, low, close, volume) 
             for date, open, high, low, close, volume 
             in zip(bars_i['timestamp'],
@@ -77,70 +78,130 @@ def feature_engineer_df(df, look_back):
                 bars_i['close'], 
                 bars_i['volume'], strict=True)]
 
+def feature_engineer_options(df):
+    quotes = get_quotes(df)
+    df = vortex_indicator(df, quotes)
+
+    trend_col = ['pvi', 'nvi'] 
+    df = trends(df, 4, 'short', trend_col)
+    df = trends(df, 8, 'long', trend_col)
+
+    df = last_two_bars(df, ['pvi', 'nvi', 'pvi_short_trend', 'nvi_short_trend'])
+
+    return df
+
+def feature_engineer_bars(df):
+    quotes = get_quotes(df)
+
     df.loc[:, 'change'] = df['close'].diff()
 
     # candle sticks
-    df['candle_bar'] = df['open'] - df['close']
+    df['candle_bar'] = df['close'] - df['open']
     df['candle_lines'] = df['high'] - df['low']
 
-    df['hour'] = df.apply(get_hour, axis=1)
-    df['minutes'] = df.apply(get_minutes, axis=1)
-    df['in_time'] = df.apply(in_time, axis=1)
-    df['date'] = df.apply(get_date, axis=1)
-    df['dayofweek'] = df.apply(get_day_of_week, axis=1)
-    df['dayofyear'] = df.apply(get_day_of_year, axis=1)
-    df['month'] = df.apply(get_month, axis=1)
+    #df['hour'] = df.apply(get_hour, axis=1)
+    #df['minutes'] = df.apply(get_minutes, axis=1)
+    #df['in_time'] = df.apply(in_time, axis=1)
+    #df['date'] = df.apply(get_date, axis=1)
+    #df['dayofweek'] = df.apply(get_day_of_week, axis=1)
+    #df['dayofyear'] = df.apply(get_day_of_year, axis=1)
+    #df['month'] = df.apply(get_month, axis=1)
 
     df = moving_average(df, quotes)
-
     df = macd(df, quotes)
-
     df = rate_of_change(df, quotes)
-
-    df = obv(df, quotes)
-
-    df = rsi(df, quotes)
-
+    #df = obv(df, quotes)
+    #df = rsi(df, quotes)
     df = vortex_indicator(df, quotes)
-
     df = bands(df, quotes)
-
     df = smi(df, quotes)
-
-    df = trends(df, look_back)
-
     df = mfi(df, quotes)
+    #df = truerange(df)
+    #df = squeeze(df)
 
-    df = truerange(df)
+    trend_col = ['close', 'open', 'pvi', 'nvi', 'mfi', 'smi'] 
+    df = trends(df, short_trend, 'short', trend_col)
+    df = trends(df, long_trend, 'long', trend_col)
 
-    df = squeeze(df)
+    #df = crossed(df, 'pvi', 1)
+    #df = crossed(df, 'nvi', 1)
+    #df = crossed(df, 'roc', 0)
+    #df = crossed(df, 'macd', 0)
+    #df = crossed(df, 'histogram', 0)
+
+    #df = dip(df, short_trend, 'short')
+    #df = dip(df, long_trend, 'long')
+
+    df = last_two_bars(df, ['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b'])
+
+    for col in df.select_dtypes(include=['bool']).columns:
+        df[col] = df[col].astype(int)
+
+    df['indicator'] = df.apply(my_indicator, axis=1)
 
     return df
 
-def drop_prices(df, look_back):
-    for i in range(look_back):
-        df.pop(f'close_{i}')
-        df.pop(f'pvi_{i}')
-        df.pop(f'nvi_{i}')
-        df.pop(f'smi_{i}')
-        df.pop(f'roc_{i}')
-        df.pop(f'macd_{i}')
-        df.pop(f'histogram_{i}')
-        df.pop(f'percent_b_{i}')
-
+def last_two_bars(df, columns):
+    d = df.copy()[columns]
+    shifted_df = d.shift(1)
+    shifted_df = shifted_df.add_suffix(f'__last')
+    df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
+    shifted_df = d.shift(2)
+    shifted_df = shifted_df.add_suffix(f'__last__last')
+    df = pd.concat([df, shifted_df], axis=1, ignore_index=False)
+    del shifted_df
     return df
 
-def trends(df, look_back):
-    col_names = ['close', 'pvi', 'nvi', 'smi', 'macd', 'roc', 'histogram', 'percent_b', 'height']
+def my_indicator(row):
+    pvi = row['pvi'] < 1 and abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
+    roc = row['roc'] > -0.05 and row['roc'] < 0.05 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
+    pb = row['percent_b'] > row['percent_b__last'] and row['percent_b'] > .3
+    candle = row.name[0] == 'QQQ' or row['candle_bar'] > 0.3
+    mi_diff = row['mfi'] - row['smi']
+    mi = (mi_diff > 0 and mi_diff < 80) or (row['smi'] > 0 and row['mfi'] < 32)
+
+    if pvi and roc and candle and pb and mi:
+        return 1
+
+    nvi = row['nvi'] < 1 and abs(row['nvi'] - row['nvi__last']) > 0.1 and abs(row['nvi__last'] - row['nvi__last__last']) > 0
+    roc = row['roc'] < 0.1 and row['roc'] > -0.15 and row['roc'] < row['roc__last'] < row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
+    pb = row['percent_b'] < row['percent_b__last'] and row['percent_b'] < .8
+    candle = row.name[0] == 'QQQ' or row['candle_bar'] < 0
+
+    if nvi and roc and candle and pb:
+        return -1
+
+    return 0 
+
+def dip(df, n, name):
+    df[f'min_{name}'] = df.iloc[argrelextrema(df.close.values, np.less_equal,
+                    order=n)[0]]['close']
+    df[f'max_{name}'] = df.iloc[argrelextrema(df.close.values, np.greater_equal,
+                    order=n)[0]]['close']
+    
+    df[f'min_{name}'] = df[f'min_{name}'].notna()
+    df[f'max_{name}'] = df[f'max_{name}'].notna()
+    return df
+
+def crossed(df, col, crossed_value):
+    df[f'{col}_cross_over'] = (df[col] >= crossed_value) & (df[col].shift() < crossed_value)
+    df[f'{col}_cross_below'] = (df[col] <= crossed_value) & (df[col].shift() > crossed_value)
+    return df
+
+def trends(df, look_back, name, col_names):
     for i in range(look_back):
         j = i + 1
         df2 = df[col_names]
-        df2 = df2.add_suffix(f'_{i}')
+        df2 = df2.add_suffix(f'_{i}_{name}')
         df2 = df2.shift(j)
         df = pd.concat([df, df2], axis=1)
 
     for col_name in col_names:
-        df[f'{col_name}_trend'] = trending(df, col_name, look_back, True, False)
+        df[f'{col_name}_{name}_trend'] = trending(df, col_name, look_back, name, True, False)
+
+    for col_name in col_names:
+        for i in range(look_back):
+            df.pop(f'{col_name}_{i}_{name}')
 
     return df
 
@@ -193,7 +254,7 @@ def vortex_indicator(df, quotes):
     return df
 
 def moving_average(df, quotes):
-    results = indicators.get_kama(quotes, 10, small_window, large_window)
+    results = indicators.get_kama(quotes, 30, small_window, large_window)
 
     df.loc[:, 'efficiency_ratio'] = [r.efficiency_ratio for r in results]
     df.loc[:, 'kama'] = [r.kama for r in results]
@@ -236,16 +297,13 @@ def smi(df, quotes):
 
     return df
 
+def get_percentage_diff(initial_value, final_value): 
+    profit_loss = final_value - initial_value 
+    percent = (profit_loss / initial_value) * 100 
+    return percent
 
-def get_percentage_diff(previous, current, round_value=True):
-    try:
-        absolute_diff = current - previous
-        average_value = (current + previous) / 2
-        percentage = (absolute_diff / average_value) * 100.0
-
-        if round_value:
-            percentage = round(percentage)
-        
-        return percentage
-    except ZeroDivisionError:
-        return float('inf')  # Infinity
+def max_or_min_first(arr, delta, num): 
+    filtered_arr = [value for value in arr if value > (num + delta) or value < (num - delta)] 
+    if not filtered_arr:
+        return 0
+    return filtered_arr[0]

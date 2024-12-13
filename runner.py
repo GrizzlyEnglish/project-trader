@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from src.strats import short_enter, exit
-from src.helpers import get_data, load_parameters
+from src.data import bars_data, options_data
+from src.options import buy, sell
+from src.strategies import short_option
+from src.helpers import options
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
 from alpaca.data.historical import StockHistoricalDataClient
@@ -10,6 +12,8 @@ from alpaca.data.historical.option import OptionHistoricalDataClient
 import schedule
 import time
 import os
+import ast
+import pytz
 
 load_dotenv()
 
@@ -17,12 +21,19 @@ api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
 paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
+day_diff = int(os.getenv('DAYDIFF'))
+symbols = ast.literal_eval(os.getenv('SYMBOLS'))
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
 short_models = []
+signals = []
+
+strat = short_option.ShortOption()
+buyer = buy.Buy(trading_client, option_client) 
+seller = sell.Sell(trading_client, option_client)
 
 # Helpers
 def is_within_open_market(offset=False):
@@ -36,43 +47,48 @@ def is_within_open_market(offset=False):
 
 def dont_hold_overnight():
     print("Close all currently open positions, so we dont hold overnight")
-    positions = get_data.get_positions(trading_client)
-    for p in positions:
-        trading_client.close_position(p.symbol)
+    current_positions = trading_client.get_all_positions()
+    for position in current_positions:
+        seller.exit(position, 'dont hold overnight')
 
 def check_short_enter():
-    global short_models
+    global short_models, signals
 
     print("Checking for entry to short positions")
-    try:
-        short_enter.enter_short(short_models, market_client, trading_client, option_client)
-    except Exception as e:
-        print(e)
-
-def generate_short_models():
-    global short_models
-
-    print("Generating short models")
-    short_models = short_enter.generate_short_models(market_client, datetime.now())
+    for symbol in symbols:
+        data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
+        bars = data.get_bars()
+        bars = strat.enter(bars)
+        if not bars.empty:
+            #TODO: Scale qty
+            b = bars.iloc[-1]
+            print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
+            if b['signal'] != 'hold':
+                buyer.purchase(symbol, True, b['signal'], b['close'], 1)
 
 def check_exit():
     print("Checking for exits")
-    exit.exit(trading_client, option_client)
+    current_positions = trading_client.get_all_positions()
+    d = options_data.OptionData('', datetime.now(), 'c', 1, option_client)
+    for position in current_positions:
+        underyling = options.get_underlying_symbol(position.symbol)
+        d.set_symbol(position.symbol)
+        bars = d.get_bars()
+        exit, reason = strat.exit(position, bars[-1])
+        if exit:
+            seller.exit(position, reason)
 
 def run_threaded(job_func, *args):
     with ThreadPoolExecutor(max_workers=5) as executor:
         executor.submit(job_func, *args)
 
-schedule.every().day.at("09:00").do(generate_short_models)
-
 schedule.every().day.at("15:00").do(dont_hold_overnight)
 
-schedule.every(2).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
+schedule.every(1).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
 # Immediately run these
 if is_within_open_market():
-    generate_short_models()
     check_exit()
     check_short_enter()
 

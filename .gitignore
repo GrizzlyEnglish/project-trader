@@ -4,11 +4,10 @@ venv/
 .env
 generated/
 virtualenv/
-.vscode/
 .idea/
 .pycproject
 .pydevproject
 *.txt
 *.csv
-*.json
 results/
+cache/
