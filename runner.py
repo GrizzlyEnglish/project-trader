@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from src.data import bars_data, options_data
 from src.options import buy, sell
-from src.strategies import short_option
+from src.strategies import short_option, long_option
 from src.helpers import options
 from dotenv import load_dotenv
 from alpaca.trading.client import TradingClient
@@ -22,7 +22,8 @@ api_secret = os.getenv("API_SECRET")
 paper = os.getenv("IS_PAPER")
 sleep_time = os.getenv("SLEEP_TIME")
 day_diff = int(os.getenv('DAYDIFF'))
-symbols = ast.literal_eval(os.getenv('SYMBOLS'))
+shorts = ast.literal_eval(os.getenv('SHORT_SYMBOLS'))
+longs = ast.literal_eval(os.getenv('LONG_SYMBOLS'))
 
 trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
@@ -31,7 +32,8 @@ option_client = OptionHistoricalDataClient(api_key, api_secret)
 short_models = []
 signals = []
 
-strat = short_option.ShortOption()
+short_strat = short_option.ShortOption()
+long_strat = long_option.LongOption()
 buyer = buy.Buy(trading_client, option_client) 
 seller = sell.Sell(trading_client, option_client)
 
@@ -55,16 +57,28 @@ def check_short_enter():
     global short_models, signals
 
     print("Checking for entry to short positions")
-    for symbol in symbols:
+    for symbol in shorts:
         data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
         bars = data.get_bars()
-        bars = strat.enter(bars)
+        bars = short_strat.enter(bars)
         if not bars.empty:
             #TODO: Scale qty
             b = bars.iloc[-1]
             print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
             if b['signal'] != 'hold':
-                buyer.purchase(symbol, True, b['signal'], b['close'], 1)
+                buyer.purchase(symbol, b['signal'], b['close'], 1)
+
+    print("Checking for entry to short positions")
+    for symbol in longs:
+        data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
+        bars = data.get_bars(1, 'Hour')
+        bars = long_strat.enter(bars)
+        if not bars.empty:
+            #TODO: Scale qty
+            b = bars.iloc[-1]
+            print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
+            if b['signal'] != 'hold':
+                buyer.purchase(symbol, b['signal'], b['close'], 1)
 
 def check_exit():
     print("Checking for exits")
@@ -73,8 +87,11 @@ def check_exit():
     for position in current_positions:
         underyling = options.get_underlying_symbol(position.symbol)
         d.set_symbol(position.symbol)
-        bars = d.get_bars()
-        exit, reason = strat.exit(position, bars[-1])
+        bars = d.get_bars(datetime.now() - timedelta(days=30), datetime.now())
+        if underyling in shorts:
+            exit, reason = short_strat.exit(position, bars.iloc[-1])
+        else:
+            exit, reason = long_strat.exit(position, bars.iloc[-1])
         if exit:
             seller.exit(position, reason)
 

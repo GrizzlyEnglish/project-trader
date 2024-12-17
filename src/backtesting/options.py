@@ -1,5 +1,5 @@
 from datetime import datetime, time, timezone, timedelta
-from src.strategies import short_option 
+from src.strategies import short_option, long_option
 from src.helpers import options, features, tracker
 from src.data import options_data, bars_data
 
@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 import pytz
 import math
 
-class BacktestOptionShort:
+class BacktestOption:
 
-    def __init__(self, symbols, end, days, day_diff, market_client, trading_client, option_client) -> None:
-        self.symbols = symbols
+    def __init__(self, shorts, longs, end, days, day_diff, market_client, trading_client, option_client) -> None:
+        self.shorts = shorts
+        self.longs = longs
+        self.symbols = shorts + longs
         self.end = end
         self.start = end - timedelta(days=days)
         self.market_client = market_client
@@ -31,6 +33,7 @@ class BacktestOptionShort:
 
         self.account = 30000
         self.account_bars = {}
+        self.returns = {}
 
         self.correct_bars = {}
         self.incorrect_bars = {}
@@ -45,6 +48,7 @@ class BacktestOptionShort:
             self.total[s] = 0
             self.correct_bars[s] = []
             self.incorrect_bars[s] = []
+            self.returns[s] = []
 
     def enter(self, symbol, row, signal, buy_qty) -> None:
         index = row.name[1]
@@ -136,21 +140,11 @@ class BacktestOptionShort:
         tracker.clear(p.symbol)
         self.account = self.account + float(p.market_value)
 
-    def run(self, show_graph = True) -> int:
-        start_dt = self.start
-        end_dt = self.end
-
-        start_dt = start_dt.replace(hour=23, minute=59, second=0, microsecond=0) 
-        start_dt = pytz.UTC.localize(start_dt)
-
-        print(f'Back test from {start_dt} to {end_dt}')
-
-        strat = short_option.ShortOption()
-
-        for symbol in self.symbols:
+    def backtest_symbols(self, strat, symbols, start_dt, end_dt, window, timeframe):
+        for symbol in symbols:
             # Get all the bars in this time frame and look for my indicators
             bars_handlers = bars_data.BarData(symbol, start_dt - timedelta(days=30), end_dt, self.market_client)
-            bars = bars_handlers.get_bars(1, 'Min')
+            bars = bars_handlers.get_bars(window, timeframe)
 
             # Only do what we want
             bars = bars[bars.index.get_level_values('timestamp') >= start_dt]
@@ -210,8 +204,25 @@ class BacktestOptionShort:
                             break
 
                     self.exit(position, symbol, reason, pindex[1], prow, row)
+                    self.returns[symbol].append([pindex[1].date(), mv - position.cost_basis])
                     balance = balance + float(position.market_value)
                     held_positions.append([entered, pindex[1]])
+
+    def run(self, show_graph = True) -> int:
+        start_dt = self.start
+        end_dt = self.end
+
+        start_dt = start_dt.replace(hour=23, minute=59, second=0, microsecond=0) 
+        start_dt = pytz.UTC.localize(start_dt)
+
+        print(f'Back test from {start_dt} to {end_dt}')
+
+
+        print(f'Running shorts')
+        self.backtest_symbols(short_option.ShortOption(), self.shorts, start_dt, end_dt, 1, 'Min')
+
+        print(f'Running longs')
+        self.backtest_symbols(long_option.LongOption(), self.longs, start_dt, end_dt, 1, 'Hour')
 
         full_total = 0
         for cs in self.symbols:
@@ -233,6 +244,21 @@ class BacktestOptionShort:
         for symbol in self.symbols:
             pd.DataFrame(data=self.correct_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_correct_bars.csv', index=True)
             pd.DataFrame(data=self.incorrect_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_incorrect_bars.csv', index=True)
+
+
+            # add missing dates
+            date_range = pd.date_range(start=self.start.date(), end=self.end.date(), freq='D')
+            for dt in date_range:
+                self.returns[symbol].append([dt.date(), 0])
+
+            df = pd.DataFrame(data=self.returns[symbol], columns=['dates', 'returns'])
+            df = df.groupby('dates').sum()
+            risk_free_rate = 0.044
+            excess_returns = df['returns'] - (risk_free_rate / 252) 
+            mean_excess_return = excess_returns.mean() 
+            std_excess_return = excess_returns.std() 
+            sharpe_ratio = (mean_excess_return / std_excess_return) * np.sqrt(252) 
+            print(f"{symbol} sharpe Ratio: {sharpe_ratio}")
 
         if show_graph:
             fig = plt.figure(1)

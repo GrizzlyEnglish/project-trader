@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import os
 import math
+import pytz
 
 class Buy:
 
@@ -15,7 +16,7 @@ class Buy:
         self.trading_client = trading_client
         self.option_client = option_client
 
-    def submit_order(stock, qty, price, trading_client):
+    def submit_order(self, stock, qty, price, trading_client):
         market_order_data = LimitOrderRequest(
                             symbol=stock,
                             qty=qty,
@@ -44,14 +45,13 @@ class Buy:
         buying_power = float(account.buying_power)
         return min(math.floor(buying_power / option_price), amt)
 
-    def purchase(self, symbol, enter, signal, close, qty) -> None:
-        if enter:
-            data = options_data.OptionData(symbol, datetime.now(), 'C' if signal == 'buy' else 'P', close, self.option_client, None)
+    def purchase(self, symbol, signal, close, qty) -> None:
+        data = options_data.OptionData(symbol, datetime.now(pytz.UTC), 'C' if signal == 'buy' else 'P', close, self.option_client)
 
-            last_quote = data.get_option_snap_shot()
-            ask_price = last_quote.latest_quote.ask_price
+        last_quote = data.get_option_snap_shot()
+        ask_price = last_quote.latest_quote.ask_price
 
-            qty = self.get_buying_power(ask_price, qty)
-            discord.send_alpaca_message(f'Limit order for {qty}x {data.symbol} at ${ask_price}')
-            self.submit_order(data.symbol, qty, ask_price, self.trading_client)
-            tracker.track(data.symbol, 0, ask_price*100)
+        qty = self.get_buying_power(ask_price, qty)
+        discord.send_alpaca_message(f'Limit order for {qty}x {data.symbol} at ${ask_price}')
+        self.submit_order(data.symbol, qty, ask_price, self.trading_client)
+        tracker.track(data.symbol, 0, 0, ask_price*100)

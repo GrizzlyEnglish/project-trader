@@ -82,11 +82,11 @@ def feature_engineer_options(df):
     quotes = get_quotes(df)
     df = vortex_indicator(df, quotes)
 
-    trend_col = ['pvi', 'nvi'] 
+    trend_col = ['pvi', 'nvi', 'close'] 
     df = trends(df, 4, 'short', trend_col)
-    df = trends(df, 8, 'long', trend_col)
+    df = trends(df, 32, 'long', trend_col)
 
-    df = last_two_bars(df, ['pvi', 'nvi', 'pvi_short_trend', 'nvi_short_trend'])
+    df = last_two_bars(df, ['pvi', 'nvi', 'pvi_short_trend', 'nvi_short_trend', 'close_short_trend'])
 
     return df
 
@@ -111,7 +111,7 @@ def feature_engineer_bars(df):
     df = macd(df, quotes)
     df = rate_of_change(df, quotes)
     #df = obv(df, quotes)
-    #df = rsi(df, quotes)
+    df = rsi(df, quotes)
     df = vortex_indicator(df, quotes)
     df = bands(df, quotes)
     df = smi(df, quotes)
@@ -137,8 +137,6 @@ def feature_engineer_bars(df):
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)
 
-    df['indicator'] = df.apply(my_indicator, axis=1)
-
     return df
 
 def last_two_bars(df, columns):
@@ -152,7 +150,19 @@ def last_two_bars(df, columns):
     del shifted_df
     return df
 
-def my_indicator(row):
+def long_indicator(row):
+    out_bands = row['percent_b'] > 1 or row['percent_b'] < 0
+    #if row['pvi__last'] < .7 and row['pvi'] > row['pvi__last'] and row['rsi'] <= 30:
+        #return 1
+    if out_bands and row['pvi'] < .7 and row['pvi_short_trend'] > 0:
+        return -1
+    if out_bands and row['nvi'] < .7 and row['nvi_short_trend'] > 0:
+        return 1
+    #if row['nvi__last'] < .7 and row['nvi'] > row['nvi__last'] and row['rsi'] >= 60:
+        #return -1
+    return 0
+
+def short_indicator(row):
     pvi = row['pvi'] < 1 and abs(row['pvi'] - row['pvi__last']) > 0.1 and abs(row['pvi__last'] - row['pvi__last__last']) > 0
     roc = row['roc'] > -0.05 and row['roc'] < 0.05 and row['roc'] > row['roc__last'] > row['roc__last__last'] and abs(row['roc'] - row['roc__last__last']) > 0.05
     pb = row['percent_b'] > row['percent_b__last'] and row['percent_b'] > .3

@@ -6,6 +6,7 @@ from src.helpers import options, features
 
 import math
 import pandas as pd
+import pytz
 
 class OptionData:
 
@@ -13,22 +14,31 @@ class OptionData:
         self.option_client = option_client
         self.underlying_symbol = underlying_symbol
         self.is_polygon = False
-        self.dte = current_time
-        self.strike = self.determine_strike(strike_price, current_time, self.dte, c_or_p)
+        self.dte = current_time if (underlying_symbol == 'QQQ' or underlying_symbol == 'SPY') else options.next_friday(current_time)
+        self.strike = self.determine_strike(strike_price, current_time, self.dte, c_or_p, self.underlying_symbol)
         self.symbol = options.create_option_symbol(underlying_symbol, self.dte, c_or_p, self.strike)
 
-    def determine_strike(self, strike, current_time, dte, c_or_p) -> int:
-        eob = dte.replace(hour=18)
-        dst = math.floor((eob - current_time).total_seconds() / 3600)
-        if dst < 2:
-            self.dte = self.dte + timedelta(days=1)
-            if self.dte.weekday() == 5:
-                self.dte = self.dte + timedelta(days=2)
-            dst = 1
+    def determine_strike(self, strike, current_time, dte, c_or_p, underlying) -> int:
+        new_strike = strike
+        if (underlying != 'SPY' and underlying != 'QQQ'):
+            new_strike = new_strike + 4 if c_or_p == 'P' else new_strike - 4
+            new_strike = (new_strike // 5) * 5
         else:
-            dst = 6 - dst
-        new_strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
-        print(f'{dst} with {eob-current_time} {c_or_p} changing {strike} to {new_strike}')
+            if dte.tzinfo is None or dte.tzinfo.utcoffset(dte) is None:
+                dte = pytz.utc.localize(dte)
+            if current_time.tzinfo is None or current_time.tzinfo.utcoffset(dte) is None:
+                current_time = pytz.utc.localize(current_time)
+            eob = dte.replace(hour=20)
+            dst = math.floor((eob - current_time).total_seconds() / 3600)
+            if dst < 2:
+                self.dte = self.dte + timedelta(days=1)
+                if self.dte.weekday() == 5:
+                    self.dte = self.dte + timedelta(days=2)
+                dst = 1
+            else:
+                dst = max(6 - dst, 0)
+            new_strike = math.floor(strike - dst) if c_or_p == 'C' else math.ceil(strike + dst)
+            print(f'{dst} with {eob-current_time} {c_or_p} changing {strike} to {new_strike}')
         strike = new_strike
         return strike
 

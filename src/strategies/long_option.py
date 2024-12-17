@@ -6,7 +6,7 @@ from src.helpers import options, tracker, features
 import os
 import pandas as pd
 
-class ShortOption:
+class LongOption:
 
     def __init():
         pass
@@ -25,7 +25,7 @@ class ShortOption:
 
         gains = (market_value - cost) / qty
 
-        print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} nvi {bar["nvi_short_trend"]}/{bar["pvi_long_trend"]} pvi {bar["pvi_short_trend"]}/{bar["pvi_long_trend"]}')
+        print(f'{position.symbol} P/L % {pl} gains {gains} current: {market_value} bought: {cost} nvi {bar["nvi_short_trend"]}/{bar["nvi_long_trend"]} pvi {bar["pvi_short_trend"]}/{bar["pvi_long_trend"]}')
 
         tracker.track(position.symbol, pl, gains, market_value)
 
@@ -33,7 +33,7 @@ class ShortOption:
         if loss_exit:
             return True, reason
 
-        gains_exit, reason = self.secure_gains(bar, pvi_gain_gaurd, hst)
+        gains_exit, reason = self.secure_gains(bar, pvi_gain_gaurd, gains)
         if gains_exit:
             return True, reason
         
@@ -49,8 +49,8 @@ class ShortOption:
 
         return False, 'hold'
     
-    def secure_gains(self, bar, pvi_gain_gaurd, hst) -> bool:
-        if len(hst) > 10 and bar['pvi'] < bar['pvi__last'] and bar['pvi_long_trend'] < pvi_gain_gaurd:
+    def secure_gains(self, bar, pvi_gain_gaurd, gains) -> bool:
+        if gains > 0 and bar['pvi'] < bar['pvi__last'] and bar['pvi_short_trend'] < -pvi_gain_gaurd and bar['close_short_trend'] < 0:
             return True, 'secure gains'
         
         return False, 'hold'
@@ -72,15 +72,15 @@ class ShortOption:
             if idx <= market_open or idx >= market_close:
                 return 'hold'
 
-            if row['short_indicator'] == 1:
+            if row['long_indicator'] == 1:
                 return 'buy'
-            elif row['short_indicator'] == -1:
+            elif row['long_indicator'] == -1:
                 return 'sell'
             else:
                 return 'hold'
             
         b = bars.copy()
-        b['short_indicator'] = b.apply(features.short_indicator, axis=1)
+        b['long_indicator'] = b.apply(features.long_indicator, axis=1)
         b['signal'] = b.apply(determine_signal, axis=1)
 
         return b

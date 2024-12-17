@@ -29,11 +29,7 @@ option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
 data = options_data.OptionData('QQQ', datetime.now(), 'C', 571, option_client)
-data.set_symbol('QQQ240102C00403000')
-o_bars = data.get_bars(datetime.now() - timedelta(days=365), datetime.now())
+data.set_symbol('GOOGL240719P00180000')
+o_bars = data.get_bars(datetime(2024, 7, 15), datetime(2024, 7, 18))
 
-bars_handlers = bars_data.BarData('QQQ', datetime(2024,1,2), datetime(2024,1,3), market_client)
-bars = bars_handlers.get_bars(1, 'Min')
-
-print(bars)
 print(o_bars)
