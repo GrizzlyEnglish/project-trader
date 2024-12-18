@@ -1,8 +1,8 @@
-from alpaca.trading.requests import LimitOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce, OrderType
+from alpaca.trading.requests import LimitOrderRequest, ReplaceOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce, OrderType, OrderStatus
 from alpaca.common.exceptions import APIError
 from src.data import options_data
-from src.helpers import tracker
+from src.helpers import tracker, options
 from src.messaging import discord
 from datetime import datetime, timedelta
 
@@ -47,9 +47,27 @@ class Buy:
 
     def purchase(self, symbol, signal, close, qty) -> None:
         data = options_data.OptionData(symbol, datetime.now(pytz.UTC), 'C' if signal == 'buy' else 'P', close, self.option_client)
+        data.set_symbol('SPY241218C00605000')
 
         last_quote = data.get_option_snap_shot()
         ask_price = last_quote.latest_quote.ask_price
+
+        # Check if a limit order is already open
+        orders = self.trading_client.get_orders()
+
+        for o in orders:
+            if o.symbol == data.symbol and o.status != OrderStatus.ACCEPTED:
+                # Check if the limit is different
+                if float(o.limit_price) != ask_price:
+                    discord.send_alpaca_message(f'Replacing limit order for {data.symbol} was ${o.limit_price} now ${ask_price}')
+                    self.trading_client.replace_order_by_id(o.id, ReplaceOrderRequest(limit_price=ask_price))
+                # we replaced the price or its the same return out dont buy
+                return
+            else:
+                underlying = options.get_underlying_symbol(o.symbol)
+                if underlying == symbol:
+                    self.trading_client.cancel_order_by_id(o.id)
+                    # We are cancelling this and buying a new one dont return
 
         qty = self.get_buying_power(ask_price, qty)
         discord.send_alpaca_message(f'Limit order for {qty}x {data.symbol} at ${ask_price}')

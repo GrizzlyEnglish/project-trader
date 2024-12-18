@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from src.data import options_data, bars_data
 from src.helpers import options, features
 from src.strategies import short_option
+from src.options import buy
 
 import numpy as np
 import pandas as pd
@@ -28,8 +29,6 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-data = options_data.OptionData('QQQ', datetime.now(), 'C', 571, option_client)
-data.set_symbol('GOOGL240719P00180000')
-o_bars = data.get_bars(datetime(2024, 7, 15), datetime(2024, 7, 18))
+b = buy.Buy(trading_client, option_client)
 
-print(o_bars)
+b.purchase('SPY', 'C', 605, 1)
