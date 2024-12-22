@@ -29,8 +29,7 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-short_models = []
-signals = []
+last_checked = {}
 
 short_strat = short_option.ShortOption()
 long_strat = long_option.LongOption()
@@ -54,8 +53,6 @@ def dont_hold_overnight():
         seller.exit(position, 'dont hold overnight')
 
 def check_short_enter():
-    global short_models, signals
-
     print("Checking for entry to short positions")
     for symbol in shorts:
         data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
@@ -64,11 +61,20 @@ def check_short_enter():
         if not bars.empty:
             #TODO: Scale qty
             b = bars.iloc[-1]
-            print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
-            if b['signal'] != 'hold':
-                buyer.purchase(symbol, b['signal'], b['close'], 1)
+            check_buy(symbol, b)
 
-    print("Checking for entry to short positions")
+def check_buy(symbol, b):
+    if symbol not in last_checked or last_checked[symbol] != b.index[1]:
+        print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
+        if b['signal'] != 'hold':
+            buyer.purchase(symbol, b['signal'], b['close'], 1)
+    else:
+        print(f'Already checked {b.index[1]} for {symbol}')
+
+    last_checked[symbol] = b.index[1]
+
+def check_long_enter():
+    print("Checking for entry to long positions")
     for symbol in longs:
         data = bars_data.BarData(symbol, datetime.now(pytz.UTC) - timedelta(days=day_diff), datetime.now(pytz.UTC) + timedelta(minutes=1), market_client)
         bars = data.get_bars(1, 'Hour')
@@ -76,9 +82,7 @@ def check_short_enter():
         if not bars.empty:
             #TODO: Scale qty
             b = bars.iloc[-1]
-            print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
-            if b['signal'] != 'hold':
-                buyer.purchase(symbol, b['signal'], b['close'], 1)
+            check_buy(symbol, b)
 
 def check_exit():
     print("Checking for exits")
@@ -101,13 +105,15 @@ def run_threaded(job_func, *args):
 
 schedule.every().day.at("15:00").do(dont_hold_overnight)
 
-schedule.every(1).minutes.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
+schedule.every(30).seconds.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
+schedule.every(30).minutes.do(lambda: run_threaded(check_long_enter) if is_within_open_market() else None)
 schedule.every(30).seconds.do(lambda: run_threaded(check_exit) if is_within_open_market() else None)
 
 # Immediately run these
 if is_within_open_market():
     check_exit()
     check_short_enter()
+    check_long_enter()
 
 # Schedule after
 while True:

@@ -31,14 +31,14 @@ polygon_client = RESTClient(api_key=polygon_key)
 
 totals = []
 
-loss = 15
+loss = 10
 gaurd = 0.01
 d = 5
 
-shorts = []
-longs = ["GOOGL"]
+shorts = ["SPY"]
+longs = []
 
-for i in range(5):
+for i in range(10):
     gaurd = 0.01
     for j in range(5):
 
@@ -46,8 +46,8 @@ for i in range(5):
             os.environ[f'{symbol}_STOP_LOSS'] = f'{loss}'
             os.environ[f'{symbol}_GAIN_GAURD'] = f'{gaurd}'
 
-        end = datetime(2024, 12, 15, 12, 30)
-        runner = options.BacktestOption(shorts, longs, end, 120, day_diff, market_client, trading_client, option_client)
+        end = datetime(2024, 12, 20, 12, 30)
+        runner = options.BacktestOption(shorts, longs, end, 5, day_diff, market_client, trading_client, option_client)
         t, acc = runner.run(False)
 
         totals.append([t, acc, loss, gaurd])

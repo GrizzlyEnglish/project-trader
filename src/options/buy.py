@@ -44,32 +44,40 @@ class Buy:
         account = self.trading_client.get_account()
         buying_power = float(account.buying_power)
         return min(math.floor(buying_power / option_price), amt)
-
-    def purchase(self, symbol, signal, close, qty) -> None:
-        data = options_data.OptionData(symbol, datetime.now(pytz.UTC), 'C' if signal == 'buy' else 'P', close, self.option_client)
-        data.set_symbol('SPY241218C00605000')
-
-        last_quote = data.get_option_snap_shot()
-        ask_price = last_quote.latest_quote.ask_price
-
+    
+    def cancel_or_replace(self, contract, symbol, ask_price) -> bool:
         # Check if a limit order is already open
         orders = self.trading_client.get_orders()
 
         for o in orders:
-            if o.symbol == data.symbol and o.status != OrderStatus.ACCEPTED:
+            if o.symbol == contract and o.status != OrderStatus.ACCEPTED:
                 # Check if the limit is different
                 if float(o.limit_price) != ask_price:
-                    discord.send_alpaca_message(f'Replacing limit order for {data.symbol} was ${o.limit_price} now ${ask_price}')
+                    discord.send_alpaca_message(f'Replacing limit order for {contract} was ${o.limit_price} now ${ask_price}')
                     self.trading_client.replace_order_by_id(o.id, ReplaceOrderRequest(limit_price=ask_price))
                 # we replaced the price or its the same return out dont buy
-                return
-            else:
+                return True
+            elif o.status == OrderStatus.ACCEPTED:
                 underlying = options.get_underlying_symbol(o.symbol)
                 if underlying == symbol:
                     self.trading_client.cancel_order_by_id(o.id)
+                    discord.send_alpaca_message(f'Cancelling limit order for {contract}')
                     # We are cancelling this and buying a new one dont return
 
-        qty = self.get_buying_power(ask_price, qty)
-        discord.send_alpaca_message(f'Limit order for {qty}x {data.symbol} at ${ask_price}')
-        self.submit_order(data.symbol, qty, ask_price, self.trading_client)
-        tracker.track(data.symbol, 0, 0, ask_price*100)
+        return False
+
+    def purchase(self, symbol, signal, close, qty) -> None:
+        data = options_data.OptionData(symbol, datetime.now(pytz.UTC), 'C' if signal == 'buy' else 'P', close, self.option_client)
+
+        last_quote = data.get_option_snap_shot()
+        ask_price = last_quote.latest_quote.ask_price
+
+        try:
+            self.cancel_or_replace(data.symbol, symbol, ask_price)
+        except Exception as e:
+            discord.send_alpaca_message(f'Exception during cancel or replace for {data.symbol}')
+        finally:
+            qty = self.get_buying_power(ask_price, qty)
+            discord.send_alpaca_message(f'Limit order for {qty}x {data.symbol} at ${ask_price}')
+            self.submit_order(data.symbol, qty, ask_price, self.trading_client)
+            tracker.track(data.symbol, 0, 0, ask_price*100)

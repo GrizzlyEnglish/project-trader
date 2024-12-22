@@ -5,6 +5,7 @@ import os
 
 def send_alpaca_message(message):
     alpaca_discord_url = os.getenv('ALPACA_DISCORD_URL')
+    print(message)
     #discord = DiscordWebhook(alpaca_discord_url, content=message, rate_limit_retry=True)
     #discord.execute()
 
