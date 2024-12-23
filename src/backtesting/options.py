@@ -240,6 +240,7 @@ class BacktestOption:
 
         print(f'Tried to buy {len(self.missing_bars)} but lacked data')
 
+        sharpes = {}
         pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}.csv', index=True)
         for symbol in self.symbols:
             pd.DataFrame(data=self.correct_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_correct_bars.csv', index=True)
@@ -258,6 +259,7 @@ class BacktestOption:
             mean_excess_return = excess_returns.mean() 
             std_excess_return = excess_returns.std() 
             sharpe_ratio = (mean_excess_return / std_excess_return) * np.sqrt(252) 
+            sharpes[symbol] = sharpe_ratio
             print(f"{symbol} sharpe Ratio: {sharpe_ratio}")
 
         if show_graph:
@@ -289,4 +291,4 @@ class BacktestOption:
             # Show the plot
             plt.show()
         
-        return full_total, accuracy
+        return full_total, accuracy, sharpes

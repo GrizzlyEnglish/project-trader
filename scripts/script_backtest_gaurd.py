@@ -31,30 +31,27 @@ polygon_client = RESTClient(api_key=polygon_key)
 
 totals = []
 
-loss = 10
 gaurd = 0.01
-d = 5
 
-shorts = ["SPY"]
-longs = []
+shorts = []
+longs = ["META"]
 
-for i in range(10):
-    gaurd = 0.01
-    for j in range(5):
+for j in range(10):
 
-        for symbol in (shorts + longs):
-            os.environ[f'{symbol}_STOP_LOSS'] = f'{loss}'
-            os.environ[f'{symbol}_GAIN_GAURD'] = f'{gaurd}'
+    for symbol in (shorts + longs):
+        os.environ[f'{symbol}_GAIN_GAURD'] = f'{gaurd}'
 
-        end = datetime(2024, 12, 20, 12, 30)
-        runner = options.BacktestOption(shorts, longs, end, 5, day_diff, market_client, trading_client, option_client)
-        t, acc = runner.run(False)
+    end = datetime(2024, 12, 20, 12, 30)
+    runner = options.BacktestOption(shorts, longs, end, 30, day_diff, market_client, trading_client, option_client)
+    t, acc, sharpes = runner.run(False)
 
-        totals.append([t, acc, loss, gaurd])
+    if len(shorts) > 0:
+        totals.append([t, acc, int(os.getenv(f'{symbol}_STOP_LOSS')), gaurd, sharpes[shorts[0]]])
+    else:
+        totals.append([t, acc, int(os.getenv(f'{symbol}_STOP_LOSS')), gaurd, sharpes[longs[0]]])
 
-        loss = loss + d
-        gaurd = gaurd + .01
+    gaurd = gaurd + .01
 
-df = pd.DataFrame(data=totals,columns=['total', 'accuracy', 'loss', 'gaurd'])
+df = pd.DataFrame(data=totals,columns=['total', 'accuracy', 'loss', 'gaurd', 'sharpe'])
 
 print(df)

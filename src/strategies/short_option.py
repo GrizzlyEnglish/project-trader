@@ -33,7 +33,7 @@ class ShortOption:
         if loss_exit:
             return True, reason
 
-        gains_exit, reason = self.secure_gains(bar, pvi_gain_gaurd, hst)
+        gains_exit, reason = self.secure_gains(bar, pvi_gain_gaurd, hst, pl)
         if gains_exit:
             return True, reason
         
@@ -49,8 +49,8 @@ class ShortOption:
 
         return False, 'hold'
     
-    def secure_gains(self, bar, pvi_gain_gaurd, hst) -> bool:
-        if len(hst) > 10 and bar['pvi'] < bar['pvi__last'] and bar['pvi_long_trend'] < pvi_gain_gaurd:
+    def secure_gains(self, bar, pvi_gain_gaurd, hst, pl) -> bool:
+        if pl > 20 and len(hst) > 10 and bar['pvi_long_trend'] < pvi_gain_gaurd:
             return True, 'secure gains'
         
         return False, 'hold'
