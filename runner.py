@@ -29,7 +29,8 @@ trading_client = TradingClient(api_key, api_secret, paper=paper)
 market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 
-last_checked = {}
+last_checked_shorts = {}
+last_checked_longs = {}
 
 short_strat = short_option.ShortOption()
 long_strat = long_option.LongOption()
@@ -43,14 +44,8 @@ def is_within_open_market(offset=False):
     if offset:
         start_hour = 10
     start_time = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-    end_time = now.replace(hour=15, minute=0, second=0, microsecond=0)
+    end_time = now.replace(hour=16, minute=0, second=0, microsecond=0)
     return start_time <= now <= end_time
-
-def dont_hold_overnight():
-    print("Close all currently open positions, so we dont hold overnight")
-    current_positions = trading_client.get_all_positions()
-    for position in current_positions:
-        seller.exit(position, 'dont hold overnight')
 
 def check_short_enter():
     print("Checking for entry to short positions")
@@ -61,17 +56,17 @@ def check_short_enter():
         if not bars.empty:
             #TODO: Scale qty
             b = bars.iloc[-1]
-            check_buy(symbol, b)
+            check_buy(symbol, b, last_checked_shorts)
 
-def check_buy(symbol, b):
-    if symbol not in last_checked or last_checked[symbol] != b.index[1]:
+def check_buy(symbol, b, last_checked):
+    if symbol not in last_checked or last_checked[symbol] != b.name[1]:
         print(f'Checking {symbol} at {b.name[1]} signal {b["signal"]}')
         if b['signal'] != 'hold':
             buyer.purchase(symbol, b['signal'], b['close'], 1)
     else:
-        print(f'Already checked {b.index[1]} for {symbol}')
+        print(f'Already checked {b.name[1]} for {symbol}')
 
-    last_checked[symbol] = b.index[1]
+    last_checked[symbol] = b.name[1]
 
 def check_long_enter():
     print("Checking for entry to long positions")
@@ -82,7 +77,7 @@ def check_long_enter():
         if not bars.empty:
             #TODO: Scale qty
             b = bars.iloc[-1]
-            check_buy(symbol, b)
+            check_buy(symbol, b, last_checked_longs)
 
 def check_exit():
     print("Checking for exits")
@@ -102,8 +97,6 @@ def check_exit():
 def run_threaded(job_func, *args):
     with ThreadPoolExecutor(max_workers=5) as executor:
         executor.submit(job_func, *args)
-
-schedule.every().day.at("15:00").do(dont_hold_overnight)
 
 schedule.every(30).seconds.do(lambda: run_threaded(check_short_enter) if is_within_open_market() else None)
 schedule.every(30).minutes.do(lambda: run_threaded(check_long_enter) if is_within_open_market() else None)

@@ -13,6 +13,7 @@ from src.data import bars_data
 
 import numpy as np
 import pandas as pd
+import ast
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-symbols = ['AAPL', 'GOOGL', 'NVDA', 'AMZN']
+symbols = ast.literal_eval(os.getenv('LONG_SYMBOLS'))
 
 for symbol in symbols:
     delta = 1 
@@ -36,7 +37,7 @@ for symbol in symbols:
     bars_handlers = bars_data.BarData(symbol, start, end, market_client)
     df = bars_handlers.get_bars(1, 'Hour')
 
-    df['indicator'] = df.apply(features.long_indicator, axis=1)
+    df['indicator'] = df.apply(features.vortext_indicator_long, axis=1)
 
     actions = 0
     p_correct = 0

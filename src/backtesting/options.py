@@ -29,11 +29,14 @@ class BacktestOption:
         self.positions = []
         self.actions = 0
         self.correct_actions = 0
-        self.total = {}
+
+        self.short_total = {}
+        self.long_total = {}
+        self.short_returns = {}
+        self.long_returns = {}
 
         self.account = 30000
         self.account_bars = {}
-        self.returns = {}
 
         self.correct_bars = {}
         self.incorrect_bars = {}
@@ -45,10 +48,27 @@ class BacktestOption:
             self.close_series[s] = []
             self.purchased_series[s] = []
             self.sell_series[s] = []
-            self.total[s] = 0
             self.correct_bars[s] = []
             self.incorrect_bars[s] = []
-            self.returns[s] = []
+            self.short_total[s] = 0
+            self.long_total[s] = 0
+            self.short_returns[s] = []
+            self.long_returns[s] = []
+
+    def sharpe(self, returns) -> float:
+        # add missing dates
+        date_range = pd.date_range(start=self.start.date(), end=self.end.date(), freq='D')
+        for dt in date_range:
+            returns.append([dt.date(), 0])
+
+        df = pd.DataFrame(data=returns, columns=['dates', 'returns'])
+        df = df.groupby('dates').sum()
+        risk_free_rate = 0.044
+        excess_returns = df['returns'] - (risk_free_rate / 252) 
+        mean_excess_return = excess_returns.mean() 
+        std_excess_return = excess_returns.std() 
+        sharpe_ratio = (mean_excess_return / std_excess_return) * np.sqrt(252) 
+        return sharpe_ratio
 
     def enter(self, symbol, row, signal, buy_qty) -> None:
         index = row.name[1]
@@ -136,7 +156,6 @@ class BacktestOption:
             self.correct_bars[symbol].append(underlying_bar)
         else:
             self.incorrect_bars[symbol].append(underlying_bar)
-        self.total[symbol] = self.total[symbol] + (float(p.market_value) - p.cost_basis)
         tracker.clear(p.symbol)
         self.account = self.account + float(p.market_value)
 
@@ -176,7 +195,7 @@ class BacktestOption:
 
                 # Enter
                 #TODO: determine how to increase buy amount
-                position, position_bars, cost = self.enter(symbol, row, row['signal'], 1)
+                position, position_bars, cost = self.enter(symbol, row, row['signal'], strat.buy_amt())
 
                 # Determine exit
                 if position != None:
@@ -199,12 +218,15 @@ class BacktestOption:
 
                         exit, reason = strat.exit(position, prow)
                         if exit:
-                            #d = position_bars.loc[pindex:]
-                            #pd.DataFrame(data=d).to_csv(f'../results/{position.symbol}_{math.floor(pld*100)}.csv', index=True)
                             break
 
                     self.exit(position, symbol, reason, pindex[1], prow, row)
-                    self.returns[symbol].append([pindex[1].date(), mv - position.cost_basis])
+                    if isinstance(strat, short_option.ShortOption):
+                        self.short_returns[symbol].append([pindex[1].date(), mv - position.cost_basis])
+                        self.short_total[symbol] = self.short_total[symbol] + (float(position.market_value) - position.cost_basis)
+                    else:
+                        self.long_returns[symbol].append([pindex[1].date(), mv - position.cost_basis])
+                        self.long_total[symbol] = self.long_total[symbol] + (float(position.market_value) - position.cost_basis)
                     balance = balance + float(position.market_value)
                     held_positions.append([entered, pindex[1]])
 
@@ -217,7 +239,6 @@ class BacktestOption:
 
         print(f'Back test from {start_dt} to {end_dt}')
 
-
         print(f'Running shorts')
         self.backtest_symbols(short_option.ShortOption(), self.shorts, start_dt, end_dt, 1, 'Min')
 
@@ -225,9 +246,13 @@ class BacktestOption:
         self.backtest_symbols(long_option.LongOption(), self.longs, start_dt, end_dt, 1, 'Hour')
 
         full_total = 0
-        for cs in self.symbols:
-            full_total = full_total + self.total[cs]
-            print(f'{cs} total {self.total[cs]}')
+        for cs in self.shorts:
+            full_total = full_total + self.short_total[cs]
+            print(f'Short: {cs} total {self.short_total[cs]}')
+
+        for cs in self.longs:
+            full_total = full_total + self.long_total[cs]
+            print(f'Long: {cs} total {self.long_total[cs]}')
 
         accuracy = 0
         if self.actions > 0:
@@ -241,26 +266,22 @@ class BacktestOption:
         print(f'Tried to buy {len(self.missing_bars)} but lacked data')
 
         sharpes = {}
+        sharpes['short'] = {}
+        sharpes['long'] = {}
         pd.DataFrame(data=self.telemetry).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}.csv', index=True)
         for symbol in self.symbols:
             pd.DataFrame(data=self.correct_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_correct_bars.csv', index=True)
             pd.DataFrame(data=self.incorrect_bars[symbol]).to_csv(f'../results/short_backtest_{self.start.strftime("%Y_%m_%d")}_{self.end.strftime("%Y_%m_%d")}_incorrect_bars.csv', index=True)
 
+        for cs in self.shorts:
+            sharpe = self.sharpe(self.short_returns[cs])
+            sharpes['short'][cs] = sharpe
+            print(f"Short: {cs} sharpe Ratio: {sharpe}")
 
-            # add missing dates
-            date_range = pd.date_range(start=self.start.date(), end=self.end.date(), freq='D')
-            for dt in date_range:
-                self.returns[symbol].append([dt.date(), 0])
-
-            df = pd.DataFrame(data=self.returns[symbol], columns=['dates', 'returns'])
-            df = df.groupby('dates').sum()
-            risk_free_rate = 0.044
-            excess_returns = df['returns'] - (risk_free_rate / 252) 
-            mean_excess_return = excess_returns.mean() 
-            std_excess_return = excess_returns.std() 
-            sharpe_ratio = (mean_excess_return / std_excess_return) * np.sqrt(252) 
-            sharpes[symbol] = sharpe_ratio
-            print(f"{symbol} sharpe Ratio: {sharpe_ratio}")
+        for cs in self.longs:
+            sharpe = self.sharpe(self.long_returns[cs])
+            sharpes['long'][cs] = sharpe
+            print(f"Long: {cs} sharpe Ratio: {sharpe}")
 
         if show_graph:
             fig = plt.figure(1)

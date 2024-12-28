@@ -38,6 +38,10 @@ class ShortOption:
             return True, reason
         
         return False, 'hold'
+
+    def buy_amt(self) -> int:
+        #TODO: Add logic? like based on account?
+        return 2
     
     def signal_check(self, signal, position) -> bool:
         if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):

@@ -113,13 +113,14 @@ def feature_engineer_bars(df):
     #df = obv(df, quotes)
     df = rsi(df, quotes)
     df = vortex_indicator(df, quotes)
+    df = vortex_indicator(df, quotes, 28, 'pvi_long', 'nvi_long')
     df = bands(df, quotes)
     df = smi(df, quotes)
     df = mfi(df, quotes)
     #df = truerange(df)
     #df = squeeze(df)
 
-    trend_col = ['close', 'open', 'pvi', 'nvi', 'mfi', 'smi'] 
+    trend_col = ['close', 'open', 'pvi', 'nvi', 'mfi', 'smi', 'pvi_long', 'nvi_long'] 
     df = trends(df, short_trend, 'short', trend_col)
     df = trends(df, long_trend, 'long', trend_col)
 
@@ -132,7 +133,7 @@ def feature_engineer_bars(df):
     #df = dip(df, short_trend, 'short')
     #df = dip(df, long_trend, 'long')
 
-    df = last_two_bars(df, ['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b'])
+    df = last_two_bars(df, ['macd', 'pvi', 'roc', 'nvi', 'histogram', 'percent_b', 'pvi_long', 'nvi_long'])
 
     for col in df.select_dtypes(include=['bool']).columns:
         df[col] = df[col].astype(int)
@@ -160,6 +161,15 @@ def long_indicator(row):
         return 1
     #if row['nvi__last'] < .7 and row['nvi'] > row['nvi__last'] and row['rsi'] >= 60:
         #return -1
+    return 0
+
+def vortext_indicator_long(row):
+    if row['pvi_long'] > 1 and (row['pvi_long__last'] < 1 or row['pvi_long__last__last'] < 1):
+        return 1
+    
+    if row['nvi_long'] > row['nvi_long__last'] and row['nvi_long__last'] > row['nvi_long__last__last'] and abs(row['nvi_long'] - row['nvi_long__last__last']) > .01 and row['nvi_long_short_trend'] > 0:
+        return - 1
+    
     return 0
 
 def short_indicator(row):
@@ -255,11 +265,11 @@ def bands(df, quotes):
 
     return df
 
-def vortex_indicator(df, quotes):
-    results = indicators.get_vortex(quotes, 14)
+def vortex_indicator(df, quotes, lookback = 14, pvi = 'pvi', nvi = 'nvi'):
+    results = indicators.get_vortex(quotes, lookback)
 
-    df.loc[:, 'pvi'] = [r.pvi for r in results]
-    df.loc[:, 'nvi'] = [r.nvi for r in results]
+    df.loc[:, pvi] = [r.pvi for r in results]
+    df.loc[:, nvi] = [r.nvi for r in results]
 
     return df
 

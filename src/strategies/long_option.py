@@ -39,6 +39,10 @@ class LongOption:
         
         return False, 'hold'
     
+    def buy_amt(self) -> int:
+        #TODO: Add logic? like based on account?
+        return 1
+    
     def signal_check(self, signal, position) -> bool:
         if (signal == 'Buy' and position.symbol[-9] == 'C') or (signal == 'Sell' and position.symbol[-9] == 'P'):
             # Hold it we are signaling
@@ -80,7 +84,8 @@ class LongOption:
                 return 'hold'
             
         b = bars.copy()
-        b['long_indicator'] = b.apply(features.long_indicator, axis=1)
+        #b['long_indicator'] = b.apply(features.long_indicator, axis=1)
+        b['long_indicator'] = b.apply(features.vortext_indicator_long, axis=1)
         b['signal'] = b.apply(determine_signal, axis=1)
 
         return b

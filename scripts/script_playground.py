@@ -29,6 +29,16 @@ market_client = StockHistoricalDataClient(api_key, api_secret)
 option_client = OptionHistoricalDataClient(api_key, api_secret)
 polygon_client = RESTClient(api_key=polygon_key)
 
-b = buy.Buy(trading_client, option_client)
 
-b.purchase('SPY', 'C', 605, 1)
+bars_handlers = bars_data.BarData('QQQ', datetime.now() - timedelta(days=90), datetime.now(), market_client)
+
+mbars = bars_handlers.get_bars(1, 'Min')
+mbars['short_indicator'] = mbars.apply(features.short_indicator, axis=1)
+
+hbars = bars_handlers.get_bars(1, 'Hour')
+hbars['long_indicator'] = hbars.apply(features.long_indicator, axis=1)
+
+mbars = mbars[mbars['short_indicator'] != 0]
+hbars = hbars[hbars['long_indicator'] != 0]
+
+print('t')
